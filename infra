@@ -1,0 +1,81 @@
+#!/bin/bash
+# ==============================================================================
+# 🚀 VPS-INFRA UNIFIED CLI TOOL ('infra')
+# ==============================================================================
+set -e
+
+BASE_DIR="/var/www/vps-infra"
+
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+function show_help() {
+    echo -e "${CYAN}${BOLD}🚀 VPS-Infra Unified CLI Tool${NC}"
+    echo -e "Usage: ${BOLD}infra <command> [options]${NC}\n"
+    echo "Commands:"
+    echo -e "  ${GREEN}up, up --vps${NC}       Deploy and start all core platform services (Traefik, DB, DevOps, CI)"
+    echo -e "  ${GREEN}down${NC}               Stop all platform infrastructure services"
+    echo -e "  ${GREEN}restart${NC}            Restart all platform infrastructure services"
+    echo -e "  ${GREEN}status, ps${NC}         Show live health and container status"
+    echo -e "  ${GREEN}logs <service>${NC}     Tail live logs (e.g. 'infra logs devops-api', 'infra logs ci-api')"
+    echo -e "  ${GREEN}backup${NC}             Trigger immediate PostgreSQL database backup"
+    echo -e "  ${GREEN}help, -h, --help${NC}   Show this help menu"
+    echo ""
+}
+
+CMD="$1"
+shift || true
+
+case "$CMD" in
+    up)
+        echo -e "${CYAN}▶ Starting VPS-Infra platform...${NC}"
+        bash "$BASE_DIR/setup.sh"
+        ;;
+    down)
+        echo -e "${YELLOW}▶ Stopping VPS-Infra platform containers...${NC}"
+        docker compose -f "$BASE_DIR/ci-server/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
+        docker compose -f "$BASE_DIR/devops-manager/web/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
+        docker compose -f "$BASE_DIR/devops-manager/api/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
+        docker compose -f "$BASE_DIR/docker-registry/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
+        docker compose -f "$BASE_DIR/db/postgres/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
+        docker compose -f "$BASE_DIR/network/traefik/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
+        echo -e "${GREEN}✅ All platform services stopped.${NC}"
+        ;;
+    restart)
+        echo -e "${CYAN}▶ Restarting VPS-Infra platform...${NC}"
+        $0 down
+        $0 up
+        ;;
+    status|ps)
+        echo -e "\n${CYAN}${BOLD}📊 VPS-INFRA CONTAINER STATUS:${NC}"
+        docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "NAMES|devops|ci-|shared_|registry|traefik" || docker ps
+        echo ""
+        ;;
+    logs)
+        SVC="$1"
+        if [ -z "$SVC" ]; then
+            echo -e "${YELLOW}Please specify a container name (e.g. devops-api-prod, ci-api-prod, traefik, shared_postgres)${NC}"
+            exit 1
+        fi
+        docker logs -f --tail=100 "$SVC"
+        ;;
+    backup)
+        echo -e "${CYAN}▶ Triggering automated backup for devops_prod...${NC}"
+        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+        mkdir -p "$BASE_DIR/volumes/db/postgres/backups"
+        docker exec shared_postgres pg_dump -U postgres devops_prod > "$BASE_DIR/volumes/db/postgres/backups/devops_prod_${TIMESTAMP}.sql"
+        echo -e "${GREEN}✅ Backup saved to: $BASE_DIR/volumes/db/postgres/backups/devops_prod_${TIMESTAMP}.sql${NC}"
+        ;;
+    help|-h|--help|"")
+        show_help
+        ;;
+    *)
+        echo -e "${RED}Unknown command: $CMD${NC}"
+        show_help
+        exit 1
+        ;;
+esac
