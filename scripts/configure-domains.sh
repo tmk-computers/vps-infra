@@ -45,7 +45,8 @@ configure_domains() {
         esac
     done
 
-    cp -p "$SCRIPT_DIR/.env" "$SCRIPT_DIR/.env.backup.$(date +%Y%m%d%H%M%S).$$"
+    mkdir -p "$SCRIPT_DIR/volumes/env-backups" || return 1
+    cp -p "$SCRIPT_DIR/.env" "$SCRIPT_DIR/volumes/env-backups/.env.backup.$(date +%Y%m%d%H%M%S).$$" || return 1
     save_domain_value PRIMARY_DOMAIN "$domain"
     while read -r key prefix; do
         value="${!key}"
