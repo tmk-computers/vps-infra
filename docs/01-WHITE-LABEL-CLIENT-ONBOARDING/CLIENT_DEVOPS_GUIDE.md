@@ -73,7 +73,7 @@ Ensure your target server meets the following specifications before beginning in
 ### Step 1: Clone the Runtime Repository
 Clone this repository to `/var/www/vps-infra`:
 ```bash
-git clone https://github.com/tmk-computers/vps-infra-client.git /var/www/vps-infra
+git clone https://github.com/tmk-computers/vps-infra.git /var/www/vps-infra
 cd /var/www/vps-infra
 ```
 
