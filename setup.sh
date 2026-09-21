@@ -298,15 +298,16 @@ else
 fi
 
 # 5. Scaffold Persistent Volume Directories
+source "$SCRIPT_DIR/scripts/setup-directories.sh"
 echo -e "${CYAN}▶ Scaffolding persistent volume directories for [${DEPLOYMENT_MODE}]...${NC}"
-mkdir -p \
+create_setup_directories \
     "$SCRIPT_DIR/volumes/apps" \
     "$SCRIPT_DIR/volumes/artifacts/builds" \
     "$SCRIPT_DIR/volumes/apk" \
     "$SCRIPT_DIR/network/traefik"
 
 if [ "$DEPLOYMENT_MODE" != "ci-only" ]; then
-    mkdir -p \
+    create_setup_directories \
         "$SCRIPT_DIR/volumes/db/postgres/data" \
         "$SCRIPT_DIR/volumes/db/postgres/backups" \
         "$SCRIPT_DIR/volumes/db/pgadmin" \
@@ -314,7 +315,7 @@ if [ "$DEPLOYMENT_MODE" != "ci-only" ]; then
 fi
 
 if [ "${DOCKER_REGISTRY_TYPE:-private}" = "private" ] && [ "$DEPLOYMENT_MODE" != "devops-only" ]; then
-    mkdir -p "$SCRIPT_DIR/volumes/infra/registry"
+    create_setup_directories "$SCRIPT_DIR/volumes/infra/registry"
 fi
 
 # Crucial Docker Safeguard: Pre-create license.key as a regular file before Docker bind-mounts it
