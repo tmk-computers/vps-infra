@@ -1,8 +1,8 @@
 #!/bin/bash
 # ==============================================================================
-# 🛑 VPS-INFRA-CLIENT: CLEAN UNINSTALL & TEARDOWN SCRIPT
+# 🛑 VPS-INFRA: CLEAN UNINSTALL & TEARDOWN SCRIPT
 # ==============================================================================
-# Safely stops and cleans up all vps-infra-client services, networks, and cron jobs.
+# Safely stops and cleans up all vps-infra services, networks, and cron jobs.
 # Provides optional persistent data retention for seamless reinstallation.
 # ==============================================================================
 set -e
@@ -57,13 +57,13 @@ done
 
 echo -e "${RED}${BOLD}"
 echo "======================================================================"
-echo "   🛑 VPS-INFRA-CLIENT: PLATFORM TEARDOWN & UNINSTALLATION"
+echo "   🛑 VPS-INFRA: PLATFORM TEARDOWN & UNINSTALLATION"
 echo "======================================================================"
 echo -e "${NC}"
 
 # Interactive Confirmation
 if [ "$FORCE" = false ]; then
-    echo -e "${YELLOW}This script will shut down and remove all vps-infra-client services.${NC}"
+    echo -e "${YELLOW}This script will shut down and remove all vps-infra services.${NC}"
     read -rp "Are you sure you want to proceed with uninstallation? [y/N]: " CONFIRM
     if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
         echo -e "${CYAN}Uninstallation cancelled.${NC}"
@@ -164,7 +164,7 @@ fi
 rm -f "$SCRIPT_DIR/upgrade.status" "$SCRIPT_DIR/upgrade.lock" 2>/dev/null || true
 
 echo -e "\n${GREEN}${BOLD}======================================================================${NC}"
-echo -e "${GREEN}${BOLD}   🎉 VPS-INFRA-CLIENT SERVICES CLEANLY UNINSTALLED${NC}"
+echo -e "${GREEN}${BOLD}   🎉 VPS-INFRA SERVICES CLEANLY UNINSTALLED${NC}"
 echo -e "${GREEN}${BOLD}======================================================================${NC}"
 if [ "$PURGE_DATA" = false ] && [ "$PURGE_ENV" = false ]; then
     echo -e "${BOLD}Database and configurations have been preserved.${NC}"

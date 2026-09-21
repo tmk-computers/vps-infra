@@ -10,7 +10,7 @@ If your VPS provider experiences an unrecoverable hardware failure or you need t
 [ Disaster Strikes / New VPS Created ]
                   |
                   v (Minute 0 - 3)
-     1. Provision Fresh Ubuntu 24.04 VPS & Clone vps-infra-client
+     1. Provision Fresh Ubuntu 24.04 VPS & Clone vps-infra
                   |
                   v (Minute 3 - 6)
      2. Restore .env and Run ./setup.sh --license "<KEY>"
@@ -36,7 +36,7 @@ If your VPS provider experiences an unrecoverable hardware failure or you need t
 ```bash
 sudo mkdir -p /var/www/vps-infra
 sudo chown -R $USER:$USER /var/www/vps-infra
-git clone https://github.com/tmk-computers/vps-infra-client.git /var/www/vps-infra
+git clone https://github.com/tmk-computers/vps-infra.git /var/www/vps-infra
 cd /var/www/vps-infra
 ```
 

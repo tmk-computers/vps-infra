@@ -1,7 +1,7 @@
 # Client Operations: Clean Uninstall, Private Network Access, and Upgrade Telemetry Guide
 
 ## Executive Overview
-This guide provides complete technical documentation for three core operational capabilities in the **`vps-infra-client`** runtime:
+This guide provides complete technical documentation for three core operational capabilities in the **`vps-infra`** runtime:
 1. **Clean Uninstall & Reinstallation Support (`uninstall.sh`)**: Safe, dependency-ordered teardown of platform stacks with optional zero-data-loss volume retention.
 2. **Private Network Access**: Native support for internal VPCs, LANs, and non-public VPS environments without public Let's Encrypt or external DNS dependencies.
 3. **Client Upgrade, Dashboard Notifications & Automated Failure Reporting**: In-dashboard release alerts, one-click detached background upgrades, and automatic telemetry reporting to the Central Licensing Authority upon failure.
@@ -76,7 +76,7 @@ Standard cloud deployments rely on public Domain Name Service (DNS) records and 
 3. **Host Header Routing Rejects Raw IP Addresses**: Routers configured with `Host(devops.example.com)` return `404 page not found` when accessed via direct IP (`http://192.168.1.100`).
 
 ### 2.2 Private Network Configuration
-To run `vps-infra-client` on an internal machine, configure the following variables in `.env`:
+To run `vps-infra` on an internal machine, configure the following variables in `.env`:
 
 ```ini
 # ==============================================================================

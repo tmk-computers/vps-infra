@@ -108,7 +108,7 @@ Subject: License Request: Cloud-Flex - [Your Company Name]
 #### Step 2: Clone the Runtime Repository
 Clone this repository to your target cloud VPS:
 ```bash
-git clone https://github.com/tmk-computers/vps-infra-client.git /var/www/vps-infra
+git clone https://github.com/tmk-computers/vps-infra.git /var/www/vps-infra
 cd /var/www/vps-infra
 ```
 
@@ -208,7 +208,7 @@ The platform supports two deployment architectures to accommodate different work
 
 #### Step 1: Clone the Runtime Repository
 ```bash
-git clone https://github.com/tmk-computers/vps-infra-client.git /var/www/vps-infra
+git clone https://github.com/tmk-computers/vps-infra.git /var/www/vps-infra
 cd /var/www/vps-infra
 ```
 

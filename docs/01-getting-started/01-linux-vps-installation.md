@@ -43,7 +43,7 @@ SSH into your Linux VPS and clone the client repository to `/var/www/vps-infra`:
 # Create target directory and clone
 sudo mkdir -p /var/www/vps-infra
 sudo chown -R $USER:$USER /var/www/vps-infra
-git clone https://github.com/tmk-computers/vps-infra-client.git /var/www/vps-infra
+git clone https://github.com/tmk-computers/vps-infra.git /var/www/vps-infra
 cd /var/www/vps-infra
 ```
 

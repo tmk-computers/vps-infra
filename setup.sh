@@ -1,6 +1,6 @@
 #!/bin/bash
 # ==============================================================================
-# 🚀 VPS-INFRA-CLIENT: ZERO-TOUCH ENTERPRISE RUNTIME DEPLOYMENT SCRIPT
+# 🚀 VPS-INFRA: ZERO-TOUCH ENTERPRISE RUNTIME DEPLOYMENT SCRIPT
 # ==============================================================================
 set -e
 
@@ -13,7 +13,7 @@ NC='\033[0m' # No Color
 
 echo -e "${CYAN}${BOLD}"
 echo "======================================================================"
-echo "   🚀 VPS-INFRA-CLIENT: MANAGED DEVOPS & CI/CD RUNTIME SETUP"
+echo "   🚀 VPS-INFRA: MANAGED DEVOPS & CI/CD RUNTIME SETUP"
 echo "======================================================================"
 echo -e "${NC}"
 

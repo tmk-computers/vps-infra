@@ -1,6 +1,6 @@
 #!/bin/bash
 # ==============================================================================
-# 🚀 VPS-INFRA-CLIENT: DETACHED BACKGROUND UPGRADE RUNNER & TELEMETRY DISPATCHER
+# 🚀 VPS-INFRA: DETACHED BACKGROUND UPGRADE RUNNER & TELEMETRY DISPATCHER
 # ==============================================================================
 # Executed in background by DevOps API or manually via CLI.
 # Safely pulls the latest client code, runs setup.sh, and reports telemetry on failure.
