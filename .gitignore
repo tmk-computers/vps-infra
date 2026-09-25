@@ -90,3 +90,4 @@ Thumbs.db
 # Local environment secrets
 .env
 .env.local
+volumes/env-backups/

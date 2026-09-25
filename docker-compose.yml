@@ -78,6 +78,8 @@ services:
       - "traefik.http.routers.devops-api-prod.entrypoints=websecure"
       - "traefik.http.routers.devops-api-prod.tls=true"
       - "traefik.http.routers.devops-api-prod.tls.certresolver=myresolver"
+      # Explicit certificate names exclude PRIVATE_IP from ACME requests.
+      - "traefik.http.routers.devops-api-prod.tls.domains[0].main=${DEVOPS_API_HOST:-devops-api.example.com}"
       - "traefik.http.services.devops-api-prod.loadbalancer.server.port=8080"
 
   # ------------------------------------------------------------
@@ -98,6 +100,10 @@ services:
       - "traefik.http.routers.devops-web-prod.entrypoints=websecure"
       - "traefik.http.routers.devops-web-prod.tls=true"
       - "traefik.http.routers.devops-web-prod.tls.certresolver=myresolver"
+      # Explicit certificate names exclude PRIVATE_IP from ACME requests.
+      - "traefik.http.routers.devops-web-prod.tls.domains[0].main=${DEVOPS_WEB_HOST:-devops.example.com}"
+      # Request the alias separately so its DNS cannot block the primary certificate.
+      - "traefik.http.routers.devops-web-prod.tls.domains[1].main=devops-manager.${PRIMARY_DOMAIN:-example.com}"
       - "traefik.http.services.devops-web-prod.loadbalancer.server.port=80"
 
   # ------------------------------------------------------------
@@ -135,6 +141,8 @@ services:
       - "traefik.http.routers.ci-api.entrypoints=websecure"
       - "traefik.http.routers.ci-api.tls=true"
       - "traefik.http.routers.ci-api.tls.certresolver=myresolver"
+      # Explicit certificate names exclude PRIVATE_IP from ACME requests.
+      - "traefik.http.routers.ci-api.tls.domains[0].main=${CI_API_HOST:-ci-api.example.com}"
       - "traefik.http.services.ci-api.loadbalancer.server.port=5051"
 
   # ------------------------------------------------------------
@@ -155,6 +163,8 @@ services:
       - "traefik.http.routers.ci-web.entrypoints=websecure"
       - "traefik.http.routers.ci-web.tls=true"
       - "traefik.http.routers.ci-web.tls.certresolver=myresolver"
+      # Explicit certificate names exclude PRIVATE_IP from ACME requests.
+      - "traefik.http.routers.ci-web.tls.domains[0].main=${CI_WEB_HOST:-ci.example.com}"
       - "traefik.http.services.ci-web.loadbalancer.server.port=80"
 
 networks:
