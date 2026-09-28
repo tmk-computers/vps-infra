@@ -69,14 +69,14 @@ services:
       start_period: 60s
 
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /var/lib/docker/containers:/var/lib/docker/containers
-      - /var/www:/var/www
-      - /var/www/vps-infra/volumes/license.key:/app/license.key
-      - /var/www/vps-infra/volumes/apps/devops-api/prod/backups:/app/backups
-      - /var/www/vps-infra/volumes/apps/devops-api/prod/uploads:/app/uploads
-      - /var/www/vps-infra/volumes/apps/devops-api/prod/logs:/app/logs
-      - /root/.docker:/root/.docker:ro
+      - ${DOCKER_SOCK_PATH:-/var/run/docker.sock}:/var/run/docker.sock
+      - ${DOCKER_CONTAINERS_PATH:-/var/lib/docker/containers}:/var/lib/docker/containers
+      - ${WWW_ROOT:-/var/www}:/var/www
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/license.key:/app/license.key
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/apps/devops-api/prod/backups:/app/backups
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/apps/devops-api/prod/uploads:/app/uploads
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/apps/devops-api/prod/logs:/app/logs
+      - ${DOCKER_CONFIG_PATH:-/root/.docker}:/root/.docker:ro
 
     networks:
       - traefik_net
@@ -138,10 +138,10 @@ services:
       - SYNC_MODE=${SYNC_MODE:-db}
       - CI_SECRET=${CI_SECRET:-SuperCiSecretKey123!}
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /var/www:/var/www
-      - /root/.ssh:/root/.ssh:ro
-      - /root/.docker:/root/.docker
+      - ${DOCKER_SOCK_PATH:-/var/run/docker.sock}:/var/run/docker.sock
+      - ${WWW_ROOT:-/var/www}:/var/www
+      - ${SSH_CONFIG_PATH:-/root/.ssh}:/root/.ssh:ro
+      - ${DOCKER_CONFIG_PATH:-/root/.docker}:/root/.docker
     networks:
       - traefik_net
     labels:

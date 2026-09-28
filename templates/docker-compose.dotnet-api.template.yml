@@ -29,8 +29,8 @@ services:
       - DOTNET_GCHeapHardLimitPercent=40
       - ConnectionStrings__DefaultConnection=Host=shared_postgres;Port=5432;Database={{DB_NAME}};Username=postgres;Password=StrongPostgres@123;Pooling=true;MaxPoolSize=10;
     volumes:
-      - /var/www/vps-infra/volumes/apps/{{SERVICE_SLUG}}/{{ENV_NAME}}/uploads:/app/wwwroot/uploads
-      - /var/www/vps-infra/volumes/apps/{{SERVICE_SLUG}}/{{ENV_NAME}}/logs:/app/logs
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/apps/{{SERVICE_SLUG}}/{{ENV_NAME}}/uploads:/app/wwwroot/uploads
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/apps/{{SERVICE_SLUG}}/{{ENV_NAME}}/logs:/app/logs
     networks:
       - traefik_net
     labels:
