@@ -18,7 +18,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ${POSTGRES_DATA_STORAGE:-postgres_data}:/var/lib/postgresql/data
+      - ${POSTGRES_DATA_STORAGE:-${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/postgres/data}:/var/lib/postgresql/data
       - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/postgres/backups:/backups
     networks:
       - traefik_net
@@ -62,7 +62,6 @@ services:
 
 volumes:
   postgres_data:
-    name: ${POSTGRES_DATA_STORAGE:-postgres_data}
 
 networks:
   traefik_net:
