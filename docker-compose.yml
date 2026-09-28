@@ -7,14 +7,24 @@ services:
     image: ${DEVOPS_API_IMAGE:-ghcr.io/tmk-computers/tmk-devops-api:latest}
     container_name: devops-api-prod
     restart: always
+    mem_limit: 512m
+    cpus: 1.0
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
+      - DOTNET_gcServer=0
+      - DOTNET_GCConserveMemory=5
+      - DOTNET_GCHeapHardLimitPercent=40
       - TMK_LICENSE_KEY=${TMK_LICENSE_KEY:-}
       - TMK_LICENSE_SERVER=${TMK_LICENSE_SERVER:-https://license.tmkcomputers.in}
 
       # Database Connection
-      - ConnectionStrings__DefaultConnection=Host=shared_postgres;Port=5432;Database=${POSTGRES_DB:-devops_prod};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-StrongPostgres@123};Pooling=true;MaxPoolSize=20;
+      - ConnectionStrings__DefaultConnection=Host=shared_postgres;Port=5432;Database=${POSTGRES_DB:-devops_prod};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-StrongPostgres@123};Pooling=true;MaxPoolSize=10;
 
       # Dynamic JWT & SuperAdmin Settings
       - JwtSettings__Issuer=https://${DEVOPS_API_HOST:-devops-api.example.com}
@@ -60,6 +70,7 @@ services:
 
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers
       - /var/www:/var/www
       - /var/www/vps-infra/volumes/license.key:/app/license.key
       - /var/www/vps-infra/volumes/apps/devops-api/prod/backups:/app/backups
