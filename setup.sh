@@ -332,6 +332,17 @@ if [ ! -f "$SCRIPT_DIR/volumes/license.key" ]; then
 fi
 echo -e "${GREEN}✅ Volume license.key secured as regular file mount.${NC}"
 
+# Crucial Docker Safeguard: Pre-create pgadmin config_local.py if missing
+if [ "$DEPLOYMENT_MODE" != "ci-only" ]; then
+    mkdir -p "$SCRIPT_DIR/volumes/db/pgadmin-config"
+    if [ -d "$SCRIPT_DIR/volumes/db/pgadmin-config/config_local.py" ]; then
+        rm -rf "$SCRIPT_DIR/volumes/db/pgadmin-config/config_local.py"
+    fi
+    if [ ! -f "$SCRIPT_DIR/volumes/db/pgadmin-config/config_local.py" ]; then
+        echo 'SESSION_DB_PATH = "/var/lib/pgadmin/pgadmin_sessions"' > "$SCRIPT_DIR/volumes/db/pgadmin-config/config_local.py"
+    fi
+fi
+
 # 6. Prepare Traefik SSL Certificate Storage & Dashboard Auth
 if [ ! -f "$SCRIPT_DIR/network/traefik/acme.json" ]; then
     touch "$SCRIPT_DIR/network/traefik/acme.json"

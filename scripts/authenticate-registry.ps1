@@ -1,8 +1,17 @@
-﻿<#
+<#
 .SYNOPSIS
     Docker registry authentication helper for VPS-Infra (PowerShell 5.1 & 7+).
     Equivalent to scripts/authenticate-registry.sh.
 #>
+
+[CmdletBinding()]
+param (
+    [string]$User = "",
+    [string]$Password = "",
+    [string]$HostTarget = "",
+    [string]$RegistryType = "",
+    [string]$DeploymentMode = ""
+)
 
 function Authenticate-Registry {
     param (
@@ -90,3 +99,5 @@ function Authenticate-Registry {
     }
     return $false
 }
+
+Authenticate-Registry -User $User -Password $Password -HostTarget $HostTarget -RegistryType $RegistryType -DeploymentMode $DeploymentMode

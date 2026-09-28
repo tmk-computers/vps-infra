@@ -1,8 +1,14 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain configuration and validation helper for VPS-Infra (PowerShell 5.1 & 7+).
     Equivalent to scripts/configure-domains.sh.
 #>
+
+[CmdletBinding()]
+param (
+    [string]$ScriptDir = "",
+    [string]$Domain = ""
+)
 
 function Test-ValidDomain {
     param (
@@ -161,3 +167,14 @@ function Configure-Domains {
 
     return $true
 }
+
+# Resolve ScriptDir if not explicitly supplied
+if (-not $ScriptDir) {
+    if ($PSScriptRoot) {
+        $ScriptDir = Split-Path -Parent $PSScriptRoot
+    } else {
+        $ScriptDir = (Get-Location).Path
+    }
+}
+
+Configure-Domains -ScriptDir $ScriptDir -DomainOverride $Domain
