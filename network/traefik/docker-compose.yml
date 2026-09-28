@@ -56,6 +56,13 @@ services:
       - "traefik.http.middlewares.traefik-auth.basicauth.usersFile=/etc/traefik/users.htpasswd"
 
     restart: always
+    mem_limit: 256m
+    cpus: 1.0
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
 
 networks:
   traefik_net:
