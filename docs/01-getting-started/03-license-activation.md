@@ -45,6 +45,12 @@ cd /var/www/vps-infra
 ./activate-license.sh "YOUR_SIGNED_TMK_LICENSE_KEY"
 ```
 
+**On Windows Server**:
+```powershell
+Set-Location -Path "C:\var\www\vps-infra"
+.\activate-license.ps1 "YOUR_SIGNED_TMK_LICENSE_KEY"
+```
+
 ---
 
 ## 🔒 Track 2: Hardware-Locked Mode (Dedicated On-Premise)
@@ -56,6 +62,13 @@ cd /var/www/vps-infra
 echo -n "TMK-HW-$(cat /etc/machine-id)" | sha256sum | awk '{print $1}'
 ```
 *Example Output: `b9e4ee73b6b7a63023c8c2c6eb47f71f265d930533b336b6daa5e6f46299c39f`*
+
+**On Windows Server Host**:
+```powershell
+Set-Location -Path "C:\var\www\vps-infra"
+.\extract-fingerprint.ps1
+```
+*Example Output: `6a4ffa475430de3b40f0f897d2bf0e73fd3e73007279ac38d85caec12154a6a1`*
 
 
 ### Step 2: Send Fingerprint to Licensing Team

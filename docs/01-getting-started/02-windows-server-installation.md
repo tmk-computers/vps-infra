@@ -193,7 +193,62 @@ To ensure complete resilience on Windows Server:
 
 ---
 
-## ✅ 7. Verification & Live Dashboard Access
+## 🔑 7. Enterprise License Management on Windows
+
+### A. 1-Click License Activation
+If your platform containers are already running and you need to activate or renew your license key:
+
+```powershell
+Set-Location -Path "C:\var\www\vps-infra"
+.\activate-license.ps1 "YOUR_SIGNED_TMK_LICENSE_KEY"
+```
+*This automatically writes to `volumes\license.key`, updates `TMK_LICENSE_KEY` in `.env`, and gracefully reloads `devops-api-prod` and `ci-api-prod`.*
+
+### B. Hardware-Locked License Extraction (Track 2)
+For high-security on-premise physical servers requiring a hardware-locked subscription:
+
+```powershell
+Set-Location -Path "C:\var\www\vps-infra"
+.\extract-fingerprint.ps1
+```
+*Output will provide your 64-character server hardware identifier (derived from `HKLM:\SOFTWARE\Microsoft\Cryptography\MachineGuid`) to send to `licensing@tmkcomputers.in`.*
+
+---
+
+## 🔀 8. Host IIS Coexistence & Traefik Dynamic Reverse Proxy
+
+If you have existing legacy ASP.NET 4.x / WCF applications running on **Host Windows IIS**, Traefik can act as the unified front-door proxy—automatically issuing Let's Encrypt SSL certificates and proxying requests to IIS on internal loopback:
+
+```text
+[ Internet HTTPS: https://legacy-app.yourdomain.com ]
+                        |
+                        v (Port 443)
+         +-------------------------------+
+         |   TRAEFIK v3 (Edge Gateway)   |
+         |  Auto Let's Encrypt SSL Term  |
+         +-------------------------------+
+                        |
+                        | http://host.docker.internal:8081
+                        v
+         +-------------------------------+
+         |      WINDOWS HOST IIS         |
+         |  Site: "Legacy-CRM-Production"|
+         |  Binding: 127.0.0.1:8081      |
+         +-------------------------------+
+```
+
+### Steps to Configure:
+1. In **IIS Manager**, bind your legacy application to loopback port `8081` (e.g. `127.0.0.1:8081`).
+2. Copy the dynamic proxy template:
+   ```powershell
+   Copy-Item "C:\var\www\vps-infra\network\traefik\dynamic\legacy-iis-apps.yml.example" "C:\var\www\vps-infra\network\traefik\dynamic\legacy-iis-apps.yml"
+   ```
+3. Edit `legacy-iis-apps.yml` to specify your public domain (e.g. `Host(`legacy-app.yourdomain.com`)`).
+4. Traefik automatically detects the file changes without restarting, requests an SSL certificate, and proxies traffic to your IIS site!
+
+---
+
+## ✅ 9. Verification & Live Dashboard Access
 
 Once `setup.ps1` completes:
 
