@@ -16,7 +16,7 @@
 |:---:|---|---|
 | **1** | **Quickstart Installation** | [🐧 Linux VPS Installation Guide](docs/01-getting-started/01-linux-vps-installation.md) • [🪟 Windows Server Installation Guide](docs/01-getting-started/02-windows-server-installation.md) |
 | **2** | **Subscription Activation** | [🔑 License Activation Guide (Cloud-Flex & Hardware-Locked)](docs/01-getting-started/03-license-activation.md) |
-| **3** | **Deploying Applications** | [📦 Web APIs](docs/02-deploying-applications/01-web-apis.md) • [🌐 Frontend SPAs](docs/02-deploying-applications/02-frontend-spas.md) • [📱 Mobile CI/CD](docs/02-deploying-applications/03-mobile-ci-cd.md) |
+| **3** | **Deploying Applications** | [📦 Web APIs](docs/02-deploying-applications/01-web-apis.md) • [🌐 Frontend SPAs](docs/02-deploying-applications/02-frontend-spas.md) • [📱 Mobile CI/CD](docs/02-deploying-applications/03-mobile-ci-cd.md) • [🪟 Windows IIS Applications](docs/02-deploying-applications/04-iis-hosted-apps.md) |
 | **4** | **Database & Backups** | [🔌 Database Connection Strings](docs/03-database-management/01-database-connections.md) • [💾 Automated Daily Backups](docs/03-database-management/02-automated-backups.md) |
 | **5** | **Operations & Recovery** | [📜 Logs & Monitoring](docs/04-operations-and-troubleshooting/01-logs-and-monitoring.md) • [🛡️ SSL & Domain Troubleshooting](docs/04-operations-and-troubleshooting/02-ssl-domain-troubleshooting.md) • [🚨 15-Minute Disaster Recovery](docs/04-operations-and-troubleshooting/03-disaster-recovery.md) |
 
