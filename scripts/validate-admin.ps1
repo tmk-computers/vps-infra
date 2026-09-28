@@ -1,8 +1,16 @@
-﻿<#
+<#
 .SYNOPSIS
     SuperAdmin account validation helper for VPS-Infra (PowerShell 5.1 & 7+).
     Equivalent to scripts/validate-admin.sh.
 #>
+
+[CmdletBinding()]
+param (
+    [string]$AdminEmail = "",
+    [string]$DbUser = "postgres",
+    [string]$DbName = "devops_prod",
+    [switch]$ShowOnly
+)
 
 $global:AdminValidationStatus = "error"
 
@@ -87,4 +95,11 @@ function Show-AdminValidation {
     if ($global:AdminValidationStatus -ne "found" -and $global:AdminValidationStatus -ne "skipped") {
         Write-Host "  Diagnostic command: docker logs --tail 200 devops-api-prod" -ForegroundColor Cyan
     }
+}
+
+if ($ShowOnly) {
+    Show-AdminValidation
+} else {
+    Test-AdminAccount -AdminEmail $AdminEmail -DbUser $DbUser -DbName $DbName | Out-Null
+    Show-AdminValidation
 }

@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # 🚀 VPS-INFRA: ZERO-TOUCH ENTERPRISE RUNTIME DEPLOYMENT SCRIPT (POWERSHELL)
 # ==============================================================================
 # Compatible with Windows PowerShell 5.1+ and PowerShell Core 7+
@@ -53,7 +53,20 @@ Write-Info "▶ Checking Docker prerequisites..."
 
 $dockerCmd = Get-Command docker -ErrorAction SilentlyContinue
 if (-not $dockerCmd) {
-    Write-Err "❌ Docker is not installed or not in PATH. Please install Docker first."
+    Write-Err "❌ Docker CLI is not installed or not found in system PATH."
+    Write-Host ""
+    Write-Host "${C_YELLOW}💡 Windows Server Docker Requirements:${C_RESET}"
+    Write-Host "   The VPS-Infra platform runs Linux containers (PostgreSQL, Traefik, DevOps/CI APIs)."
+    Write-Host "   To run Linux containers on Windows Server:"
+    Write-Host "   1. Enable WSL2 and Virtual Machine Platform:"
+    Write-Host "      dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart"
+    Write-Host "      wsl --install --no-distribution"
+    Write-Host "   2. Install Docker Desktop for Windows (configured with WSL2 backend in 'Linux Containers' mode):"
+    Write-Host "      winget install Docker.DockerDesktop"
+    Write-Host "   3. Or on Windows Server 2022/2025, install Mirantis Container Runtime with Linux container support."
+    Write-Host "   4. Note: If you ONLY want to host .NET/IIS applications natively on this Windows Server,"
+    Write-Host "      you can point this node to an external Linux DevOps Manager host via TMK IIS Agent (scripts\tmk-iis-agent.ps1)."
+    Write-Host ""
     exit 1
 }
 
@@ -105,9 +118,14 @@ foreach ($line in ($dockerInfo -split "`n")) {
 
 if ($dockerOs -match "windows") {
     Write-Warn "⚠️  Notice: Docker daemon is currently running in Windows Containers mode ('$dockerOs')."
-    Write-Warn "   The platform services and 20+ app stacks use Linux containers."
-    Write-Warn "   If using Docker Desktop, please switch to 'Linux Containers' via system tray."
-    Write-Warn "   Continuing with configuration..."
+    Write-Warn "   The VPS-Infra platform services and 20+ app stacks use Linux containers."
+    Write-Warn "   If using Docker Desktop, please switch to 'Linux Containers' via system tray:"
+    Write-Warn "     • Right-click Docker Desktop in the system tray -> Switch to Linux containers..."
+    if (-not $Force) {
+        Write-Err "❌ Cannot deploy Linux containers on a Windows-mode Docker daemon. Switch to Linux containers and rerun setup.ps1."
+        Write-Err "   (Use -Force to bypass this check if you are running an experimental setup)."
+        exit 1
+    }
 } else {
     Write-Success "✅ Docker Engine is running Linux containers mode ('$dockerOs')."
 }
@@ -316,23 +334,41 @@ if (-not $netExists) {
 # ------------------------------------------------------------------------------
 # 5. Scaffold Persistent Volume Directories
 # ------------------------------------------------------------------------------
+Write-Info "▶ Scaffolding persistent volume directories for [${selectedMode}]..."
+$dirsToCreate = @(
+    (Join-Path $ScriptDir "volumes\apps"),
+    (Join-Path $ScriptDir "volumes\artifacts\builds"),
+    (Join-Path $ScriptDir "volumes\apk"),
+    (Join-Path $ScriptDir "volumes\env-backups"),
+    (Join-Path $ScriptDir "network\traefik"),
+    (Join-Path $ScriptDir "network\traefik\dynamic")
+)
+
+if ($selectedMode -ne "ci-only") {
+    $dirsToCreate += @(
+        (Join-Path $ScriptDir "volumes\db\postgres\data"),
+        (Join-Path $ScriptDir "volumes\db\postgres\backups"),
+        (Join-Path $ScriptDir "volumes\db\pgadmin"),
+        (Join-Path $ScriptDir "volumes\db\pgadmin-config"),
+        (Join-Path $ScriptDir "volumes\infra\backups")
+    )
+}
+
+if ($regType -eq "private" -and $selectedMode -ne "devops-only") {
+    $dirsToCreate += (Join-Path $ScriptDir "volumes\infra\registry")
+}
+
 $setupDirsScript = Join-Path $ScriptDir "scripts\setup-directories.ps1"
 if (Test-Path -Path $setupDirsScript) {
-    & $setupDirsScript
+    & $setupDirsScript -Paths $dirsToCreate
 } else {
-    $commonDirs = @(
-        (Join-Path $ScriptDir "volumes\apps"),
-        (Join-Path $ScriptDir "volumes\artifacts\builds"),
-        (Join-Path $ScriptDir "volumes\apk"),
-        (Join-Path $ScriptDir "volumes\db\postgres\backups"),
-        (Join-Path $ScriptDir "network\traefik")
-    )
-    foreach ($d in $commonDirs) {
+    foreach ($d in $dirsToCreate) {
         if (-not (Test-Path -Path $d)) {
             New-Item -ItemType Directory -Path $d -Force | Out-Null
         }
     }
 }
+Write-Success "✅ Persistent volume directories scaffolded."
 
 # Crucial Docker Safeguard: Pre-create license.key as a regular file before Docker bind-mounts it
 $licenseFilePath = Join-Path $ScriptDir "volumes\license.key"
@@ -348,6 +384,18 @@ if (-not (Test-Path -Path $licenseFilePath)) {
     }
 }
 Write-Success "✅ Volume license.key secured as regular file mount."
+
+# Crucial Docker Safeguard: Pre-create pgadmin config_local.py if missing
+if ($selectedMode -ne "ci-only") {
+    $pgAdminConfigFile = Join-Path $ScriptDir "volumes\db\pgadmin-config\config_local.py"
+    if (Test-Path -Path $pgAdminConfigFile -PathType Container) {
+        Remove-Item -Path $pgAdminConfigFile -Recurse -Force
+    }
+    if (-not (Test-Path -Path $pgAdminConfigFile)) {
+        Set-Content -Path $pgAdminConfigFile -Value 'SESSION_DB_PATH = "/var/lib/pgadmin/pgadmin_sessions"' -Encoding UTF8
+    }
+    Write-Success "✅ Volume pgAdmin config_local.py secured as regular file mount."
+}
 
 # ------------------------------------------------------------------------------
 # 6. Prepare Traefik SSL Certificate Storage & Dashboard Auth
@@ -485,8 +533,10 @@ Write-Info "`n▶ Pulling and Starting Platform Services (Profile: ${composeProf
 
 # Account Validation
 $validateAdminScript = Join-Path $ScriptDir "scripts\validate-admin.ps1"
-if (Test-Path -Path $validateAdminScript) {
-    & $validateAdminScript
+if (Test-Path -Path $validateAdminScript -and $selectedMode -ne "ci-only") {
+    $pgUser = Get-EnvVal "POSTGRES_USER" "postgres"
+    $pgDb   = Get-EnvVal "POSTGRES_DB" "devops_prod"
+    & $validateAdminScript -AdminEmail $adminEmail -DbUser $pgUser -DbName $pgDb
 }
 
 # ------------------------------------------------------------------------------
@@ -537,6 +587,9 @@ if ($selectedMode -ne "ci-only") {
     Write-Host "${C_BOLD}🔑 Configured Administrator Credentials:${C_RESET}"
     Write-Host "  • SuperAdmin Email:      $adminEmail"
     Write-Host "  • SuperAdmin Password:   $adminPass"
+    if (Test-Path -Path $validateAdminScript) {
+        & $validateAdminScript -ShowOnly
+    }
     Write-Host ""
 }
 

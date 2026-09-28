@@ -1,8 +1,14 @@
-﻿<#
+<#
 .SYNOPSIS
     Persistent directory scaffolding helper for VPS-Infra (PowerShell 5.1 & 7+).
     Equivalent to scripts/setup-directories.sh.
 #>
+
+[CmdletBinding()]
+param (
+    [string[]]$Paths = @(),
+    [switch]$DebugMode
+)
 
 function New-SetupDirectories {
     param (
@@ -30,4 +36,8 @@ function New-SetupDirectories {
     }
 
     return (-not $hasError)
+}
+
+if ($Paths -and $Paths.Count -gt 0) {
+    New-SetupDirectories -Paths $Paths -DebugMode:$DebugMode
 }
