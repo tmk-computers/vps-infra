@@ -14,7 +14,7 @@
 
 | Step | Topic | Detailed Guide |
 |:---:|---|---|
-| **1** | **Quickstart Installation** | [🐧 Linux VPS Installation Guide](docs/01-getting-started/01-linux-vps-installation.md) |
+| **1** | **Quickstart Installation** | [🐧 Linux VPS Installation Guide](docs/01-getting-started/01-linux-vps-installation.md) • [🪟 Windows Server Installation Guide](docs/01-getting-started/02-windows-server-installation.md) |
 | **2** | **Subscription Activation** | [🔑 License Activation Guide (Cloud-Flex & Hardware-Locked)](docs/01-getting-started/03-license-activation.md) |
 | **3** | **Deploying Applications** | [📦 Web APIs](docs/02-deploying-applications/01-web-apis.md) • [🌐 Frontend SPAs](docs/02-deploying-applications/02-frontend-spas.md) • [📱 Mobile CI/CD](docs/02-deploying-applications/03-mobile-ci-cd.md) |
 | **4** | **Database & Backups** | [🔌 Database Connection Strings](docs/03-database-management/01-database-connections.md) • [💾 Automated Daily Backups](docs/03-database-management/02-automated-backups.md) |
@@ -66,12 +66,12 @@ flowchart TD
 
 | Specification | Minimum | Recommended |
 |---|---|---|
-| **Operating System** | Ubuntu 22.04 / 24.04 LTS | Ubuntu 24.04 LTS (x86_64) |
+| **Operating System** | Ubuntu 22.04/24.04 LTS or Windows Server 2019/2022/2025 | Ubuntu 24.04 LTS / Windows Server 2022+ |
 | **CPU** | 2 vCPUs | 4+ vCPUs |
-| **RAM** | 4 GB | 8 GB – 16 GB |
+| **RAM** | 4 GB (Linux) / 8 GB (Windows) | 8 GB – 16 GB+ |
 | **Disk Storage** | 40 GB NVMe / SSD | 100 GB+ SSD |
-| **Docker Engine** | Docker v24.0+ | Docker v26.0+ & Compose v2 |
-| **Open Firewall Ports** | `80/tcp`, `443/tcp` | `80/tcp`, `443/tcp` |
+| **Docker Engine** | Docker v24.0+ & Compose v2 | Docker v26.0+ & Compose v2 |
+| **Open Firewall Ports** | `80/tcp`, `443/tcp` (or `8080/8443` if IIS active) | `80/tcp`, `443/tcp` |
 
 ---
 
@@ -176,6 +176,30 @@ hostnames, so domain migrations require updating those overrides.
 > ```
 
 *(If your containers are already running, you can alternatively activate anytime with `./activate-license.sh "YOUR_SIGNED_TMK_LICENSE_KEY"` or via the Web UI lock screen).*
+
+---
+
+### 🪟 Windows Server Quickstart (PowerShell & `infra.cmd`)
+*Designed for Windows Server 2019, 2022, or 2025 Standard/Datacenter.*
+
+#### 1. Clone to Windows Host
+Open **PowerShell as Administrator**:
+```powershell
+git clone https://github.com/tmk-computers/vps-infra.git C:\var\www\vps-infra
+Set-Location -Path "C:\var\www\vps-infra"
+```
+
+#### 2. Run 1-Click Bootstrap Installation
+```powershell
+.\setup.ps1 -Domain yourdomain.com -License "YOUR_SIGNED_TMK_LICENSE_KEY"
+```
+
+> **Note on Existing IIS Websites**: If your Windows Server runs active sites on IIS (`W3SVC`), `setup.ps1` will automatically detect the port conflict. You can either approve stopping IIS or configure Traefik to bind to alternative ports:
+> ```powershell
+> .\setup.ps1 -Domain yourdomain.com -HttpPort 8080 -HttpsPort 8443
+> ```
+
+👉 **Full Windows Guide**: [`docs/01-getting-started/02-windows-server-installation.md`](docs/01-getting-started/02-windows-server-installation.md)
 
 ---
 
@@ -313,12 +337,24 @@ VPS-Infra includes an integrated suite of autonomous DevOps intelligence agents 
 
 ## 🛠️ Day-2 Operations & Maintenance
 
-### Starting & Stopping Services
+### 🚀 Unified Management CLI (`infra` / `infra.cmd`)
+The repository includes a unified CLI management script (`infra` on Linux, `infra.cmd` / `infra.ps1` on Windows):
+
+| Task | Windows (CMD / PowerShell) | Linux (Bash) |
+|---|---|---|
+| **Deploy / Start Platform** | `infra up` | `./infra up` |
+| **Check Live Status** | `infra status` | `./infra status` |
+| **Tail Service Logs** | `infra logs devops-api-prod` | `./infra logs devops-api-prod` |
+| **Trigger Immediate DB Backup**| `infra backup` | `./infra backup` |
+| **Restart Platform** | `infra restart` | `./infra restart` |
+| **Stop All Platform Containers**| `infra down` | `./infra down` |
+
+### Direct Docker Compose Commands
 ```bash
 # Start all services in background
 docker compose up -d
 
-# Check real-time service status
+# Check real-time container status
 docker compose ps
 
 # View live aggregate logs
@@ -330,7 +366,7 @@ docker compose logs -f devops-api-prod
 
 ### Managing Database Engines
 ```bash
-# Check status of all database engines
+# Check status of all database engines (Linux)
 ./db/manage-databases.sh status
 
 # Start or stop specific engines
