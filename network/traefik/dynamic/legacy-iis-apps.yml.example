@@ -1,0 +1,33 @@
+# ==============================================================================
+# 🪟 TRAEFIK DYNAMIC CONFIGURATION: HOST WINDOWS IIS APPLICATION PROXY
+# ==============================================================================
+# Rename this file to 'legacy-iis-apps.yml' to activate dynamic host routing.
+# Traefik will automatically issue Let's Encrypt SSL certificates for your legacy
+# IIS domains and reverse-proxy traffic to IIS running locally on the Windows host.
+#
+# PREREQUISITE:
+# In IIS Manager, configure your legacy application binding to listen on
+# loopback port 8081 (e.g. 127.0.0.1:8081 or *:8081).
+# ==============================================================================
+
+http:
+  routers:
+    legacy-iis-app-http:
+      rule: "Host(`legacy-app.example.com`)"
+      entryPoints:
+        - "web"
+      service: "legacy-iis-app-service"
+
+    legacy-iis-app:
+      rule: "Host(`legacy-app.example.com`)"
+      entryPoints:
+        - "websecure"
+      tls:
+        certResolver: "myresolver"
+      service: "legacy-iis-app-service"
+
+  services:
+    legacy-iis-app-service:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8081"
