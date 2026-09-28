@@ -18,8 +18,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - /var/www/vps-infra/volumes/db/postgres/data:/var/lib/postgresql/data
-      - /var/www/vps-infra/volumes/db/postgres/backups:/backups
+      - ${POSTGRES_DATA_STORAGE:-postgres_data}:/var/lib/postgresql/data
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/postgres/backups:/backups
     networks:
       - traefik_net
     healthcheck:
@@ -44,8 +44,8 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${SUPERADMIN_PASSWORD:-NC+P4aVcpuCK7TAx8SQM}
       PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "False"
     volumes:
-      - /var/www/vps-infra/volumes/db/pgadmin:/var/lib/pgadmin
-      - /var/www/vps-infra/volumes/db/pgadmin-config/config_local.py:/pgadmin4/config_local.py
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/pgadmin:/var/lib/pgadmin
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/pgadmin-config/config_local.py:/pgadmin4/config_local.py
     ports:
       - "5050:80"
     networks:
@@ -59,6 +59,10 @@ services:
       - "traefik.http.routers.pgadmin.tls=true"
       - "traefik.http.routers.pgadmin.tls.certresolver=myresolver"
       - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+
+volumes:
+  postgres_data:
+    name: ${POSTGRES_DATA_STORAGE:-postgres_data}
 
 networks:
   traefik_net:

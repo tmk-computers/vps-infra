@@ -16,7 +16,7 @@ services:
       REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers: '[Docker-Content-Digest]'
       REGISTRY_STORAGE_DELETE_ENABLED: "true"
     volumes:
-      - /var/www/vps-infra/volumes/infra/registry:/var/lib/registry
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/infra/registry:/var/lib/registry
       - ./auth:/auth
     ports:
       - "127.0.0.1:5000:5000"

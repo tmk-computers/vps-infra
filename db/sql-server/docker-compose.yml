@@ -17,10 +17,10 @@ services:
     ports:
       - "1433:1433"               # Expose for SSMS on Windows
     volumes:
-      - /var/www/vps-infra/volumes/db/sql/data:/var/opt/mssql/data
-      - /var/www/vps-infra/volumes/db/sql/log:/var/opt/mssql/log
-      - /var/www/vps-infra/volumes/db/sql/secrets:/var/opt/mssql/secrets
-      - /var/www/vps-infra/volumes/db/sql/backups:/var/opt/mssql/backups
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/sql/data:/var/opt/mssql/data
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/sql/log:/var/opt/mssql/log
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/sql/secrets:/var/opt/mssql/secrets
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/sql/backups:/var/opt/mssql/backups
     networks:
       - traefik_net               # Shared network (for APIs)
 

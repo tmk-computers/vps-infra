@@ -22,8 +22,8 @@ services:
       - DATABASE_URL=postgresql://postgres:StrongPostgres@123@shared_postgres:5432/{{DB_NAME}}
       - MONGODB_URL=mongodb://root:StrongMongo@123@shared_mongodb:27017/{{DB_NAME}}?authSource=admin
     volumes:
-      - /var/www/vps-infra/volumes/apps/{{SERVICE_SLUG}}/{{ENV_NAME}}/uploads:/app/uploads
-      - /var/www/vps-infra/volumes/apps/{{SERVICE_SLUG}}/{{ENV_NAME}}/models:/app/models
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/apps/{{SERVICE_SLUG}}/{{ENV_NAME}}/uploads:/app/uploads
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/apps/{{SERVICE_SLUG}}/{{ENV_NAME}}/models:/app/models
     networks:
       - traefik_net
     labels:
