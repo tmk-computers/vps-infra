@@ -254,13 +254,28 @@ try {
             $backupZip = Join-Path $backupDir "pre_deploy_$((Get-Date).ToString('yyyyMMdd_HHmmss')).zip"
             $offlineHtm = Join-Path $targetDir "app_offline.htm"
 
-            try {
-                # 1. Backup snapshot
+                # 1. Backup snapshot & prune old pre-deployment backups
                 $log.AppendLine("[1/5] Creating pre-deployment directory backup at $(Split-Path $backupZip -Leaf)...") | Out-Null
                 try {
                     Compress-Archive -Path "$targetDir\*" -DestinationPath $backupZip -Force -ErrorAction SilentlyContinue
+                    # Keep only the last 3 pre-deployment backups to prevent disk bloat
+                    $excessBackups = Get-ChildItem -Path $backupDir -Filter "pre_deploy_*.zip" -File -ErrorAction SilentlyContinue |
+                                     Sort-Object LastWriteTime -Descending |
+                                     Select-Object -Skip 3
+                    foreach ($oldBkp in $excessBackups) {
+                        Remove-Item -Path $oldBkp.FullName -Force -ErrorAction SilentlyContinue
+                    }
                 } catch {
                     $log.AppendLine("Notice: Initial backup skipped or partial: $_") | Out-Null
+                }
+
+                # Prune old application stdout/stderr logs (>7 days)
+                $appLogsDir = Join-Path $targetDir "logs"
+                if (Test-Path $appLogsDir) {
+                    $logCutoff = (Get-Date).AddDays(-7)
+                    Get-ChildItem -Path $appLogsDir -Filter "*.log" -File -Recurse -ErrorAction SilentlyContinue |
+                        Where-Object { $_.LastWriteTime -lt $logCutoff } |
+                        Remove-Item -Force -ErrorAction SilentlyContinue
                 }
 
                 # 2. Place app_offline.htm
