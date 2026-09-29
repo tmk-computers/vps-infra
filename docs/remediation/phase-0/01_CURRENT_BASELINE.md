@@ -18,21 +18,26 @@ All historical audit baselines, post-audit commits, git branches, remote trackin
 
 ---
 
-## 2. Repository Git State Freeze
+## 2. Repository Git State Freeze & State Distinctions
+
+To ensure complete reproducibility and audit traceability (satisfying Codex finding C2-03), three repository states are formally distinguished:
+1. **Implementation Baseline (Product Code Frozen)**: The clean git commit of product, runtime, test, and infrastructure files prior to any Phase 0 documentation additions. This code is 100% frozen and untouched.
+2. **Documentation Candidate Git HEAD**: The git commit recording the initial Phase 0 engineering dossier and review records.
+3. **Working-Tree Candidate**: The working tree containing Developer R0–R3 remediation updates and the authoritative Codex Gate Remediation dossier.
 
 ### 2.1 Repository 1: `vps-infra`
 
 - **Workspace Path**: `D:\company\products\vps-infra\vps-infra`
 - **Active Branch**: `main`
-- **Local HEAD SHA**: `780e8b4f152e039e9ee31ed46c71811e04947f7b` (short: `780e8b4`)
+- **Implementation Baseline SHA (Product Code Frozen)**: `780e8b4f152e039e9ee31ed46c71811e04947f7b` (short: `780e8b4`)
+- **Documentation Candidate Git HEAD**: `72758f6c23fc76e62e059e382cf61106567668ab` (short: `72758f6`)
 - **Remote Origin**: `git@github.com:tmk-computers/vps-infra.git`
-- **Remote HEAD SHA**: `780e8b4f152e039e9ee31ed46c71811e04947f7b` (`origin/main` synchronized)
-- **Working Tree State**: Clean (`nothing to commit, working tree clean`)
-- **Uncommitted Files**: None (0 files)
+- **Product Code State**: Clean & untouched (0 runtime/product files modified)
+- **Working Tree Documentation State**: Phase 0 baseline documents updated; Codex remediation dossier added in `docs/remediation/phase-0-codex-remediation/`
 - **Historical Audited Baseline**: `eab8df65aaf708875a922cf87c655d86156f402a` (short: `eab8df6`)
-- **Commit Delta Since Historical Baseline**: 6 commits ahead of `eab8df6`
+- **Commit Delta Since Historical Baseline**: 6 product commits (`eab8df6..780e8b4`) + 1 documentation commit (`72758f6`)
 
-#### Commit Log Since Historical Baseline (`eab8df6..780e8b4`):
+#### Product Commit Log Since Historical Baseline (`eab8df6..780e8b4`):
 1. `780e8b4` — `chore(release): bump version to v2.2.0`
 2. `9d119bf` — `fix: mount SSH config in devops-api-prod and pull images on upgrade`
 3. `3d876e4` — `docs: document DevOps Manager UI navigation for Application Modernization Score (AMS)`
@@ -46,15 +51,15 @@ All historical audit baselines, post-audit commits, git branches, remote trackin
 
 - **Workspace Path**: `D:\company\products\vps-infra\vps-infra-server`
 - **Active Branch**: `main`
-- **Local HEAD SHA**: `36354a32884fd0c03470d2b3f5333776f7aed6c9` (short: `36354a3`)
+- **Implementation Baseline SHA (Product Code Frozen)**: `36354a32884fd0c03470d2b3f5333776f7aed6c9` (short: `36354a3`)
+- **Documentation Candidate Git HEAD**: `dba08c63a37eb8d2c851f637d8a02a85cbab4604` (short: `dba08c6`)
 - **Remote Origin**: `git@github.com:tmk-computers/vps-infra-server.git`
-- **Remote HEAD SHA**: `36354a32884fd0c03470d2b3f5333776f7aed6c9` (`origin/main` synchronized)
-- **Working Tree State**: Clean (`nothing to commit, working tree clean`)
-- **Uncommitted Files**: None (0 files)
+- **Product Code State**: Clean & untouched (0 runtime/product files modified)
+- **Working Tree Documentation State**: Phase 0 baseline documents updated; Codex remediation dossier added in `docs/remediation/phase-0-codex-remediation/`
 - **Historical Audited Baseline**: `a1f4a51ed3fb9e9751f83ec191a29f04e6971d32` (short: `a1f4a51`)
-- **Commit Delta Since Historical Baseline**: 10 commits ahead of `a1f4a51`
+- **Commit Delta Since Historical Baseline**: 10 product commits (`a1f4a51..36354a3`) + 1 documentation commit (`dba08c6`)
 
-#### Commit Log Since Historical Baseline (`a1f4a51..36354a3`):
+#### Product Commit Log Since Historical Baseline (`a1f4a51..36354a3`):
 1. `36354a3` — `feat(release): support SemVer release versioning and increment to v2.2.0`
 2. `9097c59` — `feat: implement UI platform release check and decoupled upgrade runner`
 3. `3078a13` — `fix(services): immediately recreate containers when toggling service maintenance mode`
@@ -87,7 +92,7 @@ Four major functional components were introduced in the commit delta between his
 
 1. **Centralized Maintenance Mode (`4c40800`, `3078a13`)**:
    - Added persistent fields to `Product` and `ProjectService` entities.
-   - **Critical Gap Identified (MR-34)**: No EF Core migration or `DataSeeder.cs` DDL was generated. Real PostgreSQL instances will crash with missing column errors.
+   - **Critical Gap Identified (MR-34)**: No EF Core migration or `DataSeeder.cs` DDL was generated. Existing PostgreSQL schemas lack the newly required Maintenance Mode columns. Queries against affected entities fail with PostgreSQL SQLSTATE 42703 column-missing errors, propagating as HTTP 500 responses in the application. The PostgreSQL server itself does not crash.
    - **Isolation Defect Identified (MR-35)**: Compose regex replacement mutates environment variables across all services in `docker-compose.yml`.
 
 2. **Application Modernization Score (AMS) (`fd9bf54`, `f4fec2b`)**:
@@ -97,7 +102,7 @@ Four major functional components were introduced in the commit delta between his
 
 3. **Platform Upgrade System (`9097c59`, `36354a3`, `780e8b4`)**:
    - Added UI Platform Upgrade Card and background Docker runner for `upgrade-client.sh`.
-   - **Safety Defect Preserved (MR-19)**: The underlying script `scripts/upgrade-client.sh` still performs `git reset --hard origin/main`, takes no database backup, verifies zero service health, and has zero automated rollback.
+   - **Safety Defect Preserved (MR-19)**: The underlying script `scripts/upgrade-client.sh` still performs `git reset --hard origin/main`, takes no database backup, lacks health verification in the execution path resulting in unverified success declarations, and has zero automated rollback.
 
 4. **Test & Image Pinning (`feea40a`, `9469671`)**:
    - Pinned `.NET 10` base images in Dockerfile.

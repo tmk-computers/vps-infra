@@ -48,7 +48,7 @@ sequenceDiagram
     Script->>Script: bash setup.sh </dev/null
     
     alt setup.sh succeeds
-        Note over Script: Step 5: "Verifying service health" (FAKED!)
+        Note over Script: Step 5: "Verifying service health" (Absent in Execution)
         Note over Script: Zero HTTP probes executed. Echoes "Upgrade completed successfully."
         Script-->>Runner: status = "SUCCESS"
     else setup.sh fails
@@ -87,7 +87,7 @@ sequenceDiagram
 - **Backup**: Executes `cp "$SCRIPT_DIR/.env" "$SCRIPT_DIR/.env.bak.$(date +%Y%m%d%H%M%S)"`.
 - **CRITICAL GAP**: **Zero database backup is taken before the upgrade**. If new platform migrations corrupt the schema or fail, the database is left in a corrupted or half-migrated state with no recovery snapshot.
 
-### 3.6 Health Verification & Faked Success (F18)
+### 3.6 Health Verification Absence & Unverified Success Declaration (F18)
 - **Code Anchor**: [`vps-infra/scripts/upgrade-client.sh:170-178`](file:///d:/company/products/vps-infra/vps-infra/scripts/upgrade-client.sh#L170-L178)
 - **Script Text**:
   ```bash
@@ -101,7 +101,7 @@ sequenceDiagram
   update_status "SUCCESS" "Platform successfully upgraded to version $NEW_COMMIT." "Completed"
   exit 0
   ```
-- **Forensic Truth**: No HTTP requests, no `curl`, no docker health check queries, and no container inspection commands are run. The script logs "Verifying service health" and **immediately prints SUCCESS**. If `devops-api-prod` failed to start or crashed on boot, the upgrade status is still recorded as `SUCCESS`.
+- **Forensic Truth**: No HTTP requests, no `curl`, no docker health check queries, and no container inspection commands are run. Health verification is absent from the execution path, resulting in an unverified success declaration. Even if `devops-api-prod` failed to start or crashed on boot, the upgrade status is still recorded as `SUCCESS`.
 
 ### 3.7 Failure Detection & Rollback Defect
 - **Failure Detection**: Detects non-zero exit codes from `git fetch`, `git reset`, and `setup.sh`.

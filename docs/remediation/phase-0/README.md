@@ -24,12 +24,12 @@ This directory contains the authoritative, frozen engineering baseline establish
 | **04** | [`04_TARGET_ARCHITECTURE.md`](04_TARGET_ARCHITECTURE.md) | Target architecture specification decoupling the Shared Platform Core from Linux and Windows Adapters. |
 | **05** | [`05_SUPPORTED_OS_MATRIX.md`](05_SUPPORTED_OS_MATRIX.md) | Independent certification matrices for Linux Gate A (Ubuntu 24.04) and Windows Gate A (Windows Server 2022). |
 | **06** | [`06_DATABASE_SUPPORT_MATRIX.md`](06_DATABASE_SUPPORT_MATRIX.md) | Database engine qualification matrix separating advertised from implemented from Gate A certified engines (PostgreSQL 16). |
-| **07** | [`07_DEPLOYMENT_SAFETY_CONTRACT.md`](07_DEPLOYMENT_SAFETY_CONTRACT.md) | 5-stage cross-platform release state machine specification, readiness probe contract, and crash recovery logic. |
-| **08** | [`08_SECURITY_BOUNDARIES.md`](08_SECURITY_BOUNDARIES.md) | Formal trust boundaries covering CI build isolation, database network exposure, secret lifecycle, and multi-tenant RBAC. |
-| **09** | [`09_BACKUP_RECOVERY_CONTRACT.md`](09_BACKUP_RECOVERY_CONTRACT.md) | 4-stage disaster recovery specification: creation, offsite dispatch, remote digest verification, and source-host-loss restoration. |
+| **07** | [`07_DEPLOYMENT_SAFETY_CONTRACT.md`](07_DEPLOYMENT_SAFETY_CONTRACT.md) | Durable cross-platform release state machine (`PRECHECK` through `SUCCEEDED`), cutover semantics, atomic locking, and expand/contract migration rules. |
+| **08** | [`08_SECURITY_BOUNDARIES.md`](08_SECURITY_BOUNDARIES.md) | Formal trust boundaries, platform vs tenant role separation, Token Trust Contract, and Phase 1 negative test suite. |
+| **09** | [`09_BACKUP_RECOVERY_CONTRACT.md`](09_BACKUP_RECOVERY_CONTRACT.md) | 7-stage backup pipeline, client-side AES-256-GCM encryption, BIP-39 key escrow, format-aware `pg_restore --list`, and recovery manifests. |
 | **10** | [`10_MAINTENANCE_MODE_CURRENT_STATE.md`](10_MAINTENANCE_MODE_CURRENT_STATE.md) | Forensic report on Centralized Maintenance Mode, documenting the EF migration gap (MR-34) and compose mutation contamination (MR-35). |
 | **11** | [`11_AMS_CURRENT_STATE.md`](11_AMS_CURRENT_STATE.md) | Forensic report on Application Modernization Score (AMS), uncovering API auth failures (MR-36) and truthfulness boundaries (MR-37). |
-| **12** | [`12_UPGRADE_CURRENT_STATE.md`](12_UPGRADE_CURRENT_STATE.md) | Technical analysis of platform upgrades, documenting the faked health verification and lack of rollback in `upgrade-client.sh` (MR-19). |
+| **12** | [`12_UPGRADE_CURRENT_STATE.md`](12_UPGRADE_CURRENT_STATE.md) | Technical analysis of platform upgrades, documenting the absent health verification and lack of rollback in `upgrade-client.sh` (MR-19). |
 | **13** | [`13_CI_TRUST_MODEL.md`](13_CI_TRUST_MODEL.md) | Architectural separation of Gate-A external isolated CI (GitHub Actions) from future integrated CI qualification requirements. |
 | **14** | [`14_AI_FEATURE_CLASSIFICATION.md`](14_AI_FEATURE_CLASSIFICATION.md) | Complete inventory classifying AI features into deterministic rules, model-backed, experimental, and unsupported tiers. |
 | **15** | [`15_DOCUMENTATION_TRUTH_MATRIX.md`](15_DOCUMENTATION_TRUTH_MATRIX.md) | Commercial truth audit comparing published marketing/README claims against active codebase reality. |
@@ -40,8 +40,15 @@ This directory contains the authoritative, frozen engineering baseline establish
 
 ---
 
-## 3. Governance Status
+## 3. Related Remediation Dossiers
+
+- **Codex Gate Remediation Dossier**: [`docs/remediation/phase-0-codex-remediation/`](../phase-0-codex-remediation/README.md) (Contains the 10 exhaustive finding resolution artifacts addressing Codex findings C0-01 through C3-01).
+- **Independent Review Dossier**: [`docs/remediation/phase-0-review/`](../phase-0-review/README.md) (Contains historical Reviewer FAIL report and the immutable R2 Reviewer PASS report `PHASE_0_REVIEW_R2_FINAL_REPORT.md`).
+
+---
+
+## 4. Governance Status
 
 - **Developer Status**: Work Complete.
 - **Runtime Modification Check**: PASSED (0 product code files modified).
-- **Developer Recommendation**: **`READY FOR INDEPENDENT PHASE 0 REVIEW`**.
+- **Developer Recommendation**: **`READY FOR PHASE 0 INDEPENDENT RE-REVIEW AFTER CODEX REMEDIATION`**.

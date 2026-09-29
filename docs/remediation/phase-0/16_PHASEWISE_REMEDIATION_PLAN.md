@@ -28,13 +28,14 @@ gantt
     axisFormat  Phase %s
 
     section Foundation & Security
-    Phase 0 : Current-State Reconciliation & Architecture Freeze :active, p0, 0, 1
-    Phase 1 : Shared Security Foundation (MR-02, 03, 04, 07, 08, 34, 36) :p1, after p0, 1
-    Phase 2 : Shared Release Safety Engine (MR-09, 10, 11, 12, 35) :p2, after p1, 1
+    Phase 0 : Current-State Reconciliation & Baseline Freeze :active, p0, 0, 1
+    Phase 0.5 : Maintenance Mode Schema Prerequisite (MR-34) :p05, after p0, 1
+    Phase 1 : Shared Security Foundation (MR-02..08, 28, 36) :p1, after p05, 1
+    Phase 2 : Shared Release Safety Engine (MR-09..13, 35) :p2, after p1, 1
 
     section Operating System Adapters (Equal Priority)
-    Phase 3 : Linux Production Adapter (MR-01, 05, 06) :p3, after p2, 1
-    Phase 4 : Windows Production Agent & IIS Adapter (MR-22 to 29) :p4, after p3, 1
+    Phase 3 : Linux Production Adapter (MR-01, 20) :p3, after p2, 1
+    Phase 4 : Windows Production Agent & IIS Adapter (MR-22..27, 29) :p4, after p3, 1
 
     section Reliability & Governance
     Phase 5 : Backup, Restore & Disaster Recovery (MR-14, 15) :p5, after p4, 1
@@ -43,16 +44,19 @@ gantt
 
     section Operations & Upgrades
     Phase 8 : Infra Doctor Diagnostic Engine (MR-30) :p8, after p7, 1
-    Phase 9 : Supportability & Diagnostic Bundles (MR-31) :p9, after p8, 1
+    Phase 9 : Supportability, Documentation Truth & AMS (MR-21, 31, 37) :p9, after p8, 1
     Phase 10 : Platform Upgrade & Customer Break-Glass (MR-19, 32) :p10, after p9, 1
 
     section Verification & Pilot Gates
     Phase 11 : Dual-OS Failure Injection & Chaos Testing (MR-33) :p11, after p10, 1
-    Phase 12 : Independent Linux + Windows Gate A Certification :p12, after p11, 1
-    Phase 13 : Controlled Startup Pilot Deployment (Staggered or Dual) :p13, after p12, 1
-    Phase 14 : Pilot Hardening & Operational Feedback :p14, after p13, 1
-    Phase 15 : Commercial Dual-OS Enterprise Gate B :p15, after p14, 1
+    Phase 12A : Independent Linux Gate A Certification :p12a, after p11, 1
+    Phase 12B : Independent Windows Gate A Certification :p12b, after p11, 1
+    Phase 13A : Controlled Linux Startup Pilot (Staggered Option) :p13a, after p12a, 1
+    Phase 14 : Pilot Hardening & Operational Feedback :p14, after p13a, 1
+    Phase 15 : Dual-OS Commercial Enterprise Gate B :p15, after p14, 1
 ```
+
+*(Note: Staggered Pilot Override: If Linux Gate A (Phase 12A) passes first, Linux Pilot (Phase 13A) can proceed while Windows remediation actively continues through Phase 12B. Phase 15 remains the unified Dual-OS Commercial Gate.)*
 
 ---
 
@@ -62,16 +66,25 @@ gantt
 - **Scope**: Reconcile Codex F01–F22, Antigravity DEF-01–DEF-37, post-audit commits; freeze target architecture and Master Register (MR-01–MR-37); establish the Dual-OS Non-Negotiable mandate; zero runtime code changes.
 - **Deliverable**: Complete `docs/remediation/phase-0/` artifact suite.
 
+### Phase 0.5 — Centralized Maintenance Mode Schema Prerequisite
+- **Target MR ID**: **MR-34**
+- **Rationale & Scope**: Standalone architectural prerequisite preceding Phase 1 runtime testing.
+  - **Single Schema Authority**: Author versioned EF Core migration `20261001000000_AddMaintenanceModeEntities.cs` adding all 13 columns to `Products`, `ProjectServices`, and `MaintenanceWindows`.
+  - **DataSeeder Rule**: Prohibit adding competing raw `ALTER TABLE` DDL to `DataSeeder.cs`. Seeder is bounded purely to data population; raw DDL removal scheduled for Phase 2 (MR-13).
+  - **Acceptance Contract**: Pass all 5 test scenarios (fresh install, upgrade from existing schema, zero data loss, entity query test, idempotency) defined in `docs/remediation/phase-0-codex-remediation/07_PHASE_0_5_SCHEMA_AUTHORITY.md`.
+
 ### Phase 1 — Shared Security Foundation
-- **Target MR IDs**: **MR-02**, **MR-03**, **MR-04**, **MR-07**, **MR-08**, **MR-34**, **MR-36**, **MR-37**.
-- **Scope**:
-  - Revoke committed service account private key (MR-03) and purge from git.
-  - Implement cryptographically random secret generator on setup (MR-02, MR-07).
-  - Strip Git tokens and secrets from read DTOs; redact secrets in logs (MR-04).
-  - Enforce tenant-scoping on entity queries and service ownership authorization (MR-08).
-  - Generate missing EF Core migration for Maintenance Mode fields (MR-34).
-  - Fix AMS endpoint authorization and CI Bearer token forwarding (MR-36).
-  - Correct AMS documentation and UI labels to reflect static analysis (MR-37).
+- **Core Security Scope (9 Items)**: **MR-02**, **MR-03**, **MR-04**, **MR-05**, **MR-06**, **MR-07**, **MR-08**, **MR-28**, **MR-36**.
+- **Scope & Explicit Sub-Obligation Traceability**:
+  - **MR-02 & MR-07** (Dynamic Secrets & Signing Defaults — P0/P1): Eliminate published JWT keys and default passwords across all setup scripts (`setup.sh`, `setup.ps1`); enforce startup failure on default secrets. F16.1: Encrypt AI API keys at rest (AES-256-GCM). F16.2: Enforce monotonic streaming spend budget cap. (F16.3/F16.4 gated under AI disablement for Gate A).
+  - **MR-03** (Leaked Service Account Key — P0): Revoke Google Cloud service account RSA private key in Google Cloud IAM; purge `devops-manager/api/google-drive-credentials.json` from git history.
+  - **MR-04** (Git Tokens, Secret Disclosure & Path Traversal — P1): Strip Git PATs and sensitive secrets from read DTOs; implement credential protection; sanitize webhook and process logging. DEF-15: Canonicalize `ProjectDirectory` via `Path.GetFullPath` prefix check against tenant sandbox root.
+  - **MR-05 & MR-06** (Database Least Privilege & Network Exposure — P1/P0): Bind PostgreSQL, Redis, and admin ports to `127.0.0.1` or internal Docker overlay bridge (MR-06), and provision isolated least-privilege roles per application container (MR-05).
+  - **MR-08** (Multi-Tenant RBAC, Role Separation & Container Hardening — P1): DEF-11: Formally separate `PlatformSuperAdmin` from `TenantAdmin`; no tenant SuperAdmin global bypass. DEF-08: Drop Linux capabilities (`cap_drop: ALL`), run API container as non-root UID 10001, remove host root mount, use scoped Unix socket proxy. Enforce JWT tenant context extraction (`tid`) across all routes.
+  - **MR-28** (Windows Agent Dynamic Authentication — P0): Replace hardcoded static fallback secret `"SuperCiSecretKey123!"` with dynamically provisioned mutual authentication secrets between `devops-manager` and `tmk-iis-agent`.
+  - **MR-36** (Token Trust Contract & Inter-Service Auth — P1): Enforce Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, rotation, revocation). Secure AMS endpoints in `ci-server`; inject service bearer tokens in inter-service calls. All 9 Phase 1 negative tests must pass.
+- **Scope Exclusion**:
+  - **MR-37** (AMS Semantics & UI Labeling): Relates to calculation heuristics and marketing truthfulness rather than security boundaries. Relocated to Phase 9 alongside MR-21, with pre-pilot disclosure provided for pilots.
 
 ### Phase 2 — Shared Release Safety Engine
 - **Target MR IDs**: **MR-09**, **MR-10**, **MR-11**, **MR-12**, **MR-13**, **MR-35**.
@@ -84,15 +97,13 @@ gantt
   - Replace regex Compose string manipulation with AST-aware YAML parser (MR-35).
 
 ### Phase 3 — Linux Production Adapter
-- **Target MR IDs**: **MR-01**, **MR-05**, **MR-06**, **MR-20**.
+- **Target MR IDs**: **MR-01**, **MR-20**.
 - **Scope**:
-  - Remove production Docker socket and host root from CI test runners (MR-01).
-  - Provision unique, least-privilege PostgreSQL roles per application container (MR-05).
-  - Bind database and admin ports to `127.0.0.1` or internal Docker overlay bridge (MR-06).
-  - Enforce unsupported feature gates (block Oracle/MariaDB/Redis in Gate A) (MR-20).
+  - Remove production Docker socket and host root from CI test runners; isolate builds to disposable sandbox (MR-01).
+  - Enforce unsupported feature gates (block Oracle/MariaDB/Redis in Gate A deployment pipeline) (MR-20).
 
 ### Phase 4 — Windows Production Agent & IIS Adapter (Equal First-Class Priority)
-- **Target MR IDs**: **MR-22**, **MR-23**, **MR-24**, **MR-25**, **MR-26**, **MR-27**, **MR-28**, **MR-29**.
+- **Target MR IDs**: **MR-22**, **MR-23**, **MR-24**, **MR-25**, **MR-26**, **MR-27**, **MR-29**.
 - **Scope**:
   - Implement compiled .NET Worker Windows Service (`TMK.Agent.Windows`) with SCM integration, replacing `tmk-iis-agent.ps1` (MR-22).
   - Configure HttpListener to accept container network requests (MR-23).
@@ -100,8 +111,8 @@ gantt
   - Fix telemetry to map AppPool names to specific worker process PIDs (MR-25).
   - Implement asynchronous request processing in daemon (MR-26).
   - Establish port coexistence between Traefik and IIS without stopping `W3SVC` (MR-27).
-  - Require dynamically generated installation bearer secret (MR-28).
   - Implement cross-compilation pipeline for Windows .NET artifacts (MR-29).
+  *(Note: MR-28 Windows Agent Dynamic Authentication is delivered in Phase 1 for dual-OS security parity).*
 
 ### Phase 5 — Backup, Restore & Disaster Recovery
 - **Target MR IDs**: **MR-14**, **MR-15**.
@@ -132,11 +143,13 @@ gantt
   - Consolidate validation scripts into deterministic diagnostic API and CLI tool across Linux and Windows.
   - Validate OS prerequisites, port availability, disk headroom, and Docker daemon connectivity.
 
-### Phase 9 — Supportability & Operational Tooling
-- **Target MR IDs**: **MR-31**, **MR-21**.
+### Phase 9 — Supportability, Documentation Truth & AMS
+- **Target MR IDs**: **MR-21**, **MR-31**, **MR-37**.
 - **Scope**:
-  - Implement 1-click sanitized diagnostic support bundle export endpoint.
-  - Revise documentation and README to eliminate misleading performance and architectural claims.
+  - Implement 1-click sanitized diagnostic support bundle export endpoint (MR-31).
+  - Revise documentation and README to eliminate misleading performance and architectural claims (MR-21).
+  - Rebrand AMS in UI and documentation to "Static Architectural Modernization" and clarify that AMS does not evaluate runtime production readiness (MR-37).
+  *(Note: Prior to Phase 9, pilot participants receive an explicit Pre-Pilot Operational Disclosure Note covering deterministic AI behavior and AMS static analysis scope).*
 
 ### Phase 10 — Platform Upgrades & Customer Break-Glass
 - **Target MR IDs**: **MR-19**, **MR-32**.

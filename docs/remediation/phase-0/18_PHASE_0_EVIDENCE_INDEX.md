@@ -54,10 +54,10 @@ This document indexes all executable commands, code anchors, AST parser outputs,
   - [`ProductController.cs:231`](file:///d:/company/products/vps-infra/vps-infra-server/devops-manager/api/Controllers/ProductController.cs#L231): `client.PostAsync($"{ciUrl.TrimEnd('/')}/api/ci/modernization/calculate/{id}", null)` passes no Bearer token.
   - [`ci-server/api/server.js:662`](file:///d:/company/products/vps-infra/vps-infra-server/ci-server/api/server.js#L662): `app.post([...], authenticateToken, ...)` rejects with HTTP 401 Unauthorized.
 
-### 3.4 Upgrade Health Check Faked (MR-19)
+### 3.4 Upgrade Health Check Absent in Execution Path (MR-19)
 - **Runner Invocation**:
   - [`SystemController.cs:260-268`](file:///d:/company/products/vps-infra/vps-infra-server/devops-manager/api/Controllers/SystemController.cs#L260-L268): `docker run -d --name vps-infra-upgrade-runner ... ghcr.io/tmk-computers/tmk-devops-api:latest`.
-- **Faked Health Section in Script**:
+- **Absent Health Verification Section in Script**:
   - [`vps-infra/scripts/upgrade-client.sh:170-178`](file:///d:/company/products/vps-infra/vps-infra/scripts/upgrade-client.sh#L170-L178):
     ```bash
     CURRENT_STEP="Verifying service health"
@@ -76,10 +76,10 @@ This document indexes all executable commands, code anchors, AST parser outputs,
     - `Message: Unexpected token '}' in expression or statement.`
   - Contrasting Server Copy: `vps-infra-server/scripts/tmk-iis-agent.ps1` parses with 0 errors.
 
-### 3.6 Faked IIS Deployment Success (MR-22, F10, DEF-31)
+### 3.6 Unverified IIS Deployment Success (MR-22, F10, DEF-31)
 - **Health Probe Swallowed**:
-  - [`vps-infra-server/scripts/tmk-iis-agent.ps1:105-115`](file:///d:/company/products/vps-infra/vps-infra-server/scripts/tmk-iis-agent.ps1#L105-L115):
-    Probe error caught in catch block, logged as `"Notice: Health probe returned: $_"`, then immediately executes:
+  - [`vps-infra-server/scripts/tmk-iis-agent.ps1:290-301`](file:///d:/company/products/vps-infra/vps-infra-server/scripts/tmk-iis-agent.ps1#L290-L301):
+    Probe error caught in catch block at lines 293–295, logged as `"Notice: Health probe returned: $_ (site may still be warming up)"`, then immediately executes at lines 298–301:
     `Send-JsonResponse $response 200 @{ Success = $true }`.
 
 ### 3.7 Database Ports Exposed to WAN (MR-06, F07, DEF-03)

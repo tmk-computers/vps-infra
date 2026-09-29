@@ -14,7 +14,7 @@
 In post-audit commits `4c40800` ("feat(maintenance): add centralized maintenance mode with granular overrides, UI modals, and E2E test suite") and `3078a13`, Centralized Maintenance Mode was introduced.
 
 This forensic investigation confirms two critical defects:
-1. **MR-34 (Database Schema Migration Gap — Pilot Blocker)**: Persistent fields were added to `Product` and `ProjectService` C# entities without generating an EF Core migration or executing DDL in `DataSeeder.cs`. Clean installs and real PostgreSQL instances will crash with missing column errors.
+1. **MR-34 (Database Schema Migration Gap — Pilot Blocker)**: Persistent fields were added to `Product` and `ProjectService` C# entities without generating an EF Core migration or executing DDL in `DataSeeder.cs`. Existing PostgreSQL schemas lack the newly required Maintenance Mode columns. Queries against affected entities fail with PostgreSQL SQLSTATE 42703 column-missing errors, propagating as HTTP 500 responses in the application. The PostgreSQL server itself does not crash.
 2. **MR-35 (Service Isolation & Compose Mutation Defect — Pilot Blocker)**: The compose synchronization routine uses global regex replacement across `docker-compose.yml`, mutating environment blocks for ALL services in the file and risking YAML corruption.
 
 ---
@@ -85,13 +85,13 @@ This forensic investigation confirms two critical defects:
 
 ---
 
-## 3. Required Remediation Specifications (Phase 1 & Phase 2)
+## 3. Required Remediation Specifications (Phase 0.5 & Phase 2)
 
-1. **For MR-34 (Phase 1)**:
-   - Create a clean EF Core migration: `20261001000000_AddMaintenanceModeEntities.cs`.
-   - Add defensive idempotent `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` statements to `DataSeeder.cs`.
-   - Add real PostgreSQL integration test verifying migration execution against a live database container.
-2. **For MR-35 (Phase 2)**:
+1. **For MR-34 (Phase 0.5 — Isolated Schema Prerequisite)**:
+   - **Single Schema Authority**: Create the versioned EF Core migration: `20261001000000_AddMaintenanceModeEntities.cs` as the SOLE schema evolution authority.
+   - **DataSeeder Rule**: Prohibit adding competing raw `ALTER TABLE` DDL to `DataSeeder.cs`. `DataSeeder.cs` is strictly bounded to initial data seeding. Complete removal of existing raw DDL in `DataSeeder.cs` is scheduled for Phase 2 under MR-13.
+   - **Acceptance Verification**: Execute the 5-case PostgreSQL acceptance contract (fresh database, upgrade from existing schema, zero data loss, entity query test, idempotency) defined in `docs/remediation/phase-0-codex-remediation/07_PHASE_0_5_SCHEMA_AUTHORITY.md`.
+2. **For MR-35 (Phase 2 — Service Isolation & Container Lifecycle)**:
    - Replace regex string replacement with an AST-aware YAML parser (e.g. `YamlDotNet`).
    - Confine environment variable mutation strictly to the target service node in the Compose document.
    - Make container recreation failures fail the API request and initiate state rollback.
