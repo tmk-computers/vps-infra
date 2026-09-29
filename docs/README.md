@@ -38,6 +38,7 @@ Welcome to the **VPS-Infra** customer documentation center. Follow the sequentia
 1. [`02-deploying-applications/01-web-apis.md`](02-deploying-applications/01-web-apis.md): Onboarding and deploying Node.js, ASP.NET Core (.NET 8/9/10), and Python FastAPI microservices.
 2. [`02-deploying-applications/02-frontend-spas.md`](02-deploying-applications/02-frontend-spas.md): Packaging and deploying React, Angular, and Vue SPAs with Nginx and Let's Encrypt SSL.
 3. [`02-deploying-applications/03-mobile-ci-cd.md`](02-deploying-applications/03-mobile-ci-cd.md): Automated Android APK compilation for Flutter, React Native, and Native Android.
+4. [`02-deploying-applications/04-maintenance-mode-app-integration.md`](02-deploying-applications/04-maintenance-mode-app-integration.md): Step-by-step developer integration cookbook to enable Centralized Maintenance Mode in your APIs, Web SPAs, and Mobile apps.
 
 
 ### 💾 Step 3: Database Management

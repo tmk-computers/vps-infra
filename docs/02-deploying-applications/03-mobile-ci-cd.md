@@ -75,3 +75,18 @@ flutter test --coverage
 - Flutter writes coverage data to `coverage/lcov.info`.
 - VPS-Infra's built-in LCOV parser extracts line-hit (`LH`) and line-found (`LF`) metrics across all Dart files.
 - The overall line coverage percentage is recorded to the build record and evaluated against your project's configured coverage threshold.
+
+---
+
+## 🔧 5. Implementing Centralized Maintenance Mode in Mobile Apps
+
+When your backend enters maintenance mode, all API calls return `HTTP 503`. To prevent mobile crashes, broken token states, or confusing error toasts:
+
+1. **Cold Start & Resume Check:** Query `GET /api/system/status` on app startup and whenever the app resumes from the background (`didChangeAppLifecycleState` in Flutter / `AppState` in React Native).
+2. **Network Client Interceptor:** Configure Dio, Axios, or OkHttp to catch `503 Service Unavailable` with `isMaintenance: true` on any in-flight request.
+3. **Non-Dismissible Overlay Widget:** Display a full-screen `MaintenanceOverlay` widget that traps the Android hardware back button (`PopScope(canPop: false)`).
+4. **Instant Self-Healing:** The overlay features a **"Check Again"** button allowing users to resume immediately once maintenance finishes without needing an app update or restart.
+
+👉 **Complete Code Recipes (Flutter, React Native, Native Android Kotlin):**
+See the [Maintenance Mode Application Integration Guide](./04-maintenance-mode-app-integration.md).
+
