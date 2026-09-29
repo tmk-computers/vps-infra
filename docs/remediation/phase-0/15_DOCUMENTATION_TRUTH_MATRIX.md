@@ -1,0 +1,44 @@
+# 15 DOCUMENTATION & COMMERCIAL TRUTH AUDIT MATRIX
+
+**Document ID**: `REMED-P0-15`  
+**Phase**: Phase 0 — Current-State Reconciliation & Architecture Freeze  
+**Author**: Antigravity Conversation 1 — Developer  
+**Baseline Date**: 2026-09-29  
+**Target Master ID**: **MR-21**  
+**Review Status**: PENDING INDEPENDENT REVIEW & CODEX AUDIT GATE  
+
+---
+
+## 1. Executive Summary
+
+A critical finding across both the Codex and Antigravity audits is significant divergence between marketing copy, README assertions, architectural PRDs, and the actual executable codebase.
+
+This truth audit compares published documentation claims against active source code and configuration files.
+
+### Classification Categories:
+1. `VERIFIED`: Claim is fully matched by executable, tested code.
+2. `IMPLEMENTED_NOT_VERIFIED`: Code appears present, but claimed operational metrics or reliability lack live proof.
+3. `PARTIAL`: Some functionality exists, but critical safety guarantees or edge cases are missing.
+4. `NOT_IMPLEMENTED`: Claimed functionality does not exist in code or manifests.
+5. `MISLEADING`: Claim implies enterprise reliability, automation, or performance that actively contradicts code reality.
+
+---
+
+## 2. Comprehensive Documentation Truth Matrix
+
+| Domain | Published Documentation / Marketing Claim | Document Source | Actual Code / Config Reality | Truth Classification | Required Remediation Action |
+| :--- | :--- | :--- | :--- | :---: | :--- |
+| **Rollback Speed** | "Sub-5 second instantaneous rollback to previous release." | [`vps-infra/README.md:3`](file:///d:/company/products/vps-infra/README.md#L3) | `DeployService.cs` issues `docker compose pull`, `stop`, `up` against mutable branch `main`. Takes 15–45s; fails entirely if internet/registry is slow; re-pulls broken image. | **MISLEADING** | Revise README claim to: "Automated rollback restoring verified local cached image". Implement immutable image digest rollback (MR-11, MR-12). |
+| **Offsite Backups** | "Automated daily offsite backup synchronization to AWS S3 and Cloudflare R2." | [`vps-infra/README.md:24`](file:///d:/company/products/vps-infra/README.md#L24) | Zero S3 or R2 code exists. `GoogleDriveService.cs` exists, but its return code is unchecked and local files remain on VM. | **MISLEADING** | Remove S3/R2 claim until implemented. Accurately document current Google Drive integration with verified return status (MR-14). |
+| **Zero Downtime** | "Zero-downtime rolling deployments with automated health circuit breakers." | [`vps-infra/docs/00-OVERVIEW`](file:///d:/company/products/vps-infra/docs/00-OVERVIEW) | `ExecuteDeploymentScriptAsync` runs `docker compose stop` before `docker compose up`. Containers incur 5–20s downtime. Zero readiness verification. | **MISLEADING** | Accurately document maintenance window / minimal downtime. Blue/Green requires dual capacity (MR-10). |
+| **Windows Support** | "Enterprise Windows Server IIS deployment daemon with SCM service management." | [`docs/02-deploying-applications/04-iis-hosted-apps.md`](file:///d:/company/products/vps-infra/docs/02-deploying-applications/04-iis-hosted-apps.md) | Distributed script has fatal AST parse error (DEF-28); SCM registration fails with Error 1053 (DEF-29); `setup.ps1` stops IIS (DEF-35). | **MISLEADING** | Document Windows support as "Beta / Experimental PowerShell Agent". Plan compiled .NET Worker `TMK.Agent.Windows` (MR-22). |
+| **Linux Support** | "Production-ready single-VM orchestration on Ubuntu 24.04 LTS." | [`vps-infra/README.md:45`](file:///d:/company/products/vps-infra/README.md#L45) | Traefik and Docker orchestration run, but database ports are exposed to WAN (F07) and setup copies default credentials (F02). | **PARTIAL** | Fix network isolation (MR-06) and dynamic credential generation (MR-07) to achieve true production readiness. |
+| **Supported Databases** | "Multi-engine support: PostgreSQL, MySQL/MariaDB, SQL Server, Oracle, and Redis." | [`vps-infra/docs/03-database-management`](file:///d:/company/products/vps-infra/docs/03-database-management) | PostgreSQL manifests exist. MariaDB/MSSQL lack tested backup pipelines. Oracle handler is defective (F19). Redis has 0 manifests in repo. | **MISLEADING** | Restrict Gate A documentation strictly to PostgreSQL 16. Label Oracle/MariaDB/MSSQL as "Future Enterprise Scope" (MR-20). |
+| **AI Features** | "Three autonomous AI SRE agents: Interactive Copilot, Build Failure Diagnosis, Daily Digest." | [`docs/06-AI-AGENT-PLATFORM-BRD/09_...`](file:///d:/company/products/vps-infra/vps-infra-server/docs/06-AI-AGENT-PLATFORM-BRD/09_THREE_AGENT_IMPLEMENTATION_AND_TECH_STACK_AUDIT.md) | Copilot is a regex keyword matcher with simulated typing delays; digest caches ignore tenancy; build diagnosis is static text parsing. | **MISLEADING** | Rename features to "Deterministic Operational Assistants"; eliminate simulated streaming delays (MR-21). |
+| **Automatic Cleanup** | "Intelligent automated Docker storage cleanup preserving deployment rollback caches." | [`vps-infra/scripts/cleanup-docker.sh`](file:///d:/company/products/vps-infra/vps-infra/scripts/cleanup-docker.sh) | `MonitoringService.cs` offers `docker system prune -a` which wipes all inactive images, destroying rollback capability. | **PARTIAL** | Implement digest-preserving mark-and-sweep cleanup; retain minimum 3 prior release digests (MR-17). |
+| **Monitoring** | "Real-time host and container performance telemetry with sub-second accuracy." | [`vps-infra/docs/04-operations-and-troubleshooting`](file:///d:/company/products/vps-infra/docs/04-operations-and-troubleshooting) | Docker stats queried via CLI; Windows telemetry erroneously sums all `w3wp` processes on host (DEF-33); fallback reports hardcoded 4096MB. | **PARTIAL** | Fix Windows AppPool PID mapping (MR-25); remove hardcoded telemetry fallbacks. |
+| **Outbound Alerts** | "Real-time multi-channel incident alerting via Email, Slack, and Microsoft Teams." | [`vps-infra/docs/04-operations-and-troubleshooting`](file:///d:/company/products/vps-infra/docs/04-operations-and-troubleshooting) | Zero Slack or Teams code exists. Email alerting exists in `DockerEventsBackgroundService.cs`, but is unverified in runtime. | **PARTIAL** | Remove Slack/Teams claims until implemented. Verify SMTP email alerting in runtime test (MR-18). |
+| **Disaster Recovery** | "Automated bare-metal disaster recovery drills with row-level integrity validation." | [`DisasterRecoveryService.cs`](file:///d:/company/products/vps-infra/vps-infra-server/devops-manager/api/Infrastructure/Services/DisasterRecoveryService.cs) | DR drill only checks table count > 0; non-zero `pg_restore` exit codes log warning without failing drill (F12). | **PARTIAL** | Require exit code 0; validate database row counts and referential integrity (MR-15). |
+| **CI / CD Pipeline** | "Enterprise dual-OS CI/CD pipeline building container and native Windows artifacts." | [`ci-server/api/build-runner.js`](file:///d:/company/products/vps-infra/vps-infra-server/ci-server/api/build-runner.js) | CI runner is Linux-only; tests receive host Docker socket (F01); CI cannot build native Windows IIS archives (DEF-37). | **MISLEADING** | Restrict Gate A to external isolated CI; document integrated CI limitations (MR-01, MR-29). |
+| **Platform Upgrades** | "One-click safe platform upgrades with health validation and automatic rollback." | [`SystemController.cs`](file:///d:/company/products/vps-infra/vps-infra-server/devops-manager/api/Controllers/SystemController.cs), [`PlatformUpgradeCard.tsx`](file:///d:/company/products/vps-infra/vps-infra-server/devops-manager/web/src/components/ui/PlatformUpgradeCard.tsx) | Runner container exists, but script performs `git reset --hard origin/main`, takes no DB backup, fakes health verification, and has no rollback. | **MISLEADING** | Implement real pre-upgrade DB backup, HTTP health check, and atomic rollback before claiming safe 1-click upgrades (MR-19). |
+| **Application Modernization Score** | "Enterprise architecture health scoring proving product readiness." | [`vps-infra/docs/03-OPERATIONS-AND-DEVOPS/APPLICATION_MODERNIZATION_SCORE_GUIDE.md`](file:///d:/company/products/vps-infra/vps-infra/docs/03-OPERATIONS-AND-DEVOPS/APPLICATION_MODERNIZATION_SCORE_GUIDE.md) | Uses shallow regex checks (`dirHasPattern`, `.csproj`); runs zero tests; recalculate endpoint returns 401 Unauthorized (MR-36). | **MISLEADING** | Rebrand as "Static Architectural Guidance"; document that AMS does not evaluate runtime production readiness (MR-37). |
