@@ -106,3 +106,23 @@ networks:
    - **Target Port**: `8080`
    - **Public Hostname**: `api.yourdomain.com`
 4. Click **"Save & Deploy"**. The CI engine will automatically build, deploy, and issue Let's Encrypt SSL certificates!
+
+---
+
+## 🔧 Step 4: Supporting Centralized Maintenance Mode
+
+VPS-Infra includes platform-wide **Centralized Maintenance Mode** enabling administrators to pause traffic during database migrations or major upgrades from the DevOps Manager UI.
+
+To support one-click maintenance mode toggling in your API:
+1. **Accept Environment Variables:** When activated, DevOps Manager passes:
+   ```env
+   SystemStatus__IsMaintenance=true
+   SystemStatus__StatusMessage="Scheduled database maintenance in progress."
+   ```
+2. **Expose `GET /api/system/status`:** Public endpoint returning `{ isMaintenance, statusMessage, showMaintenanceForWeb, showMaintenanceForMobile }`.
+3. **Bypass Health Probes:** Keep `/health` and `/healthz` returning `200 OK` so Traefik does not trigger container restarts.
+4. **Return HTTP 503:** When `isMaintenance == true`, intercept business endpoints and return `HTTP 503 Service Unavailable`.
+
+👉 **Complete Code Recipes (.NET, Node.js Express, Java Spring Boot, Python FastAPI):**
+See the [Maintenance Mode Application Integration Guide](./04-maintenance-mode-app-integration.md).
+

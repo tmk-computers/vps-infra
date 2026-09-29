@@ -124,3 +124,17 @@ COPY --from=build /app/test-results /test_results_backup
 * **Test Case Ingestion**: The CI runner parses `test-results/vitest-results.json` and records each individual test case, suite name, duration, and failure message directly into the `ci_build_tests` database table.
 * **Code Coverage Verification**: The coverage engine parses `coverage/lcov.info` using its native LCOV parser, records the overall line coverage percentage, and enforces your project's configured coverage thresholds.
 * **Workspace Cleanliness**: The CI runner automatically purges test report folders (`playwright-report`, `test-results`, `coverage`) after ingestion and executes hard resets on git pull, ensuring future builds never fail due to local merge conflicts.
+
+---
+
+## 🔧 Step 6: Handling Centralized Maintenance Mode
+
+When an administrator puts a product into maintenance mode, backend APIs respond with `HTTP 503 Service Unavailable`. To provide a polished user experience without page crashes or broken redirects:
+
+1. **Global Interceptor:** Trap `HTTP 503` responses containing `isMaintenance: true` in your Axios or Fetch client.
+2. **Maintenance Overlay Component:** Mount a non-dismissible `<MaintenanceOverlay />` component at the root of your application (`src/App.tsx`).
+3. **Zero-Reload Recovery:** Include a **"Check Again"** button that queries `/api/system/status`. When maintenance concludes (`isMaintenance: false`), the overlay automatically closes so users continue their work without losing unsaved form inputs.
+
+👉 **Complete Code Recipes (React, Angular, Vue):**
+See the [Maintenance Mode Application Integration Guide](./04-maintenance-mode-app-integration.md).
+
