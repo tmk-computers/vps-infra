@@ -208,26 +208,30 @@ Authorization: Bearer <TOKEN>
 
 ---
 
-## 6. Web Dashboard UI (`ci-server/web`)
+## 6. Accessing AMS on the UI
 
-The **Modernization Index** tab is integrated directly into the CI Server header navigation bar:
+The Application Modernization Score (AMS) is available across two primary administrative interfaces:
 
-1. **Modernization Hero Banner:**
-   - Real-time gauge displaying platform average score and tier grade.
-   - Global Cross-Cutting Concerns compliance meters.
-   - "Recalculate Platform AMS" action button.
-2. **Interactive Search & Grade Filter:**
-   - Filter products by name or deployable unit directory.
-   - Quick-toggle letter grade filters (`ALL`, `A+`, `A`, `B`, `C`, `D`, `F`).
-3. **Product Modernization Cards:**
-   - Individual product score dial and letter grade badge.
-   - Unit pills for `API`, `Web`, `Mobile`, `AI Service` with respective scores.
-   - CCC compliance status indicators (Auth, Maintenance Mode, Health Probes, Errors).
-   - Top prioritized remediation suggestion with estimated point gain (e.g. `+3 pts: Specify non-root user in Dockerfile`).
-4. **Architecture Inspection Drawer / Modal:**
-   - Full 5-dimension score breakdown with visual progress meters.
-   - Detailed checklist of test coverage %, runtime version, and container limits.
-   - Comprehensive prioritized remediation roadmap.
+### Option A: Directly in DevOps Manager Panel (Recommended)
+Accessible via `https://devops.tmkcomputers.in` (or local DevOps Manager URL):
+1. Navigate to **Product Suites & Maintenance** (`/products` in the sidebar).
+2. Look at the **AMS Health Score** column in the Products table:
+   - Each product displays an interactive letter grade pill and numerical score:
+     - `[A] 87.2 / 100` (Emerald for A/A+)
+     - `[B] 83.3 / 100` (Sky for B)
+     - `[C] 74.9 / 100` (Amber for C)
+3. Click on the badge or the **"Inspect"** button (`chart-timeline-variant-shimmer` icon):
+   - Opens the **Enterprise Application Modernization Score (AMS) Inspection Modal**:
+     - **Hero Banner:** Product Score, Letter Grade, and Grade Description.
+     - **On-Demand Recalculation:** "Recalculate Score" button that immediately rescans the codebase and live-refreshes the score.
+     - **Cross-Cutting Concerns (CCC) Posture:** 5 enterprise status cards for Authentication & RBAC, Global Error Handling, Centralized Maintenance Mode, Health Probes, and Structured Logging.
+     - **Deployable Units Grid:** Filter by unit type (`API`, `Web`, `Mobile`, `AI Service`) to inspect framework currency, container hygiene, test automation, and code tooling per repository.
+     - **High-Impact Remediation Roadmap:** Top prioritized suggestions with concrete estimated score boosts (e.g. `+5.0 pts: Add Non-root user in Dockerfile`).
+
+### Option B: Dedicated Modernization Index in CI Server UI
+Accessible via `https://ci.tmkcomputers.in`:
+1. In the top navigation bar, click the **"Modernization Index"** tab (next to *Build Logs*).
+2. Features the global platform health banner, grade distribution counters, grade filters (`ALL`, `A+`, `A`, `B`, `C`, `D`, `F`), and product score cards.
 
 ---
 
