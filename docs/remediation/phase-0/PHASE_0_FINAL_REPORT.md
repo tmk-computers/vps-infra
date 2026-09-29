@@ -27,14 +27,14 @@ The authoritative engineering baseline has been verified and frozen across both 
 - **Branch**: `main`
 - **Local HEAD SHA**: `780e8b4f152e039e9ee31ed46c71811e04947f7b`
 - **Remote HEAD SHA**: `780e8b4f152e039e9ee31ed46c71811e04947f7b` (`origin/main`)
-- **Working Tree**: Clean (`nothing to commit, working tree clean`)
+- **Working Tree**: Tracked working tree clean (0 modified files; untracked Phase 0 documentation artifacts present in `docs/remediation/`)
 - **Delta Commits**: 6 commits ahead of historical audit baseline `eab8df65aaf708875a922cf87c655d86156f402a`.
 
 ### Repository 2: `vps-infra-server`
 - **Branch**: `main`
 - **Local HEAD SHA**: `36354a32884fd0c03470d2b3f5333776f7aed6c9`
 - **Remote HEAD SHA**: `36354a32884fd0c03470d2b3f5333776f7aed6c9` (`origin/main`)
-- **Working Tree**: Clean (`nothing to commit, working tree clean`)
+- **Working Tree**: Tracked working tree clean (0 modified files; untracked Phase 0 documentation artifacts present in `docs/remediation/`)
 - **Delta Commits**: 10 commits ahead of historical audit baseline `a1f4a51ed3fb9e9751f83ec191a29f04e6971d32`.
 
 ---
@@ -66,19 +66,19 @@ The following **14 items** represent critical vulnerabilities or fatal defects t
 5. **MR-10**: Linux deployment reports success without application readiness verification (F08, DEF-01).
 6. **MR-12**: Rollback engine lacks immutable digests and restores to mutable branch `main`, re-pulling broken images (F08, F10, DEF-13).
 7. **MR-14**: Offsite backup success logged before upload outcome; return status unchecked; local dump only on single host (F11, DEF-02).
-8. **MR-19**: Upgrade script executes `git reset --hard origin/main`, takes no DB backup, fakes health verification, and has no rollback (F18).
+8. **MR-19**: Upgrade script executes `git reset --hard origin/main`, takes no DB backup, lacks health verification in the execution path resulting in unverified success declarations, and has no rollback (F18).
 9. **MR-22**: IIS Agent script in `vps-infra` has fatal AST syntax error (missing catch block); SCM fails with Error 1053 (F09, DEF-28, DEF-29).
 10. **MR-23**: Windows Agent binds only to `127.0.0.1:5055`, preventing Docker control-plane connectivity (DEF-30).
 11. **MR-27**: `setup.ps1` prompts user to stop IIS (`W3SVC`) to free ports 80/443, breaking native Windows hosting (DEF-35).
 12. **MR-28**: Windows Agent uses hardcoded fallback bearer secret `"SuperCiSecretKey123!"` (DEF-36).
-13. **MR-34**: Maintenance Mode fields added to entities without EF Core migration or seeding DDL; PostgreSQL instances crash on query (Current-Main).
+13. **MR-34**: Maintenance Mode fields added to entities without EF Core migration or seeding DDL; existing schemas lack maintenance columns causing PostgreSQL SQLSTATE 42703 errors and HTTP 500 responses on entity queries (PostgreSQL server does not crash) (Current-Main).
 14. **MR-35**: Compose regex replacement in `MaintenanceService.cs` contaminates all services in `docker-compose.yml` (Current-Main).
 
 ---
 
 ## 5. Pilot Gate A Blockers by Operating System
 
-### Shared Pilot Blockers (15 Items):
+### Shared Pilot Blockers (17 Items):
 - `MR-02`: Signing / Authentication Defaults
 - `MR-03`: Leaked / Committed Credentials
 - `MR-04`: Git Tokens & Secret Disclosure
@@ -115,13 +115,25 @@ The following **14 items** represent critical vulnerabilities or fatal defects t
 - `MR-28`: Windows Agent Authentication (Dynamic Secrets)
 - `MR-29`: Windows Artifact Pipeline (Cross-Compilation / Packaging)
 
+### Cross-Platform Certification Blocker (1 Item):
+- `MR-33`: Dual-OS Failure-Injection Certification (Mandatory Phase 11 validation on both Linux and Windows Server prior to Phase 12 Gate A)
+
+### Pilot Gate A Blocker Inventory Summary:
+- **Shared Technical Pilot Blockers**: 17 Items (`MR-02`, `MR-03`, `MR-04`, `MR-07`, `MR-08`, `MR-09`, `MR-11`, `MR-12`, `MR-13`, `MR-14`, `MR-15`, `MR-18`, `MR-19`, `MR-32`, `MR-34`, `MR-36`, `MR-37`)
+- **Linux-Specific Technical Pilot Blockers**: 6 Items (`MR-01`, `MR-05`, `MR-06`, `MR-10`, `MR-16`, `MR-35`)
+- **Windows-Specific Technical Pilot Blockers**: 8 Items (`MR-22`, `MR-23`, `MR-24`, `MR-25`, `MR-26`, `MR-27`, `MR-28`, `MR-29`)
+- **Cross-Platform Certification Blocker**: 1 Item (`MR-33`)
+- **Total Pilot Gate A Blockers**: **32 Items**
+- **Non-Blockers / Scope Governed**: **5 Items** (`MR-17`, `MR-20`, `MR-21`, `MR-30`, `MR-31`)
+- **Total Master Remediation Items**: **37 Items**
+
 ---
 
 ## 6. Newly Discovered Current-Main Findings (MR-34 — MR-37)
 
 1. **MR-34: Maintenance Schema Migration Gap (`Product.cs`, `ProjectService.cs`)**:
    - Commits `4c40800` and `3078a13` introduced 13 new properties across two database entities without an EF Core migration.
-   - Tests passed only due to `.UseInMemoryDatabase()`. Real PostgreSQL deployments will fail with missing column errors.
+   - Tests passed only due to `.UseInMemoryDatabase()`. Existing PostgreSQL schemas lack the newly required Maintenance Mode columns. Queries against affected entities fail with PostgreSQL SQLSTATE 42703 column-missing errors, propagating as HTTP 500 responses in the application. The PostgreSQL server itself does not crash.
 2. **MR-35: Compose Mutation Regex Contamination (`MaintenanceService.cs`)**:
    - Global regex replace updates `SystemStatus__IsMaintenance` across all services in `docker-compose.yml`. Toggling one service affects all services in the file.
 3. **MR-36: AMS Authorization & CI Auth Breakdown (`server.js`, `ProductController.cs`)**:
@@ -139,28 +151,36 @@ The following **14 items** represent critical vulnerabilities or fatal defects t
    - Linux Adapter utilizes Docker Compose, Traefik, and cgroup governance.
    - Windows Adapter will transition from `tmk-iis-agent.ps1` to a compiled `.NET Worker` Windows Service (`TMK.Agent.Windows`).
 2. **Release State Machine (ADR-02)**:
-   - 5-stage contract: `PRECHECK` → `PREPARED` → `APPLYING` → `VERIFYING` → `SUCCEEDED`.
-   - Automatic rollback to immutable content-addressed digests on failure.
-   - Server startup reconciliation replacing blind `INTERRUPTED` database writes.
+   - Durable lifecycle: `PENDING` → `PRECHECK` → `PREPARED` → `APPLYING` → `VERIFYING` → `CUTOVER` → `POST_CUTOVER_VERIFY` → `SUCCEEDED`.
+   - Single-host per-service atomic locking via PostgreSQL advisory locks and idempotency keys.
+   - Separation of stages: Application rollback reverts traffic routing to standby release; does NOT trigger automatic database restore.
+   - Expand/Contract schema evolution ensures backward compatibility.
+   - Server startup reconciliation replacing blind `INTERRUPTED` database writes without premature promotion.
 3. **CI Architecture Bifurcation (ADR-03)**:
    - Gate A certifies External Isolated CI (GitHub Actions).
    - Integrated CI retained for development; requires rootless daemon, cgroups, and network isolation before production qualification.
 4. **Database Scope Limitation (ADR-04)**:
-   - Gate A certifies PostgreSQL 16 exclusively.
+   - Gate A certifies PostgreSQL 16 exclusively (Linux: containerized; Windows: remote endpoint).
    - Oracle, MariaDB, SQL Server, and Redis are explicitly blocked/deferred in Gate A profiles.
 
 ---
 
 ## 8. Phase 1 Proposed Scope
 
+### 8.1 Prerequisite Database Alignment (Phase 0.5 / Pre-Validation)
+- **MR-34**: Create versioned EF Core migration `20261001000000_AddMaintenanceModeEntities.cs` for Maintenance Mode fields on `Product`, `ProjectService`, and `MaintenanceWindow`. Versioned EF Core migrations are the SOLE schema evolution authority (zero raw DDL in `DataSeeder.cs`; seeder bounded to data population; raw DDL removal in Phase 2 MR-13). Pass all 5 PostgreSQL acceptance test scenarios (P05-TC01 to P05-TC05) prior to Phase 1.
+
+### 8.2 Phase 1 Core Security Implementation Scope (9 Items)
 Phase 1 (Shared Security Foundation) will implement exclusively:
-- **MR-03**: Revoke leaked service account RSA private key in Google Cloud IAM; purge `devops-manager/api/google-drive-credentials.json` from git tracking.
-- **MR-02 & MR-07**: Implement dynamic high-entropy secret generation in setup scripts; fail API boot on static fallback keys.
-- **MR-04**: Strip Git tokens and sensitive secrets from read DTOs; implement credential encryption at rest; sanitize webhook logging.
-- **MR-08**: Enforce JWT tenant context extraction and tenant-scoped query filtering across all entity queries and CI authorizations.
-- **MR-34**: Create versioned EF Core migration for Maintenance Mode fields; update `DataSeeder.cs` with defensive idempotent DDL.
-- **MR-36**: Secure AMS routes in `ci-server` with `authenticateToken`; inject Bearer authentication in `ProductController` proxy requests.
-- **MR-37**: Update AMS UI labels and documentation to "Static Architectural Modernization".
+- **MR-02 & MR-07**: Implement dynamic high-entropy secret generation in setup scripts (`setup.sh`, `setup.ps1`); fail API boot on static fallback keys. F16.1: Encrypt AI API keys at rest. F16.2: Enforce monotonic streaming spend cap. (F16.3/F16.4 gated under Gate-A AI disablement).
+- **MR-03**: Revoke leaked service account RSA private key in Google Cloud IAM; purge `devops-manager/api/google-drive-credentials.json` from git history.
+- **MR-04**: Strip Git tokens and sensitive secrets from read DTOs; implement credential encryption at rest; sanitize webhook and process logging. DEF-15: Canonicalize `ProjectDirectory` via `Path.GetFullPath` prefix validation against tenant sandbox root.
+- **MR-05 & MR-06**: Eliminate public WAN exposure of database and administrative ports (bind to loopback/internal bridge) and provision isolated least-privilege PostgreSQL roles per application container.
+- **MR-08**: Multi-tenant RBAC and role separation: formally decouple `PlatformSuperAdmin` from `TenantAdmin` (DEF-11; no tenant SuperAdmin global bypass). DEF-08: Container hardening (UID 10001, drop capabilities, read-only rootfs, scoped socket proxy).
+- **MR-28**: Replace hardcoded Windows Agent fallback bearer secret (`"SuperCiSecretKey123!"`) with dynamically generated mutual authentication secrets (Dual-OS parity).
+- **MR-36**: Comprehensive Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, rotation, revocation). Pass all 9 Phase 1 negative test criteria.
+
+*(Note: MR-37 is relocated to Phase 9 alongside MR-21; pilot participants receive an explicit Pre-Pilot Operational Disclosure Note).*
 
 ---
 
@@ -176,10 +196,14 @@ The following items cannot be fully proven via static code review and require li
 
 ## 10. Developer Recommendation
 
-### **`READY FOR INDEPENDENT PHASE 0 REVIEW`**
+### **`READY FOR PHASE 0 INDEPENDENT RE-REVIEW AFTER CODEX REMEDIATION`**
 
 > [!IMPORTANT]
 > In strict accordance with Phase 0 governance:
+> 1. All 10 Codex findings (1 C0, 4 C1, 4 C2, 1 C3) have been explicitly remediated.
+> 2. Zero runtime, product, configuration, database, or test code was modified (`Runtime/Product/Test/Configuration Code Changed: NO`).
+> 3. Zero Phase 0.5 or Phase 1 implementations were initiated.
+> 4. Linux (Ubuntu 24.04 LTS) and Windows (Windows Server 2022) remain equal first-class targets with independent Gate A certification tracks.
 > - **Zero runtime or production implementation was changed during this phase.**
 > - **No database migrations or code fixes were applied.**
 > - **Phase 0 PASS cannot be declared by the Developer; acceptance rests exclusively with the independent Reviewer and the Codex Audit Gate.**

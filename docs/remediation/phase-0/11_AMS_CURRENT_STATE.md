@@ -14,13 +14,13 @@
 In commit `fd9bf54` ("feat(ci): implement Application Modernization Score (AMS) engine, REST APIs, and dashboard") and commit `f4fec2b`, the Application Modernization Score (AMS) subsystem was introduced into `ci-server` and `devops-manager`.
 
 This forensic review determines:
-1. **MR-36 (Authentication Breakdown & Anonymous Exposure — Pilot Blocker)**:
+1. **MR-36 (Authentication Breakdown & Anonymous Exposure — P1 Mandatory Gate-A Security Blocker)**:
    - In `ci-server/api/server.js`, AMS read endpoints use `optionalAuth`, allowing unauthenticated external callers to access complete architectural maps and compliance data.
    - In `ProductController.cs`, `RecalculateProductModernization()` calls CI server without a Bearer token, causing the calculation to fail with HTTP 401 Unauthorized because CI's `/calculate/:productId` requires `authenticateToken`.
-2. **MR-37 (Semantics & Commercial Truthfulness — Pilot Blocker)**:
+2. **MR-37 (Semantics & Commercial Truthfulness — Pre-Pilot Disclosure / Phase 9)**:
    - AMS is calculated entirely via static directory checks and shallow regex matching on source files (`dirHasPattern`, `.csproj`, `tests/`).
    - It performs ZERO dynamic test execution, ZERO build verification, and ZERO runtime health checks.
-   - It must be formally labeled and governed as **static architectural pattern analysis**, NEVER as proof of production readiness or release qualification.
+   - It must be formally labeled and governed as **static architectural pattern analysis**, NEVER as proof of production readiness or release qualification. Technical platform Gate A is governed by Deployment Safety (MR-10), while pilot customers receive a pre-pilot disclosure note, and full UI/documentation rebranding is executed in Phase 9.
 
 ---
 
@@ -75,13 +75,14 @@ This forensic review determines:
 
 ---
 
-## 3. Required Remediation Specifications (Phase 1 & Phase 2)
+## 3. Required Remediation Specifications (Phase 1 & Phase 9)
 
-1. **For MR-36 (Phase 1)**:
+1. **For MR-36 (Phase 1 — Shared Security Foundation)**:
    - Change `optionalAuth` to `authenticateToken` on all AMS routes in `ci-server/api/server.js`.
    - In `ProductController.cs`, inject service-to-service JWT token generator or forward caller's Bearer token in `HttpClient` requests to `ci-server`.
    - Add integration tests verifying that anonymous calls are rejected (401) and authenticated recalculation succeeds (200).
-2. **For MR-37 (Phase 1)**:
-   - Update documentation and UI headers in `Product.tsx` and `ModernizationDashboard.tsx`:
+2. **For MR-37 (Phase 9 — Documentation Truth & UI Labeling; Pre-Pilot Disclosure for Pilots)**:
+   - Pre-pilot requirement: Provide an explicit Pre-Pilot Operational Disclosure Note clarifying that AMS is a static code-pattern analysis and does not certify operational runtime stability.
+   - Phase 9 requirement: Update documentation and UI headers in `Product.tsx` and `ModernizationDashboard.tsx`:
      Change label from `"Production Readiness"` / `"Health Score"` to **`"Static Architectural Modernization"`**.
    - Explicitly document that AMS evaluates static heuristics, while deployment safety is governed independently by the Deployment State Machine (MR-10).

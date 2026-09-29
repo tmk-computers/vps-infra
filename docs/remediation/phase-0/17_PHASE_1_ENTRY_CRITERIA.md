@@ -26,22 +26,30 @@ Before Phase 1 (Shared Security Foundation) can be entered, all prerequisite eng
 | **6. Linux & Windows Support Explicit** | **SATISFIED** | Independent matrices for Linux Gate A (Ubuntu 24.04) and Windows Gate A (Windows Server 2022) frozen in [`05_SUPPORTED_OS_MATRIX.md`](file:///d:/company/products/vps-infra/vps-infra-server/docs/remediation/phase-0/05_SUPPORTED_OS_MATRIX.md). |
 | **7. Target Architecture Frozen** | **SATISFIED** | Shared Platform Core decoupled from Linux and Windows Adapters specified in [`04_TARGET_ARCHITECTURE.md`](file:///d:/company/products/vps-infra/vps-infra-server/docs/remediation/phase-0/04_TARGET_ARCHITECTURE.md). |
 | **8. CI Trust Boundary Explicit** | **SATISFIED** | External isolated CI specified for Gate A; requirements for integrated CI frozen in [`13_CI_TRUST_MODEL.md`](file:///d:/company/products/vps-infra/vps-infra-server/docs/remediation/phase-0/13_CI_TRUST_MODEL.md). |
-| **9. Deployment Safety Contract Explicit** | **SATISFIED** | 5-stage state machine (`PRECHECK` → `PREPARED` → `APPLYING` → `VERIFYING` → `SUCCEEDED`) and crash recovery specified in [`07_DEPLOYMENT_SAFETY_CONTRACT.md`](file:///d:/company/products/vps-infra/vps-infra-server/docs/remediation/phase-0/07_DEPLOYMENT_SAFETY_CONTRACT.md). |
-| **10. Backup & Recovery Contract Explicit** | **SATISFIED** | 4-stage backup model (creation, dispatch, verification, restore) specified in [`09_BACKUP_RECOVERY_CONTRACT.md`](file:///d:/company/products/vps-infra/vps-infra-server/docs/remediation/phase-0/09_BACKUP_RECOVERY_CONTRACT.md). |
+| **9. Deployment Safety Contract Explicit** | **SATISFIED** | Durable state machine (`PRECHECK` → `PREPARED` → `APPLYING` → `VERIFYING` → `CUTOVER` → `POST_CUTOVER_VERIFY` → `SUCCEEDED`), single-host atomic locking, expand/contract migrations, and decoupled DB restore specified in [`07_DEPLOYMENT_SAFETY_CONTRACT.md`](file:///d:/company/products/vps-infra/vps-infra-server/docs/remediation/phase-0/07_DEPLOYMENT_SAFETY_CONTRACT.md). |
+| **10. Backup & Recovery Contract Explicit** | **SATISFIED** | 7-stage backup pipeline, client-side AES-256-GCM encryption, offsite BIP-39 key escrow, format-aware `pg_restore --list`, and recovery manifests specified in [`09_BACKUP_RECOVERY_CONTRACT.md`](file:///d:/company/products/vps-infra/vps-infra-server/docs/remediation/phase-0/09_BACKUP_RECOVERY_CONTRACT.md). |
 | **11. Maintenance Mode Findings Captured** | **SATISFIED** | Captured as MR-34 (Schema migration gap) and MR-35 (Service isolation defect) in [`10_MAINTENANCE_MODE_CURRENT_STATE.md`](file:///d:/company/products/vps-infra/vps-infra-server/docs/remediation/phase-0/10_MAINTENANCE_MODE_CURRENT_STATE.md). |
 | **12. AMS Findings Captured** | **SATISFIED** | Captured as MR-36 (Auth failure & anonymous access) and MR-37 (Static heuristic semantics) in [`11_AMS_CURRENT_STATE.md`](file:///d:/company/products/vps-infra/vps-infra-server/docs/remediation/phase-0/11_AMS_CURRENT_STATE.md). |
-| **13. Upgrade System Findings Captured** | **SATISFIED** | Captured as MR-19 (Faked health verification & hard reset) in [`12_UPGRADE_CURRENT_STATE.md`](file:///d:/company/products/vps-infra/vps-infra-server/docs/remediation/phase-0/12_UPGRADE_CURRENT_STATE.md). |
-| **14. Zero Historical Blockers Dropped** | **SATISFIED** | All 26 historical pilot blockers (Codex P0/P1 and Antigravity P0/P1) accounted for with active master IDs. |
+| **13. Upgrade System Findings Captured** | **SATISFIED** | Captured as MR-19 (Absent health verification in execution path & hard reset) in [`12_UPGRADE_CURRENT_STATE.md`](file:///d:/company/products/vps-infra/vps-infra-server/docs/remediation/phase-0/12_UPGRADE_CURRENT_STATE.md). |
+| **14. Zero Historical Blockers Dropped** | **SATISFIED** | All 26 historical pilot blockers (Codex P0/P1 and Antigravity P0/P1) accounted for with active master IDs and explicit child obligation traceability. |
 
 ---
 
 ## 3. Scope Specification for Phase 1 (Shared Security Foundation)
 
-Upon independent sign-off, Phase 1 execution will commence covering exclusively the following items:
-1. **MR-03**: Revoke leaked service account RSA private key; purge `devops-manager/api/google-drive-credentials.json` from git tracking.
-2. **MR-02 & MR-07**: Implement dynamic high-entropy secret generation on setup; enforce startup failure on static default keys.
-3. **MR-04**: Strip Git tokens and sensitive fields from read DTOs; implement field-level encryption for stored credentials; sanitize webhook logging.
-4. **MR-08**: Enforce tenant context extraction from JWT and tenant-scoped filtering on all entity queries and CI build authorizations.
-5. **MR-34**: Create versioned EF Core migration for Maintenance Mode fields on `Product` and `ProjectService`; add defensive idempotent DDL to `DataSeeder.cs`.
-6. **MR-36**: Secure AMS endpoints in `ci-server` with `authenticateToken`; inject Bearer authentication in `ProductController` proxy requests.
-7. **MR-37**: Update documentation and UI labels for AMS to state "Static Architectural Analysis".
+### 3.1 Prerequisite Database Alignment (Phase 0.5 / Pre-Validation)
+- **MR-34**: Create versioned EF Core migration `20261001000000_AddMaintenanceModeEntities.cs` for Maintenance Mode fields on `Product`, `ProjectService`, and `MaintenanceWindow`. Versioned EF Core migrations are the SOLE schema evolution authority (zero raw DDL in `DataSeeder.cs`; seeder bounded to data population; raw DDL removal in Phase 2 MR-13). Pass all 5 PostgreSQL acceptance test scenarios (P05-TC01 to P05-TC05) prior to Phase 1.
+
+### 3.2 Phase 1 Core Security Implementation Scope (9 Items)
+Upon independent sign-off, Phase 1 execution will commence covering exclusively the following security foundation items:
+1. **MR-02**: Enforce secure signing/authentication defaults; eliminate hardcoded fallback JWT keys. Default key on startup HALTS application.
+2. **MR-03**: Revoke leaked service account RSA private key; purge `devops-manager/api/google-drive-credentials.json` from git history.
+3. **MR-04**: Strip Git tokens and sensitive fields from read DTOs; implement credential protection; sanitize logging. DEF-15: Canonicalize `ProjectDirectory` via `Path.GetFullPath` prefix check against tenant sandbox root.
+4. **MR-05**: Implement least-privilege PostgreSQL database roles for application containers.
+5. **MR-06**: Eliminate public WAN exposure of database and administrative ports (bind to loopback/internal bridge).
+6. **MR-07**: Implement dynamic high-entropy secret generation on setup across provisioning scripts (`setup.sh`, `setup.ps1`). F16.1: Encrypt AI keys at rest. F16.2: Enforce monotonic streaming spend cap. (F16.3/F16.4 gated under Gate-A AI disablement).
+7. **MR-08**: Multi-tenant RBAC and role separation: formally decouple `PlatformSuperAdmin` from `TenantAdmin` (DEF-11). DEF-08: Container hardening (UID 10001, capability dropping, read-only rootfs, scoped socket proxy).
+8. **MR-28**: Replace hardcoded Windows Agent fallback bearer secret with dynamically provisioned mutual authentication secrets (Dual-OS parity).
+9. **MR-36**: Comprehensive Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, rotation, revocation). Pass all 9 negative test criteria.
+
+*(Note: MR-37 UI copywriting and documentation labeling is relocated to Phase 9 alongside MR-21, with pre-pilot disclosure provided for pilots).*

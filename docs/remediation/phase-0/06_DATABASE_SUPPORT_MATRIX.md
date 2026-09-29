@@ -35,16 +35,18 @@ Lifecycle Classification Tiers:
 
 ## 3. Pilot Gate A Approved Database Profile
 
-### 3.1 Exclusively Supported: PostgreSQL 16 (Alpine)
-- **Container Name**: `shared_postgres`
-- **Host Network Boundary**: Network namespace isolated; port `5432` bound strictly to `127.0.0.1` or omitted from public `ports` block, communicating only across the internal `traefik_net` Docker bridge.
+### 3.1 Exclusively Supported: PostgreSQL 16
+- **Linux Deployment Topology**: Containerized on internal `traefik_net` bridge (`shared_postgres`), port 5432 bound strictly to `127.0.0.1` or internal bridge.
+- **Windows Deployment Topology**: Remote PostgreSQL 16 endpoint (dedicated Linux VM or managed PostgreSQL service) accessed over TLS port 5432. (WSL2 and Docker Desktop on Windows Server are explicitly uncertified and prohibited for Gate A).
 - **Role Isolation**:
   - `devops_admin`: Dedicated role for DevOps Manager platform schema.
   - Per-Application User: Unique least-privilege role per customer application (e.g. `kaksha_user`) with permissions restricted strictly to its own database.
   - Prohibition of shared superuser credentials in application compose files.
 - **Backup & DR Standard**:
-  - Automated daily `pg_dump` with gzip compression.
-  - Atomic offsite dispatch to verified cloud storage with remote digest check.
+  - Automated daily consistent snapshot via `pg_dump -Fc` (custom format).
+  - Format-aware local verification via `pg_restore --list` (validating archive header, compression blocks, and table of contents; invalid `gzip -t` prohibited).
+  - Client-side envelope encryption with AES-256-GCM using off-host escrowed key recovery kit.
+  - Atomic offsite dispatch to verified cloud storage with remote SHA-256 digest check and authenticated `RecoveryPoint` manifest cataloging.
   - Periodic automated DR drill verifying table row counts and integrity invariants.
 
 ### 3.2 Enforcement for Other Engines
