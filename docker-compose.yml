@@ -77,6 +77,7 @@ services:
       - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/apps/devops-api/prod/uploads:/app/uploads
       - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/apps/devops-api/prod/logs:/app/logs
       - ${DOCKER_CONFIG_PATH:-/root/.docker}:/root/.docker:ro
+      - ${SSH_CONFIG_PATH:-/root/.ssh}:/root/.ssh:ro
 
     networks:
       - traefik_net

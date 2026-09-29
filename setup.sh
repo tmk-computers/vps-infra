@@ -606,6 +606,7 @@ if [ "$DEPLOYMENT_MODE" != "ci-only" ]; then
 fi
 
 echo -e "\n${CYAN}▶ Pulling and Starting Platform Services (Profile: ${COMPOSE_PROFILES})...${NC}"
+docker compose -f "$COMPOSE_FILE" --profile "$COMPOSE_PROFILES" --env-file "$SCRIPT_DIR/.env" pull || true
 docker compose -f "$COMPOSE_FILE" --profile "$COMPOSE_PROFILES" --env-file "$SCRIPT_DIR/.env" up -d
 
 # Verify account creation before presenting the configured credentials.
