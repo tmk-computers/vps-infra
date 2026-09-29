@@ -50,6 +50,7 @@ Welcome to the **VPS-Infra** customer documentation center. Follow the sequentia
 3. [`04-operations-and-troubleshooting/03-disaster-recovery.md`](04-operations-and-troubleshooting/03-disaster-recovery.md): Complete 15-minute server migration and rebuild runbook.
 4. [`03-OPERATIONS-AND-DEVOPS/DUAL_TOPOLOGY_DEPLOYMENT_GUIDE.md`](./03-OPERATIONS-AND-DEVOPS/DUAL_TOPOLOGY_DEPLOYMENT_GUIDE.md): Dual-topology architecture (All-in-One vs Distributed), Docker registry configuration, and REST API CI synchronization.
 5. [`03-OPERATIONS-AND-DEVOPS/CENTRALIZED_MAINTENANCE_MODE_GUIDE.md`](./03-OPERATIONS-AND-DEVOPS/CENTRALIZED_MAINTENANCE_MODE_GUIDE.md): Centralized system maintenance mode architecture, runbook, and Kaksha+ end-to-end execution flow.
+6. [`03-OPERATIONS-AND-DEVOPS/APPLICATION_MODERNIZATION_SCORE_GUIDE.md`](./03-OPERATIONS-AND-DEVOPS/APPLICATION_MODERNIZATION_SCORE_GUIDE.md): Application Modernization Score (AMS) calculation engine, 5-dimension rubric, REST APIs, and CI dashboard.
 
 ---
 
