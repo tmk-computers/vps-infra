@@ -168,17 +168,17 @@ The following **14 items** represent critical vulnerabilities or fatal defects t
 ## 8. Phase 1 Proposed Scope
 
 ### 8.1 Prerequisite Database Alignment (Phase 0.5 / Pre-Validation)
-- **MR-34**: Create versioned EF Core migration `20261001000000_AddMaintenanceModeEntities.cs` for Maintenance Mode fields on `Product`, `ProjectService`, and `MaintenanceWindow`. Versioned EF Core migrations are the SOLE schema evolution authority (zero raw DDL in `DataSeeder.cs`; seeder bounded to data population; raw DDL removal in Phase 2 MR-13). Pass all 5 PostgreSQL acceptance test scenarios (P05-TC01 to P05-TC05) prior to Phase 1.
+- **MR-34**: Create versioned EF Core migration `20261001000000_AddMaintenanceModeFields.cs` adding exactly 13 maintenance properties across 2 real entities: `Product` (8 fields) and `ProjectService` (5 fields). Versioned EF Core migrations are the SOLE schema evolution authority. Competing raw DDL in `DataSeeder.cs:46-168` MUST be neutralized and disabled prior to Phase 0.5 acceptance (bounding seeder exclusively to seed data insertion; full legacy non-DDL seeder cleanup in Phase 2 MR-13). Pass all 5 PostgreSQL acceptance test scenarios (P05-TC01 to P05-TC05) prior to Phase 1.
 
 ### 8.2 Phase 1 Core Security Implementation Scope (9 Items)
 Phase 1 (Shared Security Foundation) will implement exclusively:
 - **MR-02 & MR-07**: Implement dynamic high-entropy secret generation in setup scripts (`setup.sh`, `setup.ps1`); fail API boot on static fallback keys. F16.1: Encrypt AI API keys at rest. F16.2: Enforce monotonic streaming spend cap. (F16.3/F16.4 gated under Gate-A AI disablement).
 - **MR-03**: Revoke leaked service account RSA private key in Google Cloud IAM; purge `devops-manager/api/google-drive-credentials.json` from git history.
-- **MR-04**: Strip Git tokens and sensitive secrets from read DTOs; implement credential encryption at rest; sanitize webhook and process logging. DEF-15: Canonicalize `ProjectDirectory` via `Path.GetFullPath` prefix validation against tenant sandbox root.
+- **MR-04**: Strip Git tokens and sensitive secrets from read DTOs; implement credential encryption at rest; sanitize webhook and process logging. DEF-15: Canonicalize `ProjectDirectory` via `Path.GetFullPath` with trailing directory separator / segment-boundary validation against tenant sandbox root.
 - **MR-05 & MR-06**: Eliminate public WAN exposure of database and administrative ports (bind to loopback/internal bridge) and provision isolated least-privilege PostgreSQL roles per application container.
 - **MR-08**: Multi-tenant RBAC and role separation: formally decouple `PlatformSuperAdmin` from `TenantAdmin` (DEF-11; no tenant SuperAdmin global bypass). DEF-08: Container hardening (UID 10001, drop capabilities, read-only rootfs, scoped socket proxy).
-- **MR-28**: Replace hardcoded Windows Agent fallback bearer secret (`"SuperCiSecretKey123!"`) with dynamically generated mutual authentication secrets (Dual-OS parity).
-- **MR-36**: Comprehensive Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, rotation, revocation). Pass all 9 Phase 1 negative test criteria.
+- **MR-28**: Replace hardcoded Windows Agent fallback bearer secret (`"SuperCiSecretKey123!"` currently present in `scripts/tmk-iis-agent.ps1:21`) with dynamically generated mutual authentication secrets (Dual-OS parity target contract; agent and API fail startup if static fallback secret is present).
+- **MR-36**: Comprehensive Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, rotation, revocation). Pass all 15 Phase 1 negative test criteria (SEC-NEG-01 to SEC-NEG-15).
 
 *(Note: MR-37 is relocated to Phase 9 alongside MR-21; pilot participants receive an explicit Pre-Pilot Operational Disclosure Note).*
 

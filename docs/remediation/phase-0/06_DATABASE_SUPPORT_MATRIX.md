@@ -37,7 +37,7 @@ Lifecycle Classification Tiers:
 
 ### 3.1 Exclusively Supported: PostgreSQL 16
 - **Linux Deployment Topology**: Containerized on internal `traefik_net` bridge (`shared_postgres`), port 5432 bound strictly to `127.0.0.1` or internal bridge.
-- **Windows Deployment Topology**: Remote PostgreSQL 16 endpoint (dedicated Linux VM or managed PostgreSQL service) accessed over authenticated TLS port 5432 (`Trust Server Certificate=false`). (WSL2 and Docker Desktop on Windows Server are explicitly uncertified and prohibited for Gate A).
+- **Windows Deployment Topology**: Remote PostgreSQL 16 endpoint (dedicated Linux VM or managed PostgreSQL service) accessed over authenticated TLS port 5432 (`SSL Mode=VerifyFull` with validated CA and hostname verification; unauthenticated trust bypass is strictly prohibited). (WSL2 and Docker Desktop on Windows Server are explicitly uncertified and prohibited for Gate A).
 - **Role Isolation**:
   - `devops_admin`: Dedicated role for DevOps Manager platform schema.
   - Per-Application User: Unique least-privilege role per customer application (e.g. `kaksha_user`) with permissions restricted strictly to its own database.
