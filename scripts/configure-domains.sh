@@ -12,6 +12,15 @@ valid_domain() {
     done
 }
 
+private_domain() {
+    local domain="$1" a b c d
+    [[ "$domain" == *.lan || "$domain" == *.local || "$domain" == *.internal ]] && return 0
+    [[ "$domain" =~ ^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] || return 1
+    a=${BASH_REMATCH[1]}; b=${BASH_REMATCH[2]}; c=${BASH_REMATCH[3]}; d=${BASH_REMATCH[4]}
+    (( a <= 255 && b <= 255 && c <= 255 && d <= 255 )) &&
+        (( a == 10 || (a == 172 && b >= 16 && b <= 31) || (a == 192 && b == 168) ))
+}
+
 save_domain_value() {
     local key="$1" value="$2" temporary
     temporary=$(mktemp "${SCRIPT_DIR}/.env.domains.XXXXXX") || return 1
@@ -27,13 +36,13 @@ save_domain_value() {
 
 configure_domains() {
     local domain="${TMK_ARG_DOMAIN:-${PRIMARY_DOMAIN:-}}" key prefix value
-    if ! valid_domain "$domain"; then
+    if ! valid_domain "$domain" && ! private_domain "$domain"; then
         if [[ -n "${TMK_ARG_DOMAIN:-}" || ! -t 0 ]]; then
             echo "A real primary domain is required. Run ./setup.sh --domain company.com (use your own domain)." >&2
             return 1
         fi
         read -r -p "Primary domain (for example, company.com): " domain
-        valid_domain "$domain" || { echo "Invalid primary domain: $domain" >&2; return 1; }
+        { valid_domain "$domain" || private_domain "$domain"; } || { echo "Invalid primary domain: $domain" >&2; return 1; }
     fi
 
     # Validate every explicit override before writing any configuration.

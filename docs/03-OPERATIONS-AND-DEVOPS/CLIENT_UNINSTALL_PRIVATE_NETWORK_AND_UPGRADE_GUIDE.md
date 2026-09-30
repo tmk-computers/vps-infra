@@ -93,15 +93,9 @@ ENABLE_HTTPS_REDIRECT=false
 ```
 
 ### 2.3 Automatic Network Mode Detection in `setup.sh`
-`setup.sh` automatically evaluates the network environment:
-* If `PRIMARY_DOMAIN` is an IP address matching RFC 1918 ranges, or ends with `.lan` / `.local` / `.internal`:
-  * `setup.sh` automatically sets `NETWORK_MODE=private`.
-  * Traefik ACME challenge is disabled.
-  * Router rules in Traefik are configured with dual matching:
-    ```yaml
-    traefik.http.routers.devops-web-prod.rule: "Host(`${DEVOPS_WEB_HOST}`) || Host(`${PRIVATE_IP}`) || HostRegexp(`^[0-9.]+$`)"
-    ```
-  * Users on the internal network can navigate directly to `http://192.168.1.100` and immediately access the DevOps Manager dashboard.
+`setup.sh` detects an RFC 1918 `PRIMARY_DOMAIN` or `PRIVATE_IP`, and `.lan`, `.local`, or `.internal` primary domains. It sets `NETWORK_MODE=private` and `ENABLE_HTTPS_REDIRECT=false` so browser requests stay on HTTP. When `PRIMARY_DOMAIN` itself is a private IPv4 address and `PRIVATE_IP` is unset or loopback, setup uses that address as `PRIVATE_IP`.
+
+The DevOps web HTTP router matches its configured hostname and `PRIVATE_IP`. Set `PRIVATE_IP` to the server's reachable LAN address, then rerun `bash setup.sh` to apply the router labels. For example, clients on the same LAN can open `http://192.168.1.100`. The direct URL will not work if that address belongs to another device, is not assigned/routed to this server, or inbound TCP port 80 is blocked by the host or network firewall. Private mode serves the dashboard over HTTP; HTTPS routers remain configured for public-domain access and should not be used for the private IP unless a trusted certificate is configured.
 
 ---
 

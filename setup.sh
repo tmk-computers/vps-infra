@@ -288,6 +288,27 @@ fi
 source "$SCRIPT_DIR/scripts/configure-domains.sh"
 configure_domains
 
+# Detect private-only deployments before starting Traefik. A private primary
+# domain is supported when configured directly; PRIVATE_IP also identifies a
+# LAN deployment when PRIMARY_DOMAIN remains a public DNS name.
+is_rfc1918_ipv4() {
+    local address="$1" a b c d
+    [[ "$address" =~ ^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] || return 1
+    a=${BASH_REMATCH[1]}; b=${BASH_REMATCH[2]}; c=${BASH_REMATCH[3]}; d=${BASH_REMATCH[4]}
+    (( a <= 255 && b <= 255 && c <= 255 && d <= 255 )) || return 1
+    (( a == 10 || (a == 172 && b >= 16 && b <= 31) || (a == 192 && b == 168) ))
+}
+
+if is_rfc1918_ipv4 "${PRIMARY_DOMAIN:-}" || is_rfc1918_ipv4 "${PRIVATE_IP:-}" ||
+   [[ "${PRIMARY_DOMAIN:-}" == *.lan || "${PRIMARY_DOMAIN:-}" == *.local || "${PRIMARY_DOMAIN:-}" == *.internal ]]; then
+    if is_rfc1918_ipv4 "${PRIMARY_DOMAIN:-}" && [[ "${PRIVATE_IP:-127.0.0.1}" == 127.0.0.1 ]]; then
+        set_env_val PRIVATE_IP "$PRIMARY_DOMAIN"
+    fi
+    set_env_val NETWORK_MODE private
+    set_env_val ENABLE_HTTPS_REDIRECT false
+    echo -e "${YELLOW}▶ Private network detected; using direct HTTP access and disabling HTTPS redirect.${NC}"
+fi
+
 # 4. Create external Docker network
 echo -e "${CYAN}▶ Ensuring 'traefik_net' Docker network exists...${NC}"
 if ! docker network inspect traefik_net &> /dev/null; then
