@@ -25,14 +25,53 @@ save_domain_value() {
     export "$key=$value"
 }
 
+is_ip_address() {
+    local ip="$1"
+    local -a octets
+    IFS=. read -r -a octets <<< "$ip"
+    [[ ${#octets[@]} -eq 4 ]] || return 1
+    local octet
+    for octet in "${octets[@]}"; do
+        [[ "$octet" =~ ^[0-9]+$ ]] || return 1
+        [[ "$octet" -ge 0 && "$octet" -le 255 ]] || return 1
+    done
+    return 0
+}
+
 configure_domains() {
     local domain="${TMK_ARG_DOMAIN:-${PRIMARY_DOMAIN:-}}" key prefix value
+
+    if is_ip_address "$domain"; then
+        echo "Detected IP address for PRIMARY_DOMAIN: $domain"
+        mkdir -p "$SCRIPT_DIR/volumes/env-backups" || return 1
+        cp -p "$SCRIPT_DIR/.env" "$SCRIPT_DIR/volumes/env-backups/.env.backup.$(date +%Y%m%d%H%M%S).$$" || return 1
+        save_domain_value PRIMARY_DOMAIN "$domain"
+        save_domain_value NETWORK_MODE "private"
+        save_domain_value PRIVATE_IP "$domain"
+        save_domain_value ENABLE_HTTPS_REDIRECT "false"
+        save_domain_value DEVOPS_WEB_HOST "$domain"
+        save_domain_value DEVOPS_API_HOST "$domain"
+        save_domain_value CI_WEB_HOST "$domain"
+        save_domain_value CI_API_HOST "$domain"
+        save_domain_value REGISTRY_HOST "$domain"
+        save_domain_value PGADMIN_HOST "$domain"
+        save_domain_value PHPMYADMIN_HOST "$domain"
+        save_domain_value TRAEFIK_DASHBOARD_HOST "$domain"
+        save_domain_value MONGO_EXPRESS_HOST "$domain"
+        echo "IP address configuration saved. Direct access enabled at http://$domain"
+        return 0
+    fi
+
     if ! valid_domain "$domain"; then
         if [[ -n "${TMK_ARG_DOMAIN:-}" || ! -t 0 ]]; then
             echo "A real primary domain is required. Run ./setup.sh --domain company.com (use your own domain)." >&2
             return 1
         fi
         read -r -p "Primary domain (for example, company.com): " domain
+        if is_ip_address "$domain"; then
+            TMK_ARG_DOMAIN="$domain" configure_domains
+            return $?
+        fi
         valid_domain "$domain" || { echo "Invalid primary domain: $domain" >&2; return 1; }
     fi
 
@@ -41,7 +80,7 @@ configure_domains() {
         value="${!key}"
         case "$value" in
             ''|yourdomain.com|*.yourdomain.com|example.com|*.example.com) ;;
-            *) valid_domain "$value" || { echo "Invalid hostname in $key: $value" >&2; return 1; } ;;
+            *) is_ip_address "$value" || valid_domain "$value" || { echo "Invalid hostname in $key: $value" >&2; return 1; } ;;
         esac
     done
 
