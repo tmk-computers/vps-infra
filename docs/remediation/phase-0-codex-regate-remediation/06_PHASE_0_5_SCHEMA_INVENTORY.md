@@ -47,10 +47,10 @@ Direct source inspection of the entity definitions in `devops-manager/api/Data/E
 4. **Nonexistent Entities in Codebase**:
    - Entities named `MaintenanceWindow` or `ServiceMaintenance` **DO NOT EXIST** in the C# codebase. References to them in earlier remediation documents were erroneous and are formally excised.
 5. **Existing Migrations in Codebase**:
-   - `devops-manager/api/Migrations/` contains migrations up to initial baseline (`InitialCreate`).
-   - None of the 13 maintenance properties exist in the EF Core migration history (`__EFMigrationsHistory`) or in `ApplicationDbContextModelSnapshot.cs`.
+   - `devops-manager/api/Migrations/` contains 13 versioned migrations spanning from `20260123103215_InitialCreate.cs` through `20260831080000_AddDatabaseServerToProjectService.cs`.
+   - None of the 13 maintenance properties exist in the EF Core migration files or in `ApplicationDbContextModelSnapshot.cs`. (Deployed database history was not directly queried).
 6. **Existing `DataSeeder.cs` Raw DDL Conflict**:
-   - `devops-manager/api/Data/DataSeeder.cs` lines 46–168 execute raw SQL `ALTER TABLE` and `CREATE TABLE IF NOT EXISTS` queries in a catch block, which historically masked missing EF migrations and caused PostgreSQL runtime errors (`42703: undefined_column`).
+   - `devops-manager/api/Data/DataSeeder.cs` lines 46–168 execute raw SQL `ALTER TABLE` and `CREATE TABLE IF NOT EXISTS` queries inside a `try` block with a swallowed `catch { }` block, which masked missing EF migrations and caused PostgreSQL runtime errors (`42703: undefined_column`). This raw DDL must be neutralized and disabled prior to Phase 0.5 acceptance.
 
 ---
 

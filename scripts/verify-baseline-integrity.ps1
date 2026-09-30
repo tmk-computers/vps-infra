@@ -121,6 +121,7 @@ $dirsToVerify = @(
     "docs\remediation\phase-0-codex-remediation",
     "docs\remediation\phase-0-codex-regate-remediation",
     "docs\remediation\phase-0-final-closure",
+    "docs\remediation\phase-0-final-codex-correction",
     "docs\remediation\phase-0-review"
 )
 
@@ -177,7 +178,7 @@ foreach ($relDir in $dirsToVerify) {
 if (-not $allMatched) {
     Write-Error "Assertion Failed: Mirror files do not match bit-for-bit."
 } else {
-    Write-Host "  PASS: $fileCount documentation artifacts verified with 100% bit-for-bit SHA-256 equality across all 5 active directories." -ForegroundColor Green
+    Write-Host "  PASS: $fileCount documentation artifacts verified with 100% bit-for-bit SHA-256 equality across all $($dirsToVerify.Count) active directories." -ForegroundColor Green
 }
 
 # 5. Stale Forbidden Phrases Scan in Authoritative Phase 0 Baseline
@@ -191,7 +192,9 @@ $forbiddenPatterns = @(
     @{ Pattern = 'Trust Server Certificate\s*=\s*true'; Description = 'Insecure TLS certificate trust' },
     @{ Pattern = 'Redis denylist'; Description = 'Mandatory Redis denylist requirement' },
     @{ Pattern = '\bLocalService\b'; Description = 'Unqualified LocalService agent identity' },
-    @{ Pattern = 'Optional / Not Gate-A Certified Dependency'; Description = 'Stale Redis exclusion classification' }
+    @{ Pattern = 'Optional / Not Gate-A Certified Dependency'; Description = 'Stale Redis exclusion classification' },
+    @{ Pattern = 'revocation grace (period|window)'; Description = 'Stale revocation grace period semantics' },
+    @{ Pattern = 'SSL Mode\s*=\s*Require\s*;\s*Trust Server Certificate\s*=\s*false'; Description = 'Stale Npgsql Require TLS alternative' }
 )
 
 $forbiddenFound = 0
@@ -209,6 +212,28 @@ if ($forbiddenFound -gt 0) {
     Write-Error "Assertion Failed: Found $forbiddenFound forbidden stale phrases in authoritative Phase 0 baseline."
 } else {
     Write-Host "  PASS: Zero forbidden stale phrases found in authoritative Phase 0 baseline." -ForegroundColor Green
+}
+
+# 6. Authoritative Security Invariants & Correction Dossier Existence
+Write-Host "`n[Check 6] Authoritative Invariant Language & Dossier Existence..." -ForegroundColor Yellow
+$correctionDir = Join-Path $serverRoot "docs\remediation\phase-0-final-codex-correction"
+if (-not (Test-Path $correctionDir)) {
+    Write-Error "Assertion Failed: Required correction dossier missing: $correctionDir"
+}
+
+$secDoc = Join-Path $authDir "08_SECURITY_BOUNDARIES.md"
+$revocationEffectiveFound = $false
+if (Test-Path $secDoc) {
+    $secContent = Get-Content $secDoc -Raw
+    if ($secContent -match 'Revocation Effective Point') {
+        $revocationEffectiveFound = $true
+    }
+}
+
+if (-not $revocationEffectiveFound) {
+    Write-Error "Assertion Failed: Canonical 'Revocation Effective Point' invariant missing from 08_SECURITY_BOUNDARIES.md."
+} else {
+    Write-Host "  PASS: Canonical 'Revocation Effective Point' invariant verified in authoritative security baseline." -ForegroundColor Green
 }
 
 Write-Host "`n====================================================" -ForegroundColor Cyan

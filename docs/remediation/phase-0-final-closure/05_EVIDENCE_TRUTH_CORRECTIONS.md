@@ -45,10 +45,11 @@ In strict accordance with audit integrity rules:
 - **Relational Defaults vs CLR Initializers**: The default values (`"All systems operational."`, `true`, `false`) are C# property initializers in memory. The database relational default in the model snapshot is `None`. Non-nullable boolean columns must receive migration backfill defaults.
 - **Migration & Seeder Reality**: The 13 maintenance properties do not exist in current migrations or `ApplicationDbContextModelSnapshot.cs`. `DataSeeder.cs:46-168` raw DDL does not cover them and must be neutralized before Phase 0.5 acceptance.
 
-### 2.4 Traceability Finding Obligations (F02 & F15)
-- **Codex F02**: Requires revocation of leaked service account RSA private key in Google Cloud IAM and git history purging. Mapped to **MR-03**.
-- **Codex F15**: Requires robust crash recovery, clock-hour reconciliation, and reauthorization for scheduled background services. Mapped to **MR-18**.
-- Both findings retain their full substantive requirements in active baseline registers (`02_MASTER_REMEDIATION_REGISTER.md` and `03_HISTORICAL_FINDING_TRACEABILITY.md`).
+### 2.4 Traceability Finding Obligations (F02, F03, & F15)
+- **Codex F02**: Requires cryptographically generated install secrets, elimination of static signing defaults, and a service-specific token trust contract (algorithm whitelist `RS256`/`HS256`, negative tests for wrong issuer, rotated keys, and invalid scopes). Mapped to **MR-02** and **MR-36**.
+- **Codex F03**: Requires revocation of leaked service account RSA private key in Google Cloud IAM and git history purging. Mapped to **MR-03**.
+- **Codex F15**: Requires optimistic concurrency tokens, resource state digest snapshots, atomic claims, durable action state/idempotency, and crash recovery for human approval (HITL) workflows. Rollover across clock-hour must not invalidate unchanged state. Mapped to **MR-08**.
+- All findings retain their full substantive requirements in active baseline registers (`02_MASTER_REMEDIATION_REGISTER.md` and `03_HISTORICAL_FINDING_TRACEABILITY.md`).
 
 ### 2.5 Disaster Recovery TOC Listing vs Payload Validation
 - **Clarification**: `pg_restore --list` verifies the custom-format archive header and parses the Table of Contents (TOC). It verifies archive structure and prevents unhandled decompression crashes, but does **not** validate all compressed data blocks or evaluate referential integrity.

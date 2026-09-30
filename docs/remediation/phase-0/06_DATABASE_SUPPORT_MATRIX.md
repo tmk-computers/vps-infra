@@ -64,10 +64,12 @@ Lifecycle Classification Tiers:
   - Redis unavailability MUST NOT by itself cause loss of deployment truth, authorization truth, credential revocation truth, audit history, recovery metadata, or release history.
   - Where safe fallback is possible, the platform SHALL fall back to the durable PostgreSQL store.
   - Where safe fallback is not possible, the affected operation SHALL fail safely rather than proceed using stale or unverifiable state.
-- **Revocation Pipeline**:
+- **Revocation Pipeline & Invariant**:
   - PostgreSQL (`RevokedTokens` table) is the durable revocation authority.
-  - Redis is the fast shared revocation cache.
-  - Revocation writes must reach PostgreSQL before being considered successful, followed by Redis cache update/invalidation. Cache misses or Redis outages fall back safely to PostgreSQL, never bypassing security truth.
+  - Redis is the fast shared revocation cache; local process cache is lowest-latency cache (`Local Cache -> Redis 7 -> PostgreSQL`).
+  - **Revocation Effective Point**: A credential/token revocation becomes security-effective when the authoritative PostgreSQL revocation transaction commits. For any authorization decision initiated after that effective point, stale cache state MUST NOT authorize the revoked credential; the request MUST be denied (`DENY` / HTTP 401).
+  - Revocation writes must commit to PostgreSQL before being reported successful, followed by Redis cache update/invalidation. Cache misses or Redis outages fall back safely to PostgreSQL, never bypassing security truth.
+  - Operational cache convergence SLOs (e.g. $\le 5$s) govern propagation timing only and NEVER constitute an authorization grace period.
 - **Security & Topology Requirements**:
   - Authentication enabled (`requirepass` with dynamic high-entropy secret generated during setup);
   - Bound strictly to internal loopback (`127.0.0.1`) or private container network bridge (`traefik_net`); zero public WAN exposure;
@@ -78,9 +80,9 @@ Lifecycle Classification Tiers:
   1. *Normal Operation*: Redis healthy and available.
   2. *Redis Unavailable*: Critical platform state remains safe; platform falls back to PostgreSQL or fails safe.
   3. *Redis Restart*: Cache and coordination state reconciles correctly.
-  4. *Stale Cached Security Data*: Stale cache entries must not permit revoked credentials.
+  4. *Stale Cached Security Data*: Stale cache entries must not permit revoked credentials. For requests initiated post-PostgreSQL revocation commit, stale cache entries MUST NOT permit authorization; request receives HTTP 401 DENY. Acceptance criterion: exactly ZERO post-revocation authorizations allowed by stale cache state.
   5. *Redis Data Loss*: Flush/wipe of Redis data must not destroy or corrupt authoritative platform state.
-  6. *Redis Latency/Degradation*: High latency or queue saturation must not silently convert safety checks into permissive behavior.
+  6. *Redis Latency/Degradation*: High latency or queue saturation must not silently convert safety checks into permissive behavior; platform falls back to PostgreSQL or fails closed.
 
 ### 3.3 Enforcement for Customer Application Database Engines
 - During Pilot Gate A, selecting Oracle, MariaDB, SQL Server, or MongoDB for customer application database provisioning in DevOps Manager UI or API will return an explicit HTTP 400 Bad Request with:
