@@ -56,25 +56,30 @@ Direct source inspection of the entity definitions in `devops-manager/api/Data/E
 
 ## 3. Authoritative Source-Derived Schema Inventory
 
-The table below constitutes the **sole authoritative schema inventory** for Phase 0.5:
+The table below constitutes the **authoritative source-derived schema contract** for Phase 0.5, derived directly from `Product.cs`, `ProjectService.cs`, `ApplicationDbContext.cs`, and `ApplicationDbContextModelSnapshot.cs`:
 
-| Entity | Property | DB Column | Type | Nullable | Default Value in EF Model | Existing Migration Coverage | Seeder DDL Coverage | Required Phase 0.5 Action |
-|---|---|---|---|---|---|---|---|---|
-| **Product** | `IsMaintenance` | `"IsMaintenance"` | `boolean` | `false` | `false` | None | Partial / Unreliable | Create column in EF migration; backfill `false` |
-| **Product** | `MaintenanceMessage` | `"MaintenanceMessage"` | `text` | `true` | `'All systems operational.'` | None | None | Create nullable column with default string |
-| **Product** | `MaintenanceVersion` | `"MaintenanceVersion"` | `text` | `true` | `'1.0.0'` | None | None | Create nullable column with default string |
-| **Product** | `MinSupportedVersion` | `"MinSupportedVersion"` | `text` | `true` | `'1.0.0'` | None | None | Create nullable column with default string |
-| **Product** | `ShowMaintenanceForMobile` | `"ShowMaintenanceForMobile"` | `boolean` | `false` | `true` | None | None | Create column; backfill `true` |
-| **Product** | `ShowMaintenanceForWeb` | `"ShowMaintenanceForWeb"` | `boolean` | `false` | `true` | None | None | Create column; backfill `true` |
-| **Product** | `MaintenanceStartedAt` | `"MaintenanceStartedAt"` | `timestamp with time zone` | `true` | `null` | None | None | Create nullable timestamp column |
-| **Product** | `MaintenanceEstimatedEndAt` | `"MaintenanceEstimatedEndAt"` | `timestamp with time zone` | `true` | `null` | None | None | Create nullable timestamp column |
-| **ProjectService** | `IsMaintenanceOverride` | `"IsMaintenanceOverride"` | `boolean` | `false` | `false` | None | None | Create column; backfill `false` |
-| **ProjectService** | `IsMaintenance` | `"IsMaintenance"` | `boolean` | `true` | `null` | None | None | Create nullable boolean column |
-| **ProjectService** | `MaintenanceMessage` | `"MaintenanceMessage"` | `text` | `true` | `null` | None | None | Create nullable text column |
-| **ProjectService** | `ShowMaintenanceForMobile` | `"ShowMaintenanceForMobile"` | `boolean` | `false` | `true` | None | None | Create column; backfill `true` |
-| **ProjectService** | `ShowMaintenanceForWeb` | `"ShowMaintenanceForWeb"` | `boolean` | `false` | `true` | None | None | Create column; backfill `true` |
+| Entity | CLR Property | CLR Type | Nullable | EF Column Type | DB Default | CLR Initializer | Existing Migration | Snapshot Coverage | Seeder DDL |
+|---|---|---|---|---|---|---|---|---|---|
+| **Product** | `IsMaintenance` | `bool` | `false` | `boolean` | `None` | `false` | None | None | None |
+| **Product** | `MaintenanceMessage` | `string?` | `true` | `text` | `None` | `"All systems operational."` | None | None | None |
+| **Product** | `MaintenanceVersion` | `string?` | `true` | `text` | `None` | `"1.0.0"` | None | None | None |
+| **Product** | `MinSupportedVersion` | `string?` | `true` | `text` | `None` | `"1.0.0"` | None | None | None |
+| **Product** | `ShowMaintenanceForMobile` | `bool` | `false` | `boolean` | `None` | `true` | None | None | None |
+| **Product** | `ShowMaintenanceForWeb` | `bool` | `false` | `boolean` | `None` | `true` | None | None | None |
+| **Product** | `MaintenanceStartedAt` | `DateTime?` | `true` | `timestamp without time zone` | `None` | `null` | None | None | None |
+| **Product** | `MaintenanceEstimatedEndAt` | `DateTime?` | `true` | `timestamp without time zone` | `None` | `null` | None | None | None |
+| **ProjectService** | `IsMaintenanceOverride` | `bool` | `false` | `boolean` | `None` | `false` | None | None | None |
+| **ProjectService** | `IsMaintenance` | `bool?` | `true` | `boolean` | `None` | `null` | None | None | None |
+| **ProjectService** | `MaintenanceMessage` | `string?` | `true` | `text` | `None` | `null` | None | None | None |
+| **ProjectService** | `ShowMaintenanceForMobile` | `bool` | `false` | `boolean` | `None` | `true` | None | None | None |
+| **ProjectService** | `ShowMaintenanceForWeb` | `bool` | `false` | `boolean` | `None` | `true` | None | None | None |
 
 **Total Count**: Exactly **13 properties across 2 entities** (8 on `Product`, 5 on `ProjectService`).
+
+### 3.1 Type Mapping & Relational Invariants
+- **CLR Type vs Relational Column Type**: The relational column type for timestamps is explicitly **`timestamp without time zone`**, established by the global EF Core pre-convention in `ApplicationDbContext.cs:44-46` (`configurationBuilder.Properties<DateTime>().HaveColumnType("timestamp without time zone")`). Statements mapping DateTime to `timestamp with time zone` are invalid for this application context.
+- **CLR Initializers vs Relational Defaults**: The default strings and booleans shown above are in-memory C# field initializers on entity classes (`Product.cs`). The EF Core model configuration (`OnModelCreating`) does NOT declare `HasDefaultValue` or `HasDefaultValueSql` for these properties; thus, the database default in the relational model is `None`. Phase 0.5 migration generation must account for non-nullable boolean columns via appropriate migration backfill expressions or schema conventions.
+- **Entity Pre-existence**: Entities `MaintenanceWindow` and `ServiceMaintenance` do not exist anywhere in the application codebase. `IsActive` is an inherited property from `BaseEntity` already present in baseline migrations and snapshots.
 
 ---
 

@@ -134,13 +134,14 @@ To resolve finding `C1-03`, transport security is kept strictly distinct from re
 In previous drafts, `05_WINDOWS_TOPOLOGY_CORRECTION.md:84` mistakenly included `Trust Server Certificate=true`.
 
 ### 5.1 Enforced TLS Security Contract
-All application workloads and management components connecting to the remote PostgreSQL 16 endpoint on Windows must enforce **authenticated TLS with certificate validation**:
-- **Connection String Standard**:
+All application workloads and management components connecting to the remote PostgreSQL 16 endpoint on Windows must enforce **authenticated TLS with certificate and hostname validation (FR-C2-01)**:
+- **Canonical Connection String Standard**:
   ```ini
   Host=postgres-host.internal;Port=5432;Database=tenant_db;Username=app_user;Password=***;SSL Mode=VerifyFull;SSL Root Certificate=C:\ProgramData\TMK\Certs\internal-ca.crt
   ```
-- **Acceptable Alternatives**: `SSL Mode=Require;Trust Server Certificate=false` with the internal CA certificate installed in the Windows `LocalMachine\Root` Trusted Root Certification Authorities store.
-- **Strict Prohibition**: Setting `Trust Server Certificate=true` is strictly prohibited in production and pilot Gate-A configurations.
+- **Peer Authentication Mandate (`VerifyFull`)**:
+  In Npgsql (including v8.x and v10.x), `SSL Mode=Require` encrypts the transport channel but does **not** authenticate the server certificate or validate the server hostname against the certificate CN/SAN. Setting `Trust Server Certificate=false` does not elevate `Require` mode to full certificate verification. Therefore, `SSL Mode=VerifyFull` is mandatory for authenticated remote database connections.
+- **Strict Prohibition**: Setting `Trust Server Certificate=true` or relying on unauthenticated `Require` mode without full certificate chain and hostname verification is strictly prohibited in production and pilot Gate-A configurations.
 
 ---
 

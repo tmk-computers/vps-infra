@@ -170,7 +170,7 @@ The Windows Adapter replaces historical PowerShell scripts with a robust, compil
    - Elimination of `setup.ps1` W3SVC stop command; IIS runs continuously.
 
 4. **Certified Windows Gate-A Database Topology**:
-   - Application workloads on Windows IIS connect to a **Remote PostgreSQL 16 Endpoint** (dedicated Linux VM or managed PostgreSQL service) over authenticated TLS port 5432 (`SSL Mode=VerifyFull` or `SSL Mode=Require;Trust Server Certificate=false` with validated CA/pinning; unauthenticated server certificate trust or validation bypass is strictly prohibited).
+   - Application workloads on Windows IIS connect to a **Remote PostgreSQL 16 Endpoint** (dedicated Linux VM or managed PostgreSQL service) over authenticated TLS port 5432 (`SSL Mode=VerifyFull` with validated CA and hostname verification; unauthenticated server certificate trust or validation bypass is strictly prohibited).
    - WSL2 and Docker Desktop on Windows Server are explicitly uncertified and prohibited for Gate A.
 
 5. **Constrained Deployment Filesystem Sandbox**:

@@ -96,10 +96,10 @@ if ($missingF.Count -gt 0 -or $missingDef.Count -gt 0) {
     Write-Host "  PASS: Exact sets {F01..F22} and {DEF-01..DEF-37} verified." -ForegroundColor Green
 }
 
-# Validate all mapped target MR references exist in the 37 MR set
-$allTraceRows = $fEntries + $defEntries
+# Validate all mapped target MR references exist in the 37 MR set across ALL table rows
+$allTableRows = $traceLines | Where-Object { $_ -match '^\|\s*\*\*' }
 $invalidTargetRefs = @()
-foreach ($row in $allTraceRows) {
+foreach ($row in $allTableRows) {
     $matchedMRs = [regex]::Matches($row, 'MR-\d+')
     foreach ($m in $matchedMRs) {
         if ($expectedMrIds -notcontains $m.Value) {
@@ -108,9 +108,9 @@ foreach ($row in $allTraceRows) {
     }
 }
 if ($invalidTargetRefs.Count -gt 0) {
-    Write-Error "Assertion Failed: Invalid MR targets found in traceability: $($invalidTargetRefs -join ', ')"
+    Write-Error "Assertion Failed: Invalid MR targets found in traceability table rows: $($invalidTargetRefs -join ', ')"
 } else {
-    Write-Host "  PASS: All referenced MR targets in traceability are valid members of {MR-01..MR-37}." -ForegroundColor Green
+    Write-Host "  PASS: All referenced MR targets across all table rows in traceability are valid members of {MR-01..MR-37}." -ForegroundColor Green
 }
 
 # 4. Forward and Reverse Mirror Verification Check
@@ -120,6 +120,7 @@ $dirsToVerify = @(
     "docs\remediation\phase-0",
     "docs\remediation\phase-0-codex-remediation",
     "docs\remediation\phase-0-codex-regate-remediation",
+    "docs\remediation\phase-0-final-closure",
     "docs\remediation\phase-0-review"
 )
 
@@ -130,7 +131,12 @@ foreach ($relDir in $dirsToVerify) {
     $srcDir = Join-Path $serverRoot $relDir
     $dstDir = Join-Path $infraRoot $relDir
 
-    if (-not (Test-Path $srcDir)) { continue }
+    if (-not (Test-Path $srcDir)) {
+        Write-Error "Assertion Failed: Required source dossier directory missing: $srcDir"
+    }
+    if (-not (Test-Path $dstDir)) {
+        Write-Error "Assertion Failed: Required mirror destination directory missing: $dstDir"
+    }
 
     # Forward check: server -> infra
     $srcFiles = Get-ChildItem -Path $srcDir -Filter "*.md" -Recurse
@@ -171,7 +177,7 @@ foreach ($relDir in $dirsToVerify) {
 if (-not $allMatched) {
     Write-Error "Assertion Failed: Mirror files do not match bit-for-bit."
 } else {
-    Write-Host "  PASS: $fileCount documentation artifacts verified with 100% bit-for-bit SHA-256 equality across all 4 directories." -ForegroundColor Green
+    Write-Host "  PASS: $fileCount documentation artifacts verified with 100% bit-for-bit SHA-256 equality across all 5 active directories." -ForegroundColor Green
 }
 
 # 5. Stale Forbidden Phrases Scan in Authoritative Phase 0 Baseline
@@ -183,7 +189,8 @@ $forbiddenPatterns = @(
     @{ Pattern = 'restore pre-upgrade database'; Description = 'Automatic pre-upgrade database restore' },
     @{ Pattern = 'StartsWith\(tenantSandboxRoot'; Description = 'Naive StartsWith path traversal check' },
     @{ Pattern = 'Trust Server Certificate\s*=\s*true'; Description = 'Insecure TLS certificate trust' },
-    @{ Pattern = 'Redis denylist'; Description = 'Mandatory Redis denylist requirement' }
+    @{ Pattern = 'Redis denylist'; Description = 'Mandatory Redis denylist requirement' },
+    @{ Pattern = '\bLocalService\b'; Description = 'Unqualified LocalService agent identity' }
 )
 
 $forbiddenFound = 0
