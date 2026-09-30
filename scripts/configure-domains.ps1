@@ -34,6 +34,20 @@ function Test-ValidDomain {
     return $true
 }
 
+function Test-IsIpAddress {
+    param (
+        [string]$Address
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Address)) { return $false }
+    $ip = $null
+    if ([System.Net.IPAddress]::TryParse($Address.Trim(), [ref]$ip)) {
+        return ($ip.AddressFamily -eq [System.Net.Sockets.AddressFamily]::InterNetwork -or
+                $ip.AddressFamily -eq [System.Net.Sockets.AddressFamily]::InterNetworkV6)
+    }
+    return $false
+}
+
 function Set-EnvDomainValue {
     param (
         [string]$EnvFilePath,
@@ -85,10 +99,40 @@ function Configure-Domains {
         $env:PRIMARY_DOMAIN
     }
 
+    if (Test-IsIpAddress -Address $primaryDomain) {
+        Write-Host "Detected IP address for PRIMARY_DOMAIN: $primaryDomain" -ForegroundColor Cyan
+        $backupDir = Join-Path $ScriptDir "volumes\env-backups"
+        if (-not (Test-Path $backupDir)) {
+            New-Item -ItemType Directory -Path $backupDir -Force | Out-Null
+        }
+        $timestamp = (Get-Date).ToString("yyyyMMddHHmmss")
+        $backupFile = Join-Path $backupDir ".env.backup.${timestamp}.$PID"
+        Copy-Item -Path $envPath -Destination $backupFile -Force
+
+        Set-EnvDomainValue -EnvFilePath $envPath -Key "PRIMARY_DOMAIN" -Value $primaryDomain
+        Set-EnvDomainValue -EnvFilePath $envPath -Key "NETWORK_MODE" -Value "private"
+        Set-EnvDomainValue -EnvFilePath $envPath -Key "PRIVATE_IP" -Value $primaryDomain
+        Set-EnvDomainValue -EnvFilePath $envPath -Key "ENABLE_HTTPS_REDIRECT" -Value "false"
+        Set-EnvDomainValue -EnvFilePath $envPath -Key "DEVOPS_WEB_HOST" -Value $primaryDomain
+        Set-EnvDomainValue -EnvFilePath $envPath -Key "DEVOPS_API_HOST" -Value $primaryDomain
+        Set-EnvDomainValue -EnvFilePath $envPath -Key "CI_WEB_HOST" -Value $primaryDomain
+        Set-EnvDomainValue -EnvFilePath $envPath -Key "CI_API_HOST" -Value $primaryDomain
+        Set-EnvDomainValue -EnvFilePath $envPath -Key "REGISTRY_HOST" -Value $primaryDomain
+        Set-EnvDomainValue -EnvFilePath $envPath -Key "PGADMIN_HOST" -Value $primaryDomain
+        Set-EnvDomainValue -EnvFilePath $envPath -Key "PHPMYADMIN_HOST" -Value $primaryDomain
+        Set-EnvDomainValue -EnvFilePath $envPath -Key "TRAEFIK_DASHBOARD_HOST" -Value $primaryDomain
+        Set-EnvDomainValue -EnvFilePath $envPath -Key "MONGO_EXPRESS_HOST" -Value $primaryDomain
+        Write-Host "IP address configuration saved. Direct access enabled at http://$primaryDomain" -ForegroundColor Green
+        return $true
+    }
+
     if (-not (Test-ValidDomain -Domain $primaryDomain)) {
         if ([Environment]::UserInteractive -and [System.Console]::IsInputRedirected -eq $false) {
             Write-Host -NoNewline "Primary domain (for example, company.com): " -ForegroundColor Cyan
             $inputDomain = Read-Host
+            if (Test-IsIpAddress -Address $inputDomain) {
+                return (Configure-Domains -ScriptDir $ScriptDir -DomainOverride $inputDomain.Trim())
+            }
             if (Test-ValidDomain -Domain $inputDomain) {
                 $primaryDomain = $inputDomain.Trim()
             } else {

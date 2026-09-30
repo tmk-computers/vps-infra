@@ -51,6 +51,16 @@ Traefik v3 automatically manages Let's Encrypt TLS/SSL certificates via the HTTP
 
 ---
 
+### 4. Deploying with an IP Address instead of a Domain ("Failed to construct 'URL': Invalid URL")
+* **Cause**: Deploying `vps-infra` directly using an IP address (e.g. `PRIMARY_DOMAIN=192.168.1.50` or a public IP) without subdomains requires single-origin path routing. If domain slicing logic treats an IP as a domain, it attempts to construct invalid subdomains (such as `devops-api.1.50`), triggering `TypeError: Failed to construct 'URL': Invalid URL` when Axios makes authentication requests.
+* **Resolution**:
+  1. Set `NETWORK_MODE=private` and `ENABLE_HTTPS_REDIRECT=false` in `.env`.
+  2. Set `PRIMARY_DOMAIN=<your_server_ip>` and `PRIVATE_IP=<your_server_ip>`.
+  3. Ensure `DEVOPS_WEB_HOST` and `DEVOPS_API_HOST` are set directly to the IP address without subdomain prefixes.
+  4. The frontend dynamically detects the raw IP address and routes API requests directly to `http://<your_server_ip>/api` instead of attempting subdomain rewriting.
+
+---
+
 ## 🔄 Resetting the Let's Encrypt Certificate Cache
 
 If a certificate was corrupted or rate-limited:
