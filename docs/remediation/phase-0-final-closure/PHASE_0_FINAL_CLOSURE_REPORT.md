@@ -13,17 +13,17 @@
 
 This report concludes the **Phase 0 Surgical Closure Mission** conducted by Antigravity Conversation 1 (Developer).
 
-Following the Codex Final Re-Gate, eight architectural domains were confirmed as formally **PASSED**:
+Following the Codex Final Re-Gate, key architectural domains were confirmed as formally **PASSED**:
 1. Release Contract (ADR-01, MR-10, MR-11, MR-12, MR-19)
 2. Security Contract (ADR-02, MR-02, MR-03, MR-07, MR-36)
-3. Redis Exclusion (ADR-03, MR-20)
+3. Redis Architecture Amendment (ADR-03, MR-20, MR-36 — updated per executive instruction under `REDIS_ARCHITECTURE_AMENDMENT.md`)
 4. Path Containment (ADR-05, MR-04, MR-24)
 5. Backup & Recovery Contract (ADR-06, MR-14, MR-15)
 6. Windows Server 2022 Architecture (ADR-07, MR-22..MR-30)
 7. Traceability & Historical Obligations (MR-01..MR-37, F01..F22, DEF-01..DEF-37)
 8. Dual-OS Commercial Non-Negotiable Parity
 
-In strict compliance with instructions, **none of those eight passed domains were reopened or redesigned**.
+In strict compliance with instructions, the accepted safety, release, containment, backup, and Windows contracts were preserved without reopening. Redis architecture was amended prior to final independent review to establish Redis 7 as a first-class production component while strictly preserving PostgreSQL as the sole durable authority.
 
 The Developer focused exclusively on surgically resolving the remaining failing items:
 - **Phase 0.5 Schema Contract** (`RG-C1-02`, `C2-01`)
@@ -71,18 +71,32 @@ All findings are now fully resolved.
 
 ### 3.5 Governance Tooling Hardening & Negative Testing
 - **Blind Spot Elimination**: `scripts/verify-baseline-integrity.ps1` now halts immediately on missing dossier directories and parses all table rows in `03_HISTORICAL_FINDING_TRACEABILITY.md`.
+- **Forbidden Phrases Scan**: Added checks for `LocalService` and stale Redis exclusion phrase (`Optional / Not Gate-A Certified Dependency`).
 - **Fault-Injection Test Suite**: Executed 7 fault-injection scenarios (missing MR, duplicate MR, invalid target, mirror hash mismatch, forbidden phrase, missing dossier, malformed discovery row). All 7 exited with code 1. Clean baseline runs with exit code 0.
+
+### 3.6 Redis Architecture Amendment & Dual-Store Invariant
+- **Architectural Shift**: Amended classification to establish Redis 7 as a first-class component of the standard production architecture (`REDIS_ARCHITECTURE_AMENDMENT.md`).
+- **Non-Negotiable Invariant**: Redis SHALL NOT be the sole authoritative durable store for safety-critical platform state. PostgreSQL 16 remains the sole durable source of truth.
+- **Revocation Architecture**: Multi-tiered revocation pipeline (`Local Cache -> Redis 7 -> PostgreSQL`). Durable commit to PostgreSQL must precede Redis publication/invalidation. Fallback to PostgreSQL on Redis outage.
+- **Gate-A Validation**: Defined 6 acceptance scenarios (Normal operation, Redis unavailable, Redis restart, Stale cached security data, Redis data loss, Redis latency/degradation).
+- **AI Workforce Forward Compatibility**: Documented Redis as operational primitive for future AI workforce capabilities outside Gate-A critical path.
+- **Traceability**: Mapped cleanly to existing MR items (MR-02, MR-05, MR-06, MR-07, MR-10, MR-11, MR-12, MR-16, MR-18, MR-20, MR-36). Total MR count preserved at 37.
+
+### 3.7 Compromised Database Provisioning Credential Disposition
+- **Non-Reproduction Policy**: The literal fallback password from `create-readonly-analyst.sh` is redacted and not reproduced in documentation.
+- **Compromised Status**: Classified as compromised; mandatory rotation and revocation required in Phase 1 (MR-02/MR-05) upon actual execution.
+- **Dynamic Credential Mandate**: Future provisioning strictly requires dynamically supplied or generated credentials; static fallbacks prohibited.
 
 ---
 
-## 4. Final Candidate Freeze Declaration
+## 4. Final Candidate Re-Freeze Declaration
 
-The Phase 0 engineering audit candidate is formally frozen:
+The Phase 0 engineering audit candidate has been re-frozen following the Redis Architecture Amendment:
 
 ```text
-FINAL PHASE 0 CANDIDATE
-Infra SHA:                     174869490596c1eee07366590dbd8e1c46df5b71
-Server SHA:                    76b4bcb97dda098ff15a4fc9be4844746b6989be
+FINAL PHASE 0 CANDIDATE (POST-REDIS-AMENDMENT RE-FREEZE)
+Superseded Infra SHA:          39995013cb4a1a12c46870b33f6f05477473af24
+Superseded Server SHA:         8f6811a84cb5c78a58482e5799ff09b8b09cc7ac
 Implementation delta:          Operational database tooling drift (create-readonly-analyst.sh, Option A)
 Audit/governance delta:        Governance tooling (verify-baseline-integrity.ps1, mirror-to-infra.ps1) + documentation
 Candidate frozen:              YES

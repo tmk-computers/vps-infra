@@ -106,5 +106,4 @@ Total tracked records: **63 findings**. No finding has been omitted or silently 
 3. **Redis Qualification**:
    - Antigravity audit claimed `db/redis/docker-compose.yml` was implemented.
    - Codex audit asserted Redis manifests do not exist in tracked repository files.
-   - Current Code Reality: No Redis manifest exists anywhere in `vps-infra`. Codex's assertion was completely accurate.
-   - Resolution: Redis is marked `NOT_APPLICABLE` for Gate A and deferred to future qualification under **MR-20**.
+   - Resolution: While no historical Redis manifest existed at baseline freeze, Redis 7 is established under the Redis Architecture Amendment as a first-class standard production caching and acceleration component (managed under MR-20/MR-06/MR-36; non-authoritative; PostgreSQL remains the durable source of truth).

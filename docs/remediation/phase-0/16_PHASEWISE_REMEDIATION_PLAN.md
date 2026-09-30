@@ -79,10 +79,10 @@ gantt
   - **MR-02 & MR-07** (Dynamic Secrets & Signing Defaults — P0/P1): Eliminate published JWT keys and default passwords across all setup scripts (`setup.sh`, `setup.ps1`); enforce startup failure on default secrets. F16.1: Encrypt AI API keys at rest (AES-256-GCM) with key rotation acceptance. F16.2: Enforce monotonic streaming spend budget cap with atomic concurrent reservations. (F16.3/F16.4 gated under AI disablement for Gate A).
   - **MR-03** (Leaked Service Account Key — P0): Revoke Google Cloud service account RSA private key in Google Cloud IAM; purge `devops-manager/api/google-drive-credentials.json` from git history.
   - **MR-04** (Git Tokens, Secret Disclosure & Path Traversal — P1): Strip Git PATs and sensitive secrets from read DTOs; implement credential protection; sanitize webhook and process logging. DEF-15: Enforce normalized segment-boundary containment against tenant sandbox root; reject sibling-prefix collisions (`tenant-a` vs `tenant-ab`), UNC paths, and traversal escapes.
-  - **MR-05 & MR-06** (Database Least Privilege & Network Exposure — P1/P0): Bind PostgreSQL and admin ports to `127.0.0.1` or internal Docker overlay bridge (MR-06), and provision isolated least-privilege roles per application container (MR-05). Redis is `Optional / Not Gate-A Certified Dependency`.
+  - **MR-05 & MR-06** (Database Least Privilege & Network Exposure — P1/P0): Bind PostgreSQL, Redis 7, and admin ports to `127.0.0.1` or internal Docker overlay bridge (MR-06), and provision isolated least-privilege credentials per service container (MR-05). Redis 7 is established as a first-class standard production caching and acceleration component (non-authoritative; PostgreSQL remains durable authority).
   - **MR-08** (Multi-Tenant RBAC, Role Separation & Container Hardening — P1): DEF-11: Formally separate `PlatformSuperAdmin` from `TenantAdmin`; no tenant SuperAdmin global bypass; exceptional break-glass access under customer-consented ticket authorization with audit. DEF-08: Drop Linux capabilities (`cap_drop: ALL`), run API container as non-root UID 10001, remove host root mount, use scoped Unix socket proxy. Enforce JWT tenant context extraction (`tid`) across all routes.
   - **MR-28** (Windows Agent Dynamic Authentication — P0): Replace hardcoded static fallback secret `"SuperCiSecretKey123!"` with dynamically provisioned mutual authentication secrets between `devops-manager` and `tmk-iis-agent`.
-  - **MR-36** (Token Trust Contract & Inter-Service Auth — P1): Enforce service-specific Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, rotation, durable capability-based revocation in PostgreSQL without Redis). Secure AMS endpoints in `ci-server`; inject service bearer tokens in inter-service calls. All 15 Phase 1 negative tests must pass (including wrong issuer, retired signing key, and valid-token-with-wrong-scope).
+  - **MR-36** (Token Trust Contract & Inter-Service Auth — P1): Enforce service-specific Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, rotation, multi-tiered revocation via `Local Cache -> Redis 7 -> PostgreSQL`). Secure AMS endpoints in `ci-server`; inject service bearer tokens in inter-service calls. All 15 Phase 1 negative tests must pass (including wrong issuer, retired signing key, and valid-token-with-wrong-scope).
 - **Scope Exclusion**:
   - **MR-37** (AMS Semantics & UI Labeling): Relates to calculation heuristics and marketing truthfulness rather than security boundaries. Relocated to Phase 9 alongside MR-21, with pre-pilot disclosure provided for pilots.
 
@@ -100,7 +100,7 @@ gantt
 - **Target MR IDs**: **MR-01**, **MR-20**.
 - **Scope**:
   - Remove production Docker socket and host root from CI test runners; isolate builds to disposable sandbox (MR-01).
-  - Enforce unsupported feature gates (block Oracle/MariaDB/Redis in Gate A deployment pipeline) (MR-20).
+  - Enforce unsupported feature gates (block uncertified customer application database engines: Oracle, MariaDB, MSSQL in Gate A deployment pipeline) (MR-20). Standard platform runtime deploys PostgreSQL 16 (durable store) and Redis 7 (caching/acceleration).
 
 ### Phase 4 — Windows Production Agent & IIS Adapter (Equal First-Class Priority)
 - **Target MR IDs**: **MR-22**, **MR-23**, **MR-24**, **MR-25**, **MR-26**, **MR-27**, **MR-29**.
@@ -111,7 +111,7 @@ gantt
   - Fix telemetry to map AppPool names to specific worker process PIDs (MR-25).
   - Implement asynchronous request processing in daemon (MR-26).
   - Establish native Windows ingress via IIS 10 and HTTP.sys on ports 80 and 443 with SNI SSL bindings; Traefik is NOT deployed on the Windows host (MR-27).
-  - Require authenticated TLS connections to remote PostgreSQL 16 endpoint (`Trust Server Certificate=false`).
+  - Require authenticated TLS connections to remote PostgreSQL 16 endpoint (`SSL Mode=VerifyFull` with validated CA and hostname verification).
   - Implement safe agent update with automated rollback, post-restart functional health validation (`/health`), and deterministic recovery across interrupted updates or host reboots.
   - Implement cross-compilation pipeline for Windows .NET artifacts (MR-29).
   *(Note: MR-28 Windows Agent Dynamic Authentication is delivered in Phase 1 for dual-OS security parity).*

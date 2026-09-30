@@ -38,11 +38,11 @@ This document provides a comprehensive line-by-line technical, privilege, and se
 - **Container Name**: Hardcoded to `shared_postgres` (line 8).
 - **Target Database**: Hardcoded to `clever_farmer_uat` (line 9).
 - **Username Default**: `ANALYST_USER="${1:-clever_farmer_analyst}"` (line 10).
-- **Password Default (SECURITY RISK)**: 
+- **Password Default (SECURITY RISK — COMPROMISED CREDENTIAL)**: 
   ```bash
-  ANALYST_PASS="${2:-AM8xoChSNNgfcrhlLdc5Rnum}"
+  ANALYST_PASS="${2:-[REDACTED_FALLBACK_CREDENTIAL]}"
   ```
-  Line 11 embeds a hardcoded 24-character plaintext fallback password. If an operator invokes `./create-readonly-analyst.sh` without a second argument, the predictable fallback credential is provisioned.
+  Line 11 of the source script embeds a hardcoded 24-character plaintext fallback password. Per Phase 0 remediation security standards, the literal credential string is **NOT reproduced** in documentation and is treated as **compromised**. If an operator invokes `./create-readonly-analyst.sh` without a second argument, this predictable fallback credential is provisioned.
 - **Privilege Model**: Runs as the PostgreSQL superuser `postgres` via `docker exec`.
 
 ### 2.3 PostgreSQL Roles & Database Permissions (Write Actions)
@@ -93,14 +93,16 @@ Although described as creating a "read-only user", executing this script perform
 
 ---
 
-## 5. Phase 1 Mandatory Remediation Contract
+## 5. Phase 1 Mandatory Remediation Contract & Compromised Credential Disposition
 
 Under Option A, the following binding remediation requirements are assigned to **Phase 1** (Shared Security Foundation):
 
-1. **Mandatory Remediation Mapping**:
-   - **MR-02 (Secret Storage)** & **MR-07 (Dynamic Setup Secrets)**: Eliminate the hardcoded fallback password `AM8xoChSNNgfcrhlLdc5Rnum` from line 11 of `create-readonly-analyst.sh`.
-   - **MR-05 (Least-Privilege Role Provisioning)**: Require that password argument `$2` must be explicitly provided via high-entropy generation or interactive prompt; script MUST fail fast with exit code 1 if `$ANALYST_PASS` is empty or defaults.
+1. **Compromised Credential Policy & Mandatory Remediation Mapping**:
+   - **Compromised Status**: The exposed hardcoded fallback credential in `create-readonly-analyst.sh` is officially treated as **compromised**.
+   - **Rotation & Revocation**: The credential MUST be rotated and revoked in any existing environment where the script was executed. Rotation will be evidenced upon actual execution in Phase 1 (not silently assumed in Phase 0).
+   - **Elimination of Fallback**: **MR-02 (Secret Storage)** & **MR-07 (Dynamic Setup Secrets)**: Eliminate the hardcoded fallback password from line 11 of `create-readonly-analyst.sh`. Future provisioning MUST strictly require dynamically supplied or generated high-entropy credentials. No default or fallback production credential is permitted under any circumstances.
+   - **MR-05 (Least-Privilege Role Provisioning)**: Require that password argument `$2` must be explicitly provided via high-entropy generation or interactive prompt; the script MUST fail fast with exit code 1 if `$ANALYST_PASS` is empty or missing.
 2. **Access Control Hardening**:
-   - Ensure the script enforces role isolation and cannot be invoked against production databases without explicit environment guards.
+   - Ensure the script enforces role isolation and cannot be invoked against production databases without explicit environment guards and approval.
 3. **Execution Verification**:
-   - Live execution of this script remains unverified in Phase 0; it will be formally verified against live test infrastructure during Phase 1 acceptance testing.
+   - Live execution of this script remains unverified in Phase 0; it will be formally verified against live test infrastructure during Phase 1 acceptance testing with dynamic credential generation verified.
