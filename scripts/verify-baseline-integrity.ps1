@@ -190,7 +190,8 @@ $forbiddenPatterns = @(
     @{ Pattern = 'StartsWith\(tenantSandboxRoot'; Description = 'Naive StartsWith path traversal check' },
     @{ Pattern = 'Trust Server Certificate\s*=\s*true'; Description = 'Insecure TLS certificate trust' },
     @{ Pattern = 'Redis denylist'; Description = 'Mandatory Redis denylist requirement' },
-    @{ Pattern = '\bLocalService\b'; Description = 'Unqualified LocalService agent identity' }
+    @{ Pattern = '\bLocalService\b'; Description = 'Unqualified LocalService agent identity' },
+    @{ Pattern = 'Optional / Not Gate-A Certified Dependency'; Description = 'Stale Redis exclusion classification' }
 )
 
 $forbiddenFound = 0

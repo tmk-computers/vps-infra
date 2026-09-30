@@ -29,33 +29,34 @@ It directly responds to the findings and closure conditions returned by the Code
 | **05** | [`05_EVIDENCE_TRUTH_CORRECTIONS.md`](05_EVIDENCE_TRUTH_CORRECTIONS.md) | `FINAL-CLOSURE-05-EVIDENCE-TRUTH` | Reconciles historical R4 claims, wrapper README paths, Windows Agent static fallback secret status in source vs target, and DR listing limits. |
 | **06** | [`06_VERIFIER_HARDENING_RESULTS.md`](06_VERIFIER_HARDENING_RESULTS.md) | `FINAL-CLOSURE-06-VERIFIER-RESULTS` | Documents verifier blind-spot closures (missing directories, all-table-row target parsing) and complete 7-scenario negative fault injection results. |
 | **07** | [`07_FINAL_AUTHORITATIVE_CONSISTENCY_SCAN.md`](07_FINAL_AUTHORITATIVE_CONSISTENCY_SCAN.md) | `FINAL-CLOSURE-07-CONSISTENCY-SCAN` | Repository-wide scan confirming zero remaining material contradictions across all active baseline documents. |
-| **08** | [`PHASE_0_FINAL_CLOSURE_REPORT.md`](PHASE_0_FINAL_CLOSURE_REPORT.md) | `FINAL-CLOSURE-REPORT` | Executive summary, freeze declaration, and final closure recommendation. |
-| **09** | [`README.md`](README.md) | `FINAL-CLOSURE-README` | This navigation index and document manifest. |
+| **08** | [`REDIS_ARCHITECTURE_AMENDMENT.md`](REDIS_ARCHITECTURE_AMENDMENT.md) | `FINAL-CLOSURE-REDIS-AMENDMENT` | Redis Architecture Amendment: establishes Redis 7 as first-class caching/acceleration component; enforces PostgreSQL sole durable authority. |
+| **09** | [`PHASE_0_FINAL_CLOSURE_REPORT.md`](PHASE_0_FINAL_CLOSURE_REPORT.md) | `FINAL-CLOSURE-REPORT` | Executive summary, freeze declaration, and final closure recommendation. |
+| **10** | [`README.md`](README.md) | `FINAL-CLOSURE-README` | This navigation index and document manifest. |
 
 ---
 
-## 3. Untouched Accepted Domains
+## 3. Preserved Accepted Contracts & Redis Amendment
 
-Codex confirmed that eight domains have formally **PASSED**:
+Codex confirmed eight key architectural domains:
 1. Release Contract (ADR-01, MR-10, MR-11, MR-12, MR-19)
 2. Security Contract (ADR-02, MR-02, MR-03, MR-07, MR-36)
-3. Redis Exclusion (ADR-03, MR-20)
+3. Redis Architecture Amendment (Redis 7 first-class production cache; PostgreSQL sole durable authority; ADR-03/MR-20/MR-36)
 4. Path Containment (ADR-05, MR-04, MR-24)
 5. Backup & Recovery Contract (ADR-06, MR-14, MR-15)
 6. Windows Server 2022 Architecture (ADR-07, MR-22..MR-30)
 7. Traceability & Historical Obligations (MR-01..MR-37, F01..F22, DEF-01..DEF-37)
 8. Dual-OS Commercial Non-Negotiable Parity
 
-These eight domains were strictly preserved without modification or reopening.
+Contracts 1, 2, 4, 5, 6, 7, and 8 were strictly preserved without modification or reopening. Domain 3 was updated per executive instruction under `REDIS_ARCHITECTURE_AMENDMENT.md`.
 
 ---
 
 ## 4. Frozen Candidate Baseline
 
+The updated candidate baseline incorporates all surgical closure documentation and the Redis Architecture Amendment, re-freezing both repositories:
+
 ```text
-FINAL PHASE 0 CANDIDATE
-Infra SHA:                     174869490596c1eee07366590dbd8e1c46df5b71
-Server SHA:                    76b4bcb97dda098ff15a4fc9be4844746b6989be
+FINAL PHASE 0 CANDIDATE (POST-REDIS-AMENDMENT RE-FREEZE)
 Implementation delta:          Operational database tooling drift (create-readonly-analyst.sh, Option A)
 Audit/governance delta:        Governance tooling (verify-baseline-integrity.ps1, mirror-to-infra.ps1) + documentation
 Candidate frozen:              YES

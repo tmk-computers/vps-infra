@@ -160,8 +160,7 @@ The following **14 items** represent critical vulnerabilities or fatal defects t
    - Gate A certifies External Isolated CI (GitHub Actions).
    - Integrated CI retained for development; requires rootless daemon, cgroups, and network isolation before production qualification.
 4. **Database Scope Limitation (ADR-04)**:
-   - Gate A certifies PostgreSQL 16 exclusively (Linux: containerized; Windows: remote endpoint).
-   - Oracle, MariaDB, SQL Server, and Redis are explicitly blocked/deferred in Gate A profiles.
+   - Gate A certifies PostgreSQL 16 exclusively as the durable relational control-plane store (Linux: containerized; Windows: remote endpoint). Oracle, MariaDB, and SQL Server are explicitly blocked/deferred for customer application database profiles. Redis 7 is included as a first-class standard production caching and acceleration layer (non-authoritative; PostgreSQL remains the sole durable source of truth).
 
 ---
 

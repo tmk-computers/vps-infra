@@ -12,9 +12,9 @@
 
 This matrix provides the exhaustive resolution accounting for all remaining and new findings returned by the Codex Final Re-Gate (`PHASE_0_CODEX_FINAL_REGATE_REPORT.md` and `06_FINAL_FINDINGS_REGISTER.md`).
 
-Following the strict surgical closure mission directive, the eight domains previously certified as **PASS** by Codex (Release Contract, Security Contract, Redis Exclusion, Path Containment, Backup/Recovery, Windows Architecture, Traceability, Dual-OS) have remained completely untouched. 
+Following the strict surgical closure mission directive, the core accepted contracts (Release Contract, Security Contract, Path Containment, Backup/Recovery, Windows Architecture, Traceability, Dual-OS) have remained completely untouched. 
 
-Only the remaining failing domains (**Phase 0.5 Schema Contract** and **Evidence Integrity**) and the newly surfaced items (**Infrastructure Database Provisioning Drift** and **TLS Mode Precision**) have been addressed.
+Per executive architectural instruction prior to final independent review, the previous Redis classification was amended under `REDIS_ARCHITECTURE_AMENDMENT.md` to establish Redis 7 as a first-class component of the standard production architecture, while strictly enforcing that PostgreSQL remains the sole durable source of truth for safety-critical platform state. Only the remaining failing domains (**Phase 0.5 Schema Contract** and **Evidence Integrity**) and the newly surfaced items (**Infrastructure Database Provisioning Drift**, **TLS Mode Precision**, and **Compromised Credential Disposition**) have been addressed.
 
 ---
 
@@ -44,10 +44,13 @@ Only the remaining failing domains (**Phase 0.5 Schema Contract** and **Evidence
 - **Authoritative Baseline Update**: Canonical line 171 of `PHASE_0_FINAL_REPORT.md` was updated to reference `20261001000000_AddMaintenanceModeFields.cs` covering `Product` and `ProjectService`.
 
 ### 3.2 FR-C1-01: Database Provisioning Helper Drift
-- **Finding**: Commit `10a2e77` in `vps-infra` added `db/postgres/create-readonly-analyst.sh`, which provisions a read-only role (`clever_farmer_analyst`) for `clever_farmer_uat`. It contains a hardcoded fallback password (`AM8xoChSNNgfcrhlLdc5Rnum`) and connects via superuser `docker exec`.
+- **Finding**: Commit `10a2e77` in `vps-infra` added `db/postgres/create-readonly-analyst.sh`, which provisions a read-only role (`clever_farmer_analyst`) for `clever_farmer_uat`. It contains a hardcoded fallback password (redacted; treated as compromised) and connects via superuser `docker exec`.
 - **Disposition**: Chosen **Option A (Include in Phase 0 candidate baseline)**. It is legitimate operational database tooling authored by repository ownership on `main`. Deleting it or hiding it is rejected as dishonest.
 - **Accounting**: The full baseline delta is accounted for in `02_FINAL_CANDIDATE_BASELINE.md`. A comprehensive security and architectural disposition is documented in `04_INFRA_DATABASE_PROVISIONING_DISPOSITION.md`.
-- **Phase 1 Remediation Mandate**: Mapped to **MR-02** (Secret Storage) and **MR-05** (Least-Privilege Roles). In Phase 1, the hardcoded password fallback in line 11 MUST be removed, dynamic password generation enforced, and invocation restricted to authorized operational execution.
+- **Compromised Credential Policy & Phase 1 Remediation Mandate**:
+  - The exposed hardcoded credential is treated as compromised. It MUST be rotated/revoked.
+  - Future provisioning must use dynamically supplied or generated credentials; no default/fallback production credential is permitted.
+  - Mapped to **MR-02** (Secret Storage) and **MR-05** (Least-Privilege Roles). In Phase 1, the hardcoded password fallback MUST be removed, dynamic password generation enforced, and invocation restricted to authorized operational execution. Rotation will be evidenced upon execution in Phase 1 (not silently assumed in Phase 0).
 
 ### 3.3 C2-01: Schema Evolution Authority & Seeder Neutralization
 - **Finding**: `PHASE_0_FINAL_REPORT.md:171` claimed versioned EF Core migrations are the sole schema evolution authority, but parenthetically deferred raw DDL removal in `DataSeeder.cs` to Phase 2 MR-13.
@@ -70,6 +73,16 @@ Only the remaining failing domains (**Phase 0.5 Schema Contract** and **Evidence
 - **Hardening Applied**:
   - Missing dossier directories now trigger immediate `Write-Error` and exit 1 (no silent continue).
   - Traceability target parsing now scans all table rows (including discovery rows `MR-34`..`MR-37`), validating that every target reference is a valid member of `{MR-01..MR-37}`.
-  - Added forbidden phrase scan for `LocalService` agent identity.
+  - Added forbidden phrase scan for `LocalService` agent identity and stale Redis exclusion wording (`Optional / Not Gate-A Certified Dependency`).
   - Included `phase-0-final-closure` in mirror synchronization and bit-for-bit SHA-256 verification.
 - **Negative Testing**: All 7 fault-injection scenarios were executed and confirmed to exit with code 1. Clean baseline exits with code 0.
+
+### 3.7 Executive Architectural Amendment: Redis Architecture & Dual-Store Invariant
+- **Architectural Shift**: Amended previous classification (`Redis = Optional / Not Gate-A Certified Dependency`) to: **Redis 7 is a first-class component of the standard production architecture**.
+- **Non-Negotiable Durability Invariant**: **Redis SHALL NOT be the sole authoritative durable store for safety-critical platform state**. PostgreSQL 16 remains the durable source of truth for deployment state, release history, tenant config, users, authorization, durable credential/token revocation, audit history, recovery metadata, licensing, critical config, and billing records.
+- **Multi-Tiered Revocation Architecture**: Canonical pipeline `Local Cache -> Redis 7 -> PostgreSQL`. Revocation writes MUST commit durably to PostgreSQL first before being considered successful. Invalidation follows. Outages/cache misses fall back safely to PostgreSQL.
+- **Failure Model & Degraded Operation**: Redis unavailable MUST NOT cause loss of critical state. Fall back to PostgreSQL where possible; fail safe where not possible.
+- **Gate-A Acceptance Testing**: Defined 6 required test scenarios (Normal operation, Redis unavailable, Redis restart, Stale cached security data, Redis data loss, Redis latency/degradation).
+- **AI Workforce Forward Compatibility**: Documented Redis as operational primitive for future AI workforce capabilities outside Gate-A critical path.
+- **Traceability**: Mapped cleanly to existing MR items (MR-02, MR-05, MR-06, MR-07, MR-10, MR-11, MR-12, MR-16, MR-18, MR-20, MR-36) without increasing MR count above 37.
+

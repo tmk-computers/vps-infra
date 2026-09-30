@@ -44,6 +44,8 @@ The consistency scan inspected all active authoritative files in:
 | `F16.5` $\rightarrow$ `MR-17` | Resource governor admission control must map semantically to MR-16. | Cleanly mapped to **MR-16** across all registers; zero stale references to MR-17. | **PASS** |
 | Windows Static Fallback Secret | Accurately state present source reality vs target contract. | Explicitly stated: fallback is currently present in source (`scripts/tmk-iis-agent.ps1:21`); its complete elimination is a Phase 1 target contract (**MR-28**). | **PASS** |
 | Wrapper README Path | File links must point to existing repo paths (`vps-infra/README.md`). | All links in `15_DOCUMENTATION_TRUTH_MATRIX.md` corrected; early claims labeled as promotional assertions. | **PASS** |
+| `Optional / Not Gate-A Certified Dependency` | Stale Redis exclusion classification prohibited in current authoritative baseline. | **0 occurrences** in `docs/remediation/phase-0/`. Redis 7 established as first-class caching/acceleration component; PostgreSQL sole durable authority. | **PASS** |
+| Compromised Provisioning Credential | Literal plaintext fallback password string from `create-readonly-analyst.sh` must not be reproduced. | **0 occurrences** in documentation. String redacted and treated as compromised; rotation/revocation assigned to Phase 1 (MR-02/MR-05). | **PASS** |
 
 ---
 
@@ -72,8 +74,16 @@ The consistency scan inspected all active authoritative files in:
 8. **`scripts/verify-baseline-integrity.ps1`**:
    - Hardened to abort on missing dossier directories.
    - Expanded target MR parsing to scan all table rows in traceability matrix.
-   - Added LocalService forbidden pattern scan.
+   - Added LocalService and stale Redis exclusion forbidden pattern scans.
    - Included `phase-0-final-closure` in mirror scope.
+9. **Redis Architecture Amendment (`REDIS_ARCHITECTURE_AMENDMENT.md`)**:
+   - Replaced `Redis = Optional / Not Gate-A Certified Dependency` with `Redis 7 is a first-class component of the standard production architecture`.
+   - Codified non-negotiable invariant: `Redis SHALL NOT be the sole authoritative durable store for safety-critical platform state` (PostgreSQL remains durable source of truth).
+   - Multi-tiered revocation pipeline defined: `Local Cache -> Redis 7 -> PostgreSQL`.
+   - 6 Gate-A acceptance test scenarios defined; AI workforce forward compatibility documented outside Gate-A critical path.
+10. **Compromised Provisioning Credential Disposition**:
+   - Redacted all plaintext credential strings from `04_INFRA_DATABASE_PROVISIONING_DISPOSITION.md` and `01_FINAL_CODEX_FINDING_CLOSURE_MATRIX.md`.
+   - Classified as compromised; mandated Phase 1 rotation/revocation and dynamic secret generation under MR-02/MR-05.
 
 ---
 

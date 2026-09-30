@@ -46,6 +46,7 @@ Every file added or modified between `36354a32` and `76b4bcb9` is accounted for 
 | `docs/remediation/phase-0-review-r4/*` | **Documentation** | Independent Review R4 audit artifacts. |
 | `docs/remediation/phase-0-codex-gate/*` | **Documentation** | Historical Codex Gate audit artifacts. |
 | `docs/remediation/phase-0-codex-regate/*` | **Documentation** | Historical Codex Re-Gate audit artifacts. |
+| `docs/remediation/phase-0-final-closure/*` | **Documentation** | Phase 0 final closure dossier artifacts and Redis Architecture Amendment. |
 | `scripts/verify-baseline-integrity.ps1` | **Audit/Governance Tooling** | Mechanical cross-repo hash, traceability, and forbidden phrase verifier. |
 | `scripts/mirror-to-infra.ps1` | **Audit/Governance Tooling** | Automation script to mirror documentation to `vps-infra`. |
 
@@ -86,16 +87,20 @@ Every file added or modified between `780e8b4f` and `17486949` is accounted for 
   2. Deleting legitimate repository work merely to manufacture an artificial "clean diff" is strictly rejected by governance standards.
   3. Rather than disguising or ignoring the file, it is explicitly classified as **operational database tooling drift relative to historical baseline `780e8b4f`**.
   4. It is formally mapped to **MR-02** (Secret Storage) and **MR-05** (Least-Privilege Database Roles).
-  5. Its security risks (embedded fallback password in line 11, execution via superuser `docker exec`) are comprehensively analyzed in `04_INFRA_DATABASE_PROVISIONING_DISPOSITION.md`, and mandatory credential remediation is assigned to Phase 1.
+  5. Its security risks (embedded fallback password in line 11—redacted and treated as compromised—and execution via superuser `docker exec`) are comprehensively analyzed in `04_INFRA_DATABASE_PROVISIONING_DISPOSITION.md`. Mandatory rotation/revocation, dynamic credential generation, and elimination of static fallbacks are assigned to Phase 1.
 
 ---
 
-## 5. Candidate Immutability Mandate
+## 5. Candidate Immutability Mandate & Re-Freeze
 
-From this point forward:
+The candidate baseline was updated to incorporate the Redis Architecture Amendment (`REDIS_ARCHITECTURE_AMENDMENT.md`) and the compromised credential disposition.
 
-1. `PHASE_0_FINAL_CANDIDATE_INFRA_SHA` = `174869490596c1eee07366590dbd8e1c46df5b71`
-2. `PHASE_0_FINAL_CANDIDATE_SERVER_SHA` = `76b4bcb97dda098ff15a4fc9be4844746b6989be`
+### Superseded Candidate SHAs:
+- `PHASE_0_FINAL_CANDIDATE_INFRA_SHA` (superseded): `39995013cb4a1a12c46870b33f6f05477473af24`
+- `PHASE_0_FINAL_CANDIDATE_SERVER_SHA` (superseded): `8f6811a84cb5c78a58482e5799ff09b8b09cc7ac`
+
+### New Frozen Candidate Baseline:
+The new exact candidate commit SHAs are recorded upon candidate re-freeze and verified to have clean worktrees.
 
 ### Freeze Rule:
 **DO NOT MODIFY, COMMIT, OR MERGE CHANGES TO MAIN IN EITHER REPOSITORY UNTIL THE INDEPENDENT REVIEWER AND CODEX FINAL AUDIT GATE COMPLETE.**

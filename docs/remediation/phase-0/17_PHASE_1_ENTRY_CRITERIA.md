@@ -50,7 +50,7 @@ Upon independent sign-off, Phase 1 execution will commence covering exclusively 
 6. **MR-07**: Implement dynamic high-entropy secret generation on setup across provisioning scripts (`setup.sh`, `setup.ps1`). F16.1: Encrypt AI keys at rest with rotation acceptance. F16.2: Enforce monotonic streaming spend cap with atomic concurrent spend reservations. (F16.3/F16.4 gated under Gate-A AI disablement).
 7. **MR-08**: Multi-tenant RBAC and role separation: formally decouple `PlatformSuperAdmin` from `TenantAdmin` (DEF-11); break-glass governance with customer consent, short-lived elevation, and audit. DEF-08: Container hardening (UID 10001, capability dropping, read-only rootfs, scoped socket proxy).
 8. **MR-28**: Replace hardcoded Windows Agent fallback bearer secret with dynamically provisioned mutual authentication secrets (Dual-OS parity).
-9. **MR-36**: Comprehensive Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, rotation, durable capability-based revocation in PostgreSQL without Redis). Pass all 15 negative test criteria (including wrong issuer, historical/retired signing key, and valid-token-with-wrong-scope).
+9. **MR-36**: Comprehensive Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, rotation, multi-tiered revocation via `Local Cache -> Redis 7 -> PostgreSQL`). Pass all 15 negative test criteria (including wrong issuer, historical/retired signing key, and valid-token-with-wrong-scope).
 
 
 *(Note: MR-37 UI copywriting and documentation labeling is relocated to Phase 9 alongside MR-21, with pre-pilot disclosure provided for pilots).*

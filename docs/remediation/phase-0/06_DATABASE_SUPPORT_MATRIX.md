@@ -29,13 +29,13 @@ Lifecycle Classification Tiers:
 | **MariaDB / MySQL 11** | **YES** | **YES** (`db/mariadb/docker-compose.yml`) | **PARTIAL** (`mysqldump` script) | **NOT IN GATE A** (Deferred) | PENDING EVAL | Containerized | Compose exists; port 3306 exposed to `0.0.0.0` (MR-06); deferred to prevent pilot surface dilution. |
 | **Oracle Database** | **YES** | **YES** (`db/oracle/docker-compose.yml`) | **DEFECTIVE** (`OracleBackupHandler.cs`) | **EXCLUDED** (Unsupported) | PENDING EVAL | Containerized | Critical defect F19: handler swallows expdp/impdp errors and returns false success; strictly excluded from Gate A. |
 | **MongoDB** | **YES** | **YES** (`db/mongodb/docker-compose.yml`) | **NO** | **EXCLUDED** (Unsupported) | PENDING EVAL | Containerized | No automated backup or verification logic implemented. |
-| **Redis 7** | **YES** (PRDs/Audit) | **NO** (0 manifests in repo) | **NO** | **EXCLUDED** (Unsupported) | PENDING EVAL | None (Ghost manifest) | **Audit Assertion Reconciled**: Claimed in Antigravity audit, but 0 manifests exist in `vps-infra`. Must be designed from scratch post-pilot for caching. |
+| **Redis 7** | **YES** (Standard) | **TARGET STANDARD** | **N/A** (Non-authoritative cache) | **FIRST-CLASS PRODUCTION CACHE** | **IN-SCOPE (Standard)** | Internal bridge (`shared_redis`) / remote endpoint | **Standard Production Cache & Acceleration Layer**: Established as a first-class standard production infrastructure component for distributed caching, rate limiting, and Pub/Sub event distribution. Non-authoritative: PostgreSQL remains the sole durable source of truth. |
 
 ---
 
-## 3. Pilot Gate A Approved Database Profile
+## 3. Pilot Gate A Approved Database & Caching Profile
 
-### 3.1 Exclusively Supported: PostgreSQL 16
+### 3.1 Exclusively Supported Durable Relational Store: PostgreSQL 16
 - **Linux Deployment Topology**: Containerized on internal `traefik_net` bridge (`shared_postgres`), port 5432 bound strictly to `127.0.0.1` or internal bridge.
 - **Windows Deployment Topology**: Remote PostgreSQL 16 endpoint (dedicated Linux VM or managed PostgreSQL service) accessed over authenticated TLS port 5432 (`SSL Mode=VerifyFull` with validated CA and hostname verification; unauthenticated trust bypass is strictly prohibited). (WSL2 and Docker Desktop on Windows Server are explicitly uncertified and prohibited for Gate A).
 - **Role Isolation**:
@@ -49,7 +49,40 @@ Lifecycle Classification Tiers:
   - Atomic offsite dispatch to verified cloud storage with remote SHA-256 digest check and authenticated `RecoveryPoint` manifest cataloging.
   - Periodic automated DR drill with real data restore verifying table row counts and integrity invariants.
 
-### 3.2 Enforcement for Other Engines
-- During Pilot Gate A, selecting Oracle, MariaDB, SQL Server, MongoDB, or Redis in DevOps Manager UI or API will return an explicit HTTP 400 Bad Request with:
+### 3.2 First-Class Standard Production Cache & Acceleration: Redis 7
+- **Architecture Role**: Redis 7 is a first-class component of the standard production architecture, deployed alongside PostgreSQL 16.
+- **Strict Invariant**: **Redis SHALL NOT be the sole authoritative durable store for safety-critical platform state.** PostgreSQL remains the sole durable source of truth for deployment state, release history, tenant configuration, users, authorization state, durable credential/token revocation, audit history, recovery metadata, licensing, critical configuration, and billing records.
+- **Architectural Responsibilities**:
+  - Distributed caching and short-lived session state;
+  - API rate limiting and monotonic spend tracking caches;
+  - Pub/Sub event fan-out and real-time status distribution (WebSockets / SSE);
+  - Token and revocation caching acceleration (`Local Cache -> Redis 7 -> PostgreSQL`);
+  - Lock pre-filtering and distributed worker coordination (complementing, not replacing, PostgreSQL advisory locks and epoch fencing);
+  - LLM response caching and AI tool-result caching;
+  - Future AI Workforce and agent coordination infrastructure.
+- **Failure Model & Degraded Operation**:
+  - Redis unavailability MUST NOT by itself cause loss of deployment truth, authorization truth, credential revocation truth, audit history, recovery metadata, or release history.
+  - Where safe fallback is possible, the platform SHALL fall back to the durable PostgreSQL store.
+  - Where safe fallback is not possible, the affected operation SHALL fail safely rather than proceed using stale or unverifiable state.
+- **Revocation Pipeline**:
+  - PostgreSQL (`RevokedTokens` table) is the durable revocation authority.
+  - Redis is the fast shared revocation cache.
+  - Revocation writes must reach PostgreSQL before being considered successful, followed by Redis cache update/invalidation. Cache misses or Redis outages fall back safely to PostgreSQL, never bypassing security truth.
+- **Security & Topology Requirements**:
+  - Authentication enabled (`requirepass` with dynamic high-entropy secret generated during setup);
+  - Bound strictly to internal loopback (`127.0.0.1`) or private container network bridge (`traefik_net`); zero public WAN exposure;
+  - TLS encryption where connections cross untrusted network boundaries;
+  - Memory bounds configured (`maxmemory`, appropriate eviction policy e.g. `volatile-lru`);
+  - Monitoring for memory usage, connection spikes, and latency degradation.
+- **Gate-A Acceptance Testing Scenarios**:
+  1. *Normal Operation*: Redis healthy and available.
+  2. *Redis Unavailable*: Critical platform state remains safe; platform falls back to PostgreSQL or fails safe.
+  3. *Redis Restart*: Cache and coordination state reconciles correctly.
+  4. *Stale Cached Security Data*: Stale cache entries must not permit revoked credentials.
+  5. *Redis Data Loss*: Flush/wipe of Redis data must not destroy or corrupt authoritative platform state.
+  6. *Redis Latency/Degradation*: High latency or queue saturation must not silently convert safety checks into permissive behavior.
+
+### 3.3 Enforcement for Customer Application Database Engines
+- During Pilot Gate A, selecting Oracle, MariaDB, SQL Server, or MongoDB for customer application database provisioning in DevOps Manager UI or API will return an explicit HTTP 400 Bad Request with:
   `"This database engine is not qualified under Pilot Gate A certification. Please select PostgreSQL 16."`
-- Eliminates silent failures, unverified backups, and operational downtime.
+- *(Note: Redis 7 is managed directly by the platform runtime as a shared caching and acceleration layer, not provisioned as a general-purpose customer application database).*

@@ -70,7 +70,7 @@ The Shared Platform Core executes platform-level business logic independently of
    - Per-installation encrypted secret vault using OS DPAPI or AES-256-GCM.
    - In-memory redaction of secrets in log templates, process arguments, and trace outputs.
    - Comprehensive Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, lifetime, rotation, revocation).
-   - Durable capability-based token revocation repository in PostgreSQL, synchronized with local in-memory cache, surviving service restarts. Redis is classified as `Optional / Not Gate-A Certified Dependency`.
+   - Multi-tiered token revocation pipeline (`Local Cache -> Redis 7 -> PostgreSQL`). PostgreSQL (`RevokedTokens`) remains the durable source of truth and authority. Redis 7 is established as a first-class standard production caching and acceleration layer. Revocation writes must reach PostgreSQL before being considered successful, followed by Redis cache update/invalidation. Cache misses and Redis unavailability fall back safely to PostgreSQL, never bypassing security truth.
 
 3. **Release Model & Artifact Provenance**:
    - Mandatory immutable release identifiers (SemVer + Git SHA or Content Digest).
@@ -82,7 +82,7 @@ The Shared Platform Core executes platform-level business logic independently of
      `PENDING` → `PRECHECK` → `PREPARED` → `APPLYING` → `VERIFYING` → `CUTOVER` → `POST_CUTOVER_VERIFY` → `SUCCEEDED`
    - Explicit failure states:
      `FAILED` (pre-mutation) or `ROLLBACK` → `ROLLED_BACK` / `RECOVERY_REQUIRED`
-   - Single-host per-service atomic locking via PostgreSQL advisory locks, idempotency keys, and physical process fencing.
+   - Single-host per-service atomic locking via PostgreSQL advisory locks, idempotency keys, and physical process fencing. Redis may support notifications, lock pre-filtering, and status fan-out, but Redis locks alone are non-authoritative and must never replace durable PostgreSQL advisory locks, idempotency keys, and epoch fencing for irreversible deployment or database actions. Loss of Redis must never impair determination of durable deployment state.
    - Process crash / server reboot recovery: deterministic reconciliation of in-flight states upon startup without premature promotion.
 
 5. **Health & Readiness Contract**:
