@@ -11,6 +11,7 @@ $dirs = @(
     "docs\remediation\phase-0-final-closure",
     "docs\remediation\phase-0-final-codex-correction",
     "docs\remediation\phase-0-final-c2-04-correction",
+    "docs\remediation\phase-0-final-c2-04-source-truth-reconciliation",
     "docs\remediation\phase-0-review"
 )
 
@@ -34,4 +35,4 @@ foreach ($dir in $dirs) {
 
 Copy-Item -Path (Join-Path $srcBase "scripts\verify-baseline-integrity.ps1") -Destination (Join-Path $dstBase "scripts\verify-baseline-integrity.ps1") -Force
 Copy-Item -Path (Join-Path $srcBase "scripts\mirror-to-infra.ps1") -Destination (Join-Path $dstBase "scripts\mirror-to-infra.ps1") -Force
-Write-Host "Mirror synchronization completed successfully across all 7 remediation directories." -ForegroundColor Green
+Write-Host "Mirror synchronization completed successfully across all 8 remediation directories." -ForegroundColor Green

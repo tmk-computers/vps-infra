@@ -46,14 +46,14 @@ This statement contained two distinct factual errors:
    }
    ```
    It has nothing to do with pruning.
-2. **False Command Assertion**: No code in `MonitoringService.cs` (or anywhere else in the codebase) executes `docker system prune -a`. While `MonitoringService.cs` does define an on-demand method `CleanupDockerAsync` (lines 234–315), that method executes individual subcommands (`docker container prune -f`, `docker image prune -f [-a]`, `docker network prune -f`, etc.) upon explicit operator request, and is not an automated or background system prune execution.
+2. **False Attribution to Line 213**: Line 213 does not execute any command. Line 213 was erroneously cited as Docker cleanup implementation. While `MonitoringService.CleanupDockerAsync` (lines 234–323) dynamically constructs and executes Docker CLI prune commands (including `docker system prune -f -a` when `CleanSystem` and `RemoveAllUnusedImages` are true, as invoked daily by `DockerCleanupBackgroundService`), line 213 itself is merely error logging in `GetProjectStatusAsync`.
 
 ### 2.3 The Historical Reviewer Error
 As required by Section 9 of the prompt, this report explicitly documents the historical Reviewer error:
-> **The previous Developer correction and targeted Reviewer report (`docs/remediation/phase-0-final-codex-correction-review/`) incorrectly treated the `MonitoringService` reference as evidence of active Docker pruning (`docker system prune -a`).**
-> **Conversation 2 (Independent Reviewer) failed to independently inspect `MonitoringService.cs:213` against the running candidate and repeated the Developer's incorrect line citation and command claim in `03_C2_04_EVIDENCE_ACCURACY_REVIEW.md:42`.**
-> **Codex independently inspected the candidate source code, disproved that attribution, and failed the gate.**
-> **Per governance rules, historical Reviewer and Codex audit artifacts remain immutable post-freeze audit records, while the authoritative Phase 0 baseline documentation is now corrected to reflect actual source truth.**
+> **The previous Developer correction and targeted Reviewer report (`docs/remediation/phase-0-final-codex-correction-review/`) incorrectly treated the `MonitoringService` line 213 reference as evidence of active Docker pruning (`docker system prune -a`).**
+> **Conversation 2 (Independent Reviewer) failed to independently inspect `MonitoringService.cs:213` against the running candidate and repeated the Developer's incorrect line citation in `03_C2_04_EVIDENCE_ACCURACY_REVIEW.md:42`.**
+> **Codex independently inspected the candidate source code, disproved that line attribution, and failed the gate.**
+> **Per governance rules, historical Reviewer and Codex audit artifacts remain immutable post-freeze audit records, while the authoritative Phase 0 baseline documentation is now reconciled to reflect actual canonical source truth.**
 
 ---
 
@@ -61,11 +61,19 @@ As required by Section 9 of the prompt, this report explicitly documents the his
 
 Direct static source inspection across `vps-infra` and `vps-infra-server` establishes the following facts:
 
-1. **No Automatic Docker Pruning Execution**:
-   Automatic Docker pruning / cleanup execution is **NOT evidenced** by inspected current source code.
+1. **Automatic Docker Cleanup Exists**:
+   Automatic Docker cleanup **EXISTS** and is executed automatically by `DockerCleanupBackgroundService` (an `IHostedService` registered in `Program.cs:359`) on a scheduled daily cron (default 3:00 AM IST) calling `MonitoringService.CleanupDockerAsync`.
 2. **MonitoringService Functionality**:
-   - `MonitoringService.cs:195-218`: Gathers container status via `docker ps` and logs a warning on failure. It does not execute pruning.
-   - `MonitoringService.cs:234-315` (`CleanupDockerAsync`): Exposes an on-demand API endpoint accepting `DockerCleanupRequestDto`. When invoked by an operator, it executes targeted prunes (`image prune`, `container prune`, `network prune`, `volume prune`, `builder prune`). It does NOT execute `docker system prune -a`.
+   - `MonitoringService.cs:195-218`: Gathers container status via `docker ps` and logs a warning on failure at line 213. It does not execute pruning.
+   - `MonitoringService.cs:234-323` (`CleanupDockerAsync`): Core cleanup implementation. Constructs and executes Docker CLI commands via `ExecuteCommandWithTimeoutAsync` spawning `System.Diagnostics.Process`. When invoked by `DockerCleanupBackgroundService`, it executes:
+     - `docker container prune -f`
+     - active container log truncation (`truncate -s 0`)
+     - `docker image prune -f -a`
+     - `docker network prune -f`
+     - `docker system prune -f -a`
+     - `docker builder prune -a -f`
+     - local registry garbage collection
+   - **No explicit `docker volume prune` command was identified in the inspected current C# source.** Neither `docker volume prune` nor a `CleanVolumes` DTO property exists in `MonitoringService.cs` or `DockerCleanupRequestDto.cs`.
 3. **Diagnostic Suggestion Only**:
    - `CiDiagnosticsAgentService.cs:241`: Returns a list of suggestion strings to an operator for build OOM diagnosis:
      ```csharp
@@ -76,8 +84,8 @@ Direct static source inspection across `vps-infra` and `vps-infra-server` establ
      });
      ```
      This string is displayed in diagnostic UI or logs; it is **never executed** by the service.
-4. **Scheduled Background Service Scope**:
-   - `DockerCleanupBackgroundService.cs`: Runs a scheduled daily cron (3:00 AM IST) that deletes old database logs (14–30 days), old application logs (7 days), and truncates container log files > 50MB. While Step 4 calls `monitoringService.CleanupDockerAsync`, this is an uncoordinated cleanup that wipes unused images indiscriminately and fails to protect proven rollback digests (the core defect tracked by **MR-17** and **Codex F13**).
+4. **Current Safety Status (MR-17 / Codex F13)**:
+   - The current automatic cleanup is **indiscriminate, aggressive, and not rollback-aware**. Passing `RemoveAllUnusedImages = true` issues `-a` flags that purge all non-running container images, completely wiping local rollback image caches. Safe rollback-aware retention and deployment concurrency locking are **NOT IMPLEMENTED** (owned by **MR-17**).
 
 ---
 
