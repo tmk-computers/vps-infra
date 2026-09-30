@@ -122,10 +122,11 @@ To ensure that backups remain recoverable if the source VPS is destroyed:
 2. **Air-Gapped Customer Recovery Sheet**: The operator is required to record the recovery phrase off-host (e.g. in secure password vault or physical safe).
 3. **Key Derivation (PBKDF2 / Argon2id)**: The KEK is deterministically derived from this recovery passphrase:
    $$\text{KEK} = \text{Argon2id}(\text{Passphrase}, \text{Salt}, \text{Iterations}=3, \text{Memory}=64\text{MB})$$
+   **Self-Sufficient Recovery Manifest**: Nonsecret derivation metadata (Argon2id salt, KEK version identifier, initialization vector) is stored in plaintext within the recovery manifest accompanying the backup archive, enabling clean-slate reconstruction.
 4. **Disaster Recovery Execution**: On a completely blank replacement VPS, the operator provides:
    - The offsite storage credentials (endpoint, bucket, access keys);
    - The 24-word recovery passphrase.
-   The replacement host derives the KEK, downloads the encrypted backup, unwraps the DEK, and decrypts the archive. **Zero dependency on the destroyed host filesystem, local registry, or licensing server.**
+   The replacement host retrieves the recovery manifest, extracts the salt, derives the KEK, downloads the encrypted backup, unwraps the DEK, and decrypts the archive. **Zero dependency on the destroyed host filesystem, local registry, or licensing server.**
 
 ---
 
@@ -141,7 +142,9 @@ For Gate A (PostgreSQL 16), backup validity is verified non-destructively using 
 
 ```bash
 # Non-destructive format-aware verification:
-# Reads the archive header, verifies compression blocks, and dumps the Table of Contents (TOC).
+# Reads the archive header and Table of Contents (TOC).
+# Crucial Precision: It does NOT decompress data blocks or verify full table data integrity.
+# Full data and relational integrity is proven exclusively via real automated restore drills.
 # Returns exit code 0 if valid; non-zero if truncated, corrupted, or unreadable.
 pg_restore --list "$LOCAL_BACKUP_PATH" > /tmp/backup_toc.txt
 
@@ -174,7 +177,7 @@ A database dump alone is insufficient to reconstruct a functional platform. A co
    - Docker image tags and digest hashes;
    - Ingress routing rules and domain names;
    - Tenant-to-host mappings and environment variables;
-   - Secret envelope hashes.
+   - Protected secrets (database credentials, JWT signing keys, TLS private keys) encrypted under the KEK, enabling complete restoration on a bare-metal host.
 3. **Asset & Storage Bundle**: Customer file uploads, project templates, and persistent object files stored in the persistent volume root.
 
 All three components are packaged under a common `RecoveryPointId` and uploaded together.
@@ -201,17 +204,33 @@ Backup cleanup must never jeopardize disaster recovery.
 
 ---
 
-## 8. Realistic RPO and RTO Targets (Gate A Profile)
+## 8. Master Phase 5 Failure Acceptance Matrix
 
-Unrealistic promises of "instantaneous recovery" are eliminated. The Gate A recovery contract defines measurable targets:
+To ensure full coverage of disaster recovery failure modes, Phase 5 testing mandates verification against the following scenarios:
 
-| Metric | Target | Measurement Method | Gate-A Acceptance Criterion |
+| Failure Mode | Injected Fault | Expected Behavior | Acceptance Standard |
 |---|---|---|---|
-| **Recovery Point Objective (RPO)** | **24 hours** (Scheduled)<br>**1 hour** (Pre-deploy) | Maximum elapsed time between the most recent restorable backup and the point of failure. | Verified during Phase 5 testing: Daily backups run successfully every 24h; pre-deploy backups run immediately before deployment. |
-| **Recovery Time Objective (RTO)** | **30 minutes** | Total time required to download, decrypt, format-verify, and restore a 10 GB database onto a provisioned replacement VPS. | Verified during Phase 5 testing: Restore drill on test VM restores 10 GB database and starts services in $\le 30$ minutes. |
+| **Corrupted Payload (Tamper)** | Random byte flipped in encrypted `.dump.enc`. | AES-256-GCM authentication tag verification fails during decryption. | Decryption aborts with `CryptographicException`; corrupted file quarantined. |
+| **Truncated Dump** | `pg_dump` interrupted before completion. | `pg_restore --list` returns non-zero exit code or zero `TABLE DATA` entries in TOC. | Local verification fails; recovery point marked `INVALID`; offsite upload aborted. |
+| **Null / Upload Failure** | Network disconnected during S3 upload. | Upload task fails; remote digest verification detects missing object. | State set to `FAILED_OFFSITE_UPLOAD`; notification dispatched; local dump retained. |
+| **Key Rotation & Custody** | Backup created under KEK v1; system rotated to KEK v2. | Manifest specifies `KekVersion = 1`; engine resolves historical KEK from kit. | Successful decryption and restore using historical key. |
+| **Storage Pressure / Floor** | Disk at 95% capacity; automated prune triggered. | Pruning purges expired pre-deploy dumps; aborts if verified count would drop below floor. | Minimum retention floor (2 verified points) strictly preserved. |
+| **Total Source Host Loss (Linux)** | Linux host destroyed; blank VM provisioned. | Operator provides S3 credentials and 24-word recovery passphrase. | System derives KEK, downloads manifest, restores DB, and restarts services. |
+| **Total Source Host Loss (Windows)** | Windows Server destroyed; fresh Windows Server provisioned. | Operator provides S3 credentials and 24-word recovery passphrase. | System derives KEK, restores remote DB schema, provisions IIS sites/apppools, binds TLS. |
 
 ---
 
-## 9. Conclusion
+## 9. Realistic RPO and RTO Targets (Gate A Profile)
 
-This contract resolves all defects identified in finding `C1-02`. It establishes end-to-end client-side encryption with disaster-proof key custody, format-aware PostgreSQL verification, a complete platform recovery set, and realistic RPO/RTO operational targets.
+Unrealistic promises of "instantaneous recovery" are eliminated. The Gate A recovery contract defines operational targets for subsequent measurement:
+
+| Metric | Target | Measurement Method | Gate-A Acceptance Criterion |
+|---|---|---|---|
+| **Recovery Point Objective (RPO)** | **24 hours** (Scheduled)<br>**1 hour** (Pre-deploy) | Maximum elapsed time between the most recent restorable backup and the point of failure. | Operational target: Daily backups run successfully every 24h; pre-deploy backups run immediately before deployment. |
+| **Recovery Time Objective (RTO)** | **30 minutes** | Total time required to download, decrypt, format-verify, and restore a 10 GB database onto a provisioned replacement VPS. | Operational target: Restore drill on test VM restores 10 GB database and starts services in $\le 30$ minutes. |
+
+---
+
+## 10. Conclusion
+
+This contract resolves all defects identified in finding `C1-02`. It establishes end-to-end client-side encryption with disaster-proof key custody, format-aware PostgreSQL verification, a complete platform recovery set, full Phase 5 failure test coverage, and realistic RPO/RTO operational targets.

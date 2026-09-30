@@ -63,13 +63,13 @@ To eliminate documentation drift and false product readiness claims, all evaluat
 - **Prerequisites**: Minimum 4 vCPUs, 16 GB RAM, 100 GB NVMe/SSD, IIS 10.0, ASP.NET Core Hosting Bundle 8.0, .NET 8 Runtime.
 - **Frozen Windows Gate-A Topology**:
   - **Workload Host**: Native Windows IIS 10 hosting ASP.NET Core applications via ANCM.
-  - **Agent Service**: Compiled `.NET Worker` Windows Service (`TMK.Agent.Windows`) running under `NT AUTHORITY\LocalService` with native SCM lifecycle integration (MR-22).
-  - **Control Plane Connection**: DevOps Manager on Linux connects to `TMK.Agent.Windows` via mutual TLS (mTLS) over HTTPS on dedicated port 5055 (MR-23).
-  - **Database Endpoint**: Workloads connect to a **Remote PostgreSQL 16 Endpoint** (dedicated Linux VM or managed instance) over TLS port 5432. WSL2 and Docker Desktop on Windows Server are explicitly uncertified and prohibited for Gate A.
+  - **Agent Service**: Compiled `.NET Worker` Windows Service (`TMK.Agent.Windows`) running under a **dedicated least-privilege Windows service identity** (e.g. `NT SERVICE\TMKAgent`) with explicitly granted required rights: IIS administration / AppPool control, deployment filesystem rights (`C:\inetpub\staging\` and `C:\inetpub\wwwroot\`), and SCM inspection (MR-22, MR-24); explicitly restricted from unrelated OS directories and LocalSystem privileges.
+  - **Control Plane Connection**: DevOps Manager on Linux connects to `TMK.Agent.Windows` via mutual TLS (mTLS) over HTTPS on dedicated port 5055 (MR-23), paired with scoped short-lived operation authorization tokens.
+  - **Database Endpoint**: Workloads connect to a **Remote PostgreSQL 16 Endpoint** (dedicated Linux VM or managed instance) over authenticated TLS port 5432 (`SSL Mode=VerifyFull` or `SSL Mode=Require;Trust Server Certificate=false` with validated CA/pinning; unauthenticated server certificate trust or validation bypass is strictly prohibited). WSL2 and Docker Desktop on Windows Server are explicitly uncertified and prohibited for Gate A.
   - **Ingress & Port Architecture**: Traefik is **NOT deployed** on the Windows host. Native Windows `HTTP.sys` driver and IIS 10 own ports 80 and 443 with SNI SSL bindings, completely eliminating port conflicts and `setup.ps1` W3SVC stoppage (MR-27).
-  - **Filesystem Security**: Sandboxed deployment filesystem (`C:\inetpub\staging` and `C:\inetpub\wwwroot\apps`) with NTFS ACL enforcement and path traversal validation (MR-24).
+  - **Filesystem Security**: Sandboxed deployment filesystem (`C:\inetpub\staging` and `C:\inetpub\wwwroot\apps\{tenant}\`) with NTFS ACL enforcement, normalized segment-boundary containment, and path traversal validation (MR-24).
   - **Telemetry**: Per-AppPool PID telemetry mapping, eliminating the all-w3wp summation defect (MR-25).
-  - **Agent Upgrades**: Detached helper (`TMK.Agent.Updater.exe`) executes atomic binary swap with automated rollback on service failure.
+  - **Agent Upgrades**: Safe binary replacement with automated rollback on service failure, post-restart functional health verification (`/health`), and deterministic recovery across interrupted updates or host reboot events.
 
 ### 4.3 Staggered Operational Execution Policy
 - If Linux remediation reaches its independent Gate A criteria before Windows Server reaches Windows Gate A, an operational pilot for Linux may commence under Phase 13A.

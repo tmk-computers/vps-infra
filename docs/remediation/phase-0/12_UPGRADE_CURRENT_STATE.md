@@ -119,9 +119,10 @@ sequenceDiagram
 3. **True Post-Upgrade Readiness Verification**:
    - Script must poll `http://127.0.0.1:5000/api/system/status` or health probe for 60 seconds.
    - All platform containers (`traefik`, `devops-api-prod`, `devops-web-prod`, `ci-api-prod`, `shared_postgres`) must report healthy.
-4. **Automated Atomic Rollback**:
+4. **Automated Application Rollback (Without Database Restoration)**:
    - If health probes fail within the timeout, the upgrade runner must automatically:
      - Revert git repository to previous commit SHA.
-     - Restore pre-upgrade database backup.
-     - Restart previous Docker container images.
+     - Restart previous Docker container images / application binaries.
      - Verify restored platform health before exiting with failure.
+   - **CRITICAL INVARIANT**: Application rollback MUST NOT automatically restore the database. The previous release must remain compatible with the database schema under the Expand/Contract contract. Destructive database restoration is strictly an explicit disaster recovery operation requiring human authorization (`--confirm-destructive-data-loss`), system quiescing, an ad-hoc pre-restore safety dump, and data-loss window assessment.
+

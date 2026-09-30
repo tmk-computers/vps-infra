@@ -170,8 +170,10 @@ To guarantee deterministic operation without introducing complex distributed loc
 2. If a worker crashes or hangs, the heartbeat expires after a 60-second TTL.
 3. Upon detecting an expired heartbeat:
    - The lock is considered stale.
-   - A recovering or subsequent worker verifies the process ID (`WorkerPid`) and host name. If the process is dead, the deployment state is transitioned to `RECOVERY_REQUIRED` (or `ROLLBACK` if before cutover).
-   - Fencing token: Every database update checks `Version = @ExpectedVersion`, incrementing the version atomically. Any late write from a partitioned or suspended worker fails with an optimistic concurrency exception.
+   - A recovering supervisor verifies the process ID (`WorkerPid`) and host name. If the process is still running, it is terminated forcefully (`kill -9` / `TerminateProcess`) to prevent stale workers from resuming already-authorized ingress mutations.
+   - **Generation Epoch Tokens**: Every deployment step attaches a monotonically increasing `DeploymentEpoch` token to physical router configs and staging directories. Late writes from stale or partitioned workers are rejected because their epoch is superseded.
+   - **Database Fencing**: Every database update checks `Version = @ExpectedVersion`, incrementing the version atomically. Any late write fails with an optimistic concurrency exception.
+   - If a crash occurred before cutover, the supervisor inspects whether irreversible migrations ran. If schema was modified and compatibility with $N-1$ is unverified, state transitions to `RECOVERY_REQUIRED`. Otherwise, it safely marks `FAILED` or initiates application rollback.
 
 ---
 
@@ -187,14 +189,16 @@ Reverting an application binary or container NEVER triggers an automatic databas
 - **Application Rollback** is safe, non-destructive, and can be automated because it simply repoints traffic to an existing, valid container/package.
 - **Database Restoration** is destructive: restoring a database backup or snapshot wipes out all transactions, user registrations, orders, and state changes written between the snapshot time and the rollback time.
 
-### 6.2 Backward-Compatible "Expand/Contract" Migration Mandate
-For Gate A, all database schema migrations must adhere to the **Expand / Contract (Two-Phase Evolution) Pattern**:
+### 6.2 Backward-Compatible "Expand/Contract" Migration Mandate Across Rollback Candidates
+For Gate A, all database schema migrations must adhere to the **Expand / Contract (Two-Phase Evolution) Pattern across active rollback candidates**:
 1. **Expand Phase (Release $N$)**:
    - Schema changes must be strictly additive and backward-compatible with Release $N-1$.
    - Allowed: Adding nullable columns, adding new tables, adding views, adding indexes (concurrently).
    - Prohibited in a single step: Renaming existing columns, deleting tables/columns, adding non-nullable columns without defaults, altering data types destructively.
-2. **Contract Phase (Release $N+1$)**:
-   - Deprecated columns and tables from Release $N-1$ are only dropped in a subsequent release after Release $N$ is proven stable and historical rollback to $N-1$ is no longer required.
+   - Release $N$ dual-writes or writes to new schema structures while maintaining old columns.
+2. **Contract Phase (Release $N+2$)**:
+   - Columns or tables utilized by Release $N$ MUST NOT be dropped during Release $N+1$ deployment if Release $N$ remains an active rollback candidate.
+   - Contract migrations (dropping legacy columns/tables) are permitted only in Release $N+2$, after Release $N+1$ has proven stable in production and Release $N$ is no longer an eligible rollback target.
 
 ### 6.3 Pre-Deployment Migration Eligibility Evaluation
 Before any deployment begins:
@@ -221,14 +225,15 @@ To satisfy the Codex acceptance criteria, the table below documents the determin
 | Failure Scenario | Active State | State Machine Action | Resulting State | Data Loss Risk? |
 |---|---|---|---|---|
 | **Duplicate Request** | `APPLYING` | Second request matches `IdempotencyKey`; returns HTTP 409 with active deployment stream. | `APPLYING` (Unchanged) | None |
-| **Worker Process Dies (Power loss / Crash)** | `APPLYING` | Staging container running on internal bridge; previous live service serving traffic. On reboot, worker detects expired heartbeat with no cutover. Staging container pruned. | `FAILED` | None |
+| **Lock-Holder Death / Worker Crash** | `APPLYING` | Heartbeat TTL expires. Recovering supervisor terminates dead PID (`kill -9`), verifies generation epoch. If schema compatibility with $N-1$ is unverified or modified, routes to `RECOVERY_REQUIRED`. Otherwise, cleans up staging container. | `FAILED` or `RECOVERY_REQUIRED` | None |
 | **Precheck Disk Space Exhaustion** | `PRECHECK` | Disk space < 5GB detected. No files created, no containers spawned, lock released. | `FAILED` | None |
 | **Staging Health Probes Fail (HTTP 500)** | `VERIFYING` | Staging container fails health checks 3 times. Staging container stopped. Live traffic was never switched. Old release intact. | `FAILED` | None |
 | **Traffic Cutover Routing Fails** | `CUTOVER` | Traefik configuration reload errors or HTTP.sys binding fails. Cutover aborted; routing verified pointing to old container. | `ROLLBACK` → `ROLLED_BACK` | None |
-| **Post-Cutover Spike in 5xx Errors** | `POST_CUTOVER_VERIFY` | Error rate > 1% detected during 30s observation window. Automated rollback triggered: routing switched back to previous standby container. Staging container stopped. | `ROLLBACK` → `ROLLED_BACK` | None |
+| **Post-Cutover Spike in 5xx Errors** | `POST_CUTOVER_VERIFY` | Error rate > 1% detected during 30s observation window. Automated rollback triggered: routing switched back to previous standby container. Staging container stopped. DB snapshot is NOT restored. | `ROLLBACK` → `ROLLED_BACK` | None |
 | **Migration Succeeded, Application Fails to Start** | `APPLYING` / `VERIFYING` | Migration succeeded. Because migrations follow Expand/Contract, the previous release ($N-1$) is 100% compatible with the expanded schema. Traffic remains on $N-1$. Staging container stopped. DB snapshot is NOT restored. | `ROLLBACK` → `ROLLED_BACK` | Zero data loss. $N-1$ continues serving. |
-| **Destructive Migration Failed Mid-Execution** | `APPLYING` | Migration transaction rolls back automatically (PostgreSQL transactional DDL). Application never deployed. System remains on $N-1$. | `FAILED` | None |
+| **Destructive/Incompatible Migration Failed Mid-Execution** | `APPLYING` | Migration transaction rolls back automatically (PostgreSQL transactional DDL). Application never deployed. System remains on $N-1$. | `FAILED` | None |
 | **Rollback Fails (Previous container crashed while standby)** | `ROLLBACK` | Traffic cutover reverted, but previous container fails health checks. Automated recovery cannot safely determine authoritative state. Machine halts. High-priority alert triggered. | `RECOVERY_REQUIRED` | Fenced. Prevents split-brain or data corruption. |
+| **Writes Occurring After Pre-Deploy Snapshot** | `POST_CUTOVER_VERIFY` | Production writes committed during and after deployment. Application rollback reverts containers only. Post-deploy writes are preserved in live DB. | `ROLLED_BACK` | Zero data loss (no DB restore). |
 
 ---
 
@@ -237,8 +242,8 @@ To satisfy the Codex acceptance criteria, the table below documents the determin
 All unqualified claims of "zero-downtime rollback" and "outage prevented" are formally removed from the baseline documents.
 
 In their place, the contract precisely defines:
-- **Target Ingress Latency**: During normal cutover, Traefik and HTTP.sys achieve near-zero connection drop (< 200ms connection handover) for HTTP keep-alive requests.
-- **Rollback Latency**: If automated rollback is triggered during `POST_CUTOVER_VERIFY`, traffic is redirected to the standby container within 2 to 5 seconds.
+- **Target Ingress Latency**: During normal cutover, Traefik and HTTP.sys achieve near-zero connection drop (< 200ms connection handover) for HTTP keep-alive requests (operational target).
+- **Target Rollback Latency**: If automated rollback is triggered during `POST_CUTOVER_VERIFY`, traffic is redirected to the standby container within an operational target of 2 to 5 seconds (not a certified measurement until live testing).
 - **Maintenance Windows**: Deployments involving major schema refactoring or stateful component upgrades may schedule explicit maintenance windows using Centralized Maintenance Mode (MR-14).
 
 ---

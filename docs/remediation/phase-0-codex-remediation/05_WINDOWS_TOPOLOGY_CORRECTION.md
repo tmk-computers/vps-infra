@@ -81,7 +81,7 @@ The Gate A Windows profile is defined as a **Native Windows IIS Application Host
 
 ### 3.3 Database Location & Connectivity
 - **Certified Gate-A Profile**: PostgreSQL 16 executes on a **Dedicated Remote Linux VM** or managed PostgreSQL 16 service within the private network.
-- **Application Connection**: The IIS-hosted application connects to PostgreSQL over TCP port 5432 using encrypted TLS connections (`SSL Mode=Require;Trust Server Certificate=true` or validated CA).
+- **Application Connection**: The IIS-hosted application connects to PostgreSQL over TCP port 5432 using authenticated TLS connections (`SSL Mode=VerifyFull` or `SSL Mode=Require;Trust Server Certificate=false` with validated CA; unauthenticated `Trust Server Certificate=true` is strictly prohibited).
 - **Prohibited**: Running PostgreSQL natively on Windows Server via ad-hoc Windows service binaries or running PostgreSQL inside WSL2.
 
 ### 3.4 Ingress & Port Architecture (Zero Conflict)
@@ -103,11 +103,11 @@ The legacy PowerShell script agent (`tmk-iis-agent.ps1`) is strictly designated 
 |---|---|
 | **Service Name** | `TMK.Agent.Windows` (Display: *TMK Infrastructure Agent for Windows*) |
 | **Runtime Binary** | Self-contained compiled .NET 8 executable (`TMK.Agent.Windows.exe`). |
-| **Service Account** | `NT AUTHORITY\LocalService` (with restricted filesystem ACLs granting write access only to `C:\inetpub\staging\` and read access to IIS configuration). |
+| **Service Account** | **Dedicated least-privilege Windows service identity** (e.g. `NT SERVICE\TMKAgent`) with explicitly granted rights: IIS administration / AppPool control, deployment filesystem rights (`C:\inetpub\staging\` and `C:\inetpub\wwwroot\apps\`), and SCM inspection; restricted from unrelated OS directories and LocalSystem privileges. |
 | **Communication Direction** | **Bidirectional**: <br>1. **Inbound**: DevOps Manager issues deployment commands to Agent via HTTPS on port 5055.<br>2. **Outbound**: Agent pushes health and telemetry heartbeats to DevOps Manager via HTTPS on port 5001. |
 | **Transport Security** | Mutual TLS (mTLS) with client certificate authentication. Both DevOps Manager and `TMK.Agent.Windows` validate each other's certificate thumbprints against a pinned root CA. |
 | **Authorization** | Every incoming request must provide an HTTP Authorization header containing a cryptographically signed Windows Agent Bearer Token (`aud: "tmk-agent-windows"`). |
-| **Deployment Root Sandbox** | The agent is strictly restricted to operations within `C:\inetpub\wwwroot\` and `C:\inetpub\staging\`. Path traversal attempts outside these roots are rejected. |
+| **Deployment Root Sandbox** | The agent is strictly restricted to operations within `C:\inetpub\wwwroot\apps\{tenant}\` and `C:\inetpub\staging\`. Normalized segment-boundary containment rejects any path escaping these roots. |
 | **Concurrency** | The agent executes a single deployment operation at a time using an internal C# `SemaphoreSlim(1, 1)`. Concurrent requests receive HTTP 423 Locked. |
 
 ---
@@ -128,7 +128,7 @@ The platform distinguishes three separate upgrade targets on Windows:
 6. The previous Application Pool is placed in standby for a 10-minute observation window.
 7. If health fails, Agent immediately reverts IIS bindings to the previous Application Pool.
 
-### 5.2 Agent Self-Update Lifecycle (Atomic Swap & Rollback)
+### 5.2 Agent Self-Update Lifecycle (Atomic Swap, Health Verification & Reboot Recovery)
 An agent replacing its own executable binary while running is hazardous. `TMK.Agent.Windows` implements a robust two-stage update wrapper:
 1. **Download & Verify**: New agent binary (`TMK.Agent.Windows.new.exe`) is downloaded to `C:\Program Files\TMK\Agent\staging\` and verified against its cryptographic SHA-256 digest.
 2. **Update Helper Invocation**: The agent launches a lightweight, detached Windows helper executable (`TMK.Agent.Updater.exe`) and signals its own termination.
@@ -137,13 +137,15 @@ An agent replacing its own executable binary while running is hazardous. `TMK.Ag
    - Backs up current binary: `TMK.Agent.Windows.exe` → `TMK.Agent.Windows.bak.exe`.
    - Copies new binary: `TMK.Agent.Windows.new.exe` → `TMK.Agent.Windows.exe`.
    - Starts the Windows Service: `sc.exe start TMK.Agent.Windows`.
-4. **Rollback on Service Start Failure**:
-   - The helper monitors service start status for 30 seconds.
-   - If the service fails to enter `SERVICE_RUNNING` or crashes:
+4. **Functional Health Verification & Rollback**:
+   - The helper monitors service start status and actively probes the agent's local functional health endpoint: `GET http://127.0.0.1:5055/health` (polling every 3s for 30s).
+   - If the service fails to enter `SERVICE_RUNNING`, crashes, or returns non-200 from `/health`:
      - The helper stops the broken service.
      - Restores `TMK.Agent.Windows.bak.exe` → `TMK.Agent.Windows.exe`.
      - Restarts the previous known-good service binary.
      - Logs critical error to Windows Event Log (`Application` log, Source: `TMK.Agent.Updater`).
+5. **Reboot / Power Loss Recovery**:
+   - On Windows system startup, `TMK.Agent.Updater.exe` runs a startup integrity check before service launch. If a pending or interrupted update is detected (e.g. `.bak` exists but `/health` was never verified), it executes deterministic recovery: rolls back to `.bak` binary, cleans staging files, and resumes known-good service.
 
 ---
 
