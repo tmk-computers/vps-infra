@@ -122,6 +122,7 @@ $dirsToVerify = @(
     "docs\remediation\phase-0-codex-regate-remediation",
     "docs\remediation\phase-0-final-closure",
     "docs\remediation\phase-0-final-codex-correction",
+    "docs\remediation\phase-0-final-c2-04-correction",
     "docs\remediation\phase-0-review"
 )
 
@@ -194,7 +195,9 @@ $forbiddenPatterns = @(
     @{ Pattern = '\bLocalService\b'; Description = 'Unqualified LocalService agent identity' },
     @{ Pattern = 'Optional / Not Gate-A Certified Dependency'; Description = 'Stale Redis exclusion classification' },
     @{ Pattern = 'revocation grace (period|window)'; Description = 'Stale revocation grace period semantics' },
-    @{ Pattern = 'SSL Mode\s*=\s*Require\s*;\s*Trust Server Certificate\s*=\s*false'; Description = 'Stale Npgsql Require TLS alternative' }
+    @{ Pattern = 'SSL Mode\s*=\s*Require\s*;\s*Trust Server Certificate\s*=\s*false'; Description = 'Stale Npgsql Require TLS alternative' },
+    @{ Pattern = 'MonitoringService\.cs:213'; Description = 'False pruning attribution to MonitoringService.cs:213' },
+    @{ Pattern = 'active pruning.*MonitoringService'; Description = 'False claim that active pruning resides in MonitoringService' }
 )
 
 $forbiddenFound = 0
