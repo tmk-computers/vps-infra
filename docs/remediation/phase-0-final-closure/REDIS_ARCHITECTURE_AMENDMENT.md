@@ -111,17 +111,29 @@ To achieve sub-millisecond authentication verification without sacrificing durab
 3. Upon successful PostgreSQL commit, the revocation is published to Redis 7 (via key write and/or Redis Pub/Sub invalidation).
 4. Process-local caches invalidate or update their local entries upon receiving Redis notification or polling sync.
 
-### 4.2 Read Path (Token Validation)
-1. Token validation evaluates `jti` (JWT ID) against Tier 1 (local cache).
-2. If absent in Tier 1, query Tier 2 (Redis 7).
-3. If absent in Tier 2, query Tier 3 (PostgreSQL `RevokedTokens`).
-4. **Resilience**: If Redis is offline or returns an error, the validation pipeline bypasses Tier 2 and queries Tier 3 directly. Under no circumstances does a Redis failure result in assuming a token is valid without verifying PostgreSQL truth.
+### 4.2 Read Path (Token Validation) & Canonical Revocation Effective Point
+1. **Revocation Effective Point**: A credential/token revocation becomes security-effective at the exact instant the authoritative PostgreSQL revocation transaction commits.
+2. **Post-Revocation Request Semantics**: For any authorization decision initiated after the PostgreSQL revocation commit, **stale cache state MUST NOT authorize the revoked credential**. The request MUST receive an immediate **`DENY` (HTTP 401 Unauthorized)**.
+3. **No Authorization Grace Period**: The request MUST NOT succeed merely because:
+   - Local process cache is stale;
+   - Redis cache is stale;
+   - Invalidation Pub/Sub delivery is delayed, lost, or pending;
+   - Another process or worker instance has not yet observed the revocation event.
+4. **Validation Progression**:
+   - Token validation evaluates `jti` (JWT ID) against Tier 1 (local cache) and Tier 2 (Redis 7).
+   - If positive cached authorization state is held but its freshness relative to authoritative revocation cannot be guaranteed, or if cache misses occur, the pipeline evaluates Tier 3 (PostgreSQL `RevokedTokens`).
+   - **Resilience & Safe Fallback**: If Redis is offline, partitioned, or returns an error, the validation pipeline bypasses Tier 2 and queries Tier 3 directly. If PostgreSQL authoritative validation is required but unreachable, the platform **fails closed (DENY)**. Under no circumstances does an uncertain cache result in permissive authorization (`uncertain cache -> fail closed`).
+5. **Race Semantics**:
+   - Authorization decisions completed *before* the PostgreSQL revocation transaction commits were evaluated under the pre-revocation state.
+   - Authorization decisions initiated *after* the authoritative revocation commit MUST observe revocation semantics and deny the credential.
+   - For concurrent evaluations crossing the commit boundary, the implementation must provide a deterministic, fail-safe ordering mechanism consistent with this invariant.
 
-### 4.3 Phase 1 Consistency & Invalidation Requirements
+### 4.3 Operational Convergence SLO vs. Authorization Grace Period
 In Phase 1 (MR-36 implementation), the team must define:
 - Cache entry TTLs bounded by token maximum lifetime (`exp`);
 - Invalidation pub/sub channel naming conventions;
-- Negative caching rules (caching non-revoked status with short TTL to prevent PostgreSQL read storms while guaranteeing bounded revocation propagation time $\le 5$ seconds).
+- **Operational Convergence SLO ($\le 5$ seconds)**: The operational timeline within which distributed caches must synchronize and evict stale entries across all cluster nodes.
+- **Strict Invariant**: **Cache convergence is an operational SLO only, NEVER an authorization grace period.** It does NOT permit revoked tokens to remain valid for up to 5 seconds, and does NOT allow any authorization engine to accept stale cached validity after the durable revocation effective point.
 
 ---
 
@@ -148,12 +160,12 @@ Because Redis 7 is now a first-class production component, Phase 1 implementatio
 
 | # | Scenario | Injected Condition | Expected Behavior |
 |:---:|---|---|---|
-| **1** | **Normal Operation** | Redis 7 healthy, authenticated, responsive. | All token validations, rate limits, and coordination states hit Redis cache; sub-millisecond latency; zero fallback pressure on PostgreSQL. |
-| **2** | **Redis Unavailable** | Redis service stopped, network partition, or crashed. | Platform falls back to PostgreSQL for security checks and deployment queries; operations fail safe; zero authorization bypass; platform health monitors signal degraded cache status. |
+| **1** | **Normal Operation** | Redis 7 healthy, authenticated, responsive (warm-cache workload). | All active token validations, rate limits, and coordination states hit Redis cache; sub-millisecond latency; zero fallback pressure on PostgreSQL for cached items. |
+| **2** | **Redis Unavailable** | Redis service stopped, network partition, or crashed. | Platform falls back to PostgreSQL for security checks and deployment queries; operations fail safe; zero authorization bypass; platform health monitors signal degraded cache status. If PostgreSQL is also unavailable, security decisions fail closed. |
 | **3** | **Redis Restart** | Redis daemon restarted with clean memory or AOF replay. | Platform reconnects automatically with exponential backoff; cache repopulates from PostgreSQL on demand; coordination locks re-synchronize without deadlock. |
-| **4** | **Stale Cached Security Data** | Redis contains stale token approval after revocation in PostgreSQL. | Multi-tier invalidation pipeline evicts stale cache entries; token revocation in PostgreSQL immediately invalidates Redis; revoked credentials are rejected within bounded window ($\le 5\text{s}$). |
+| **4** | **Stale Cached Security Data** | Populated local and Redis caches with valid token state, followed by PostgreSQL revocation commit with delayed/blocked invalidation propagation. | **10-Step Deterministic Acceptance Test**:<br>1. Issue valid token.<br>2. Populate local and Redis caches with previously valid state.<br>3. Commit token revocation in PostgreSQL (Revocation Effective Point established).<br>4. Prevent/delay cache invalidation propagation across network/pub-sub.<br>5. Send another request using the revoked token.<br>6. Verify request is rejected (**HTTP 401 DENY**).<br>7. Verify no stale local or Redis entry causes authorization success.<br>8. Restore cache propagation.<br>9. Verify caches converge to revoked state within operational SLO ($\le 5\text{s}$).<br>10. Verify audit/telemetry records the expected security behavior.<br>**Acceptance Criterion: Exactly ZERO successful post-revocation authorizations caused by stale cache state.** |
 | **5** | **Redis Data Loss** | Redis cache completely flushed (`FLUSHALL`) or unpersisted restart. | Zero loss of deployment state, user identities, release history, or durable revocation records. Platform reconstructs active cache from PostgreSQL on read. |
-| **6** | **Redis Latency / Degradation** | 5000ms latency injected on Redis socket; queue saturation. | Timeouts fire cleanly; circuit breaker opens; requests fall back safely to PostgreSQL or fail closed; slow cache NEVER turns safety checks into permissive bypass. |
+| **6** | **Redis Latency / Degradation** | 5000ms latency injected on Redis socket; queue saturation; partition. | Timeouts fire cleanly; circuit breaker opens; requests fall back safely to PostgreSQL or fail closed; slow or partitioned cache NEVER turns safety checks into permissive bypass. |
 
 ---
 

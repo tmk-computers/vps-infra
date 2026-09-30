@@ -88,12 +88,12 @@ In compliance with Section 29 of the Phase 0 Codex Re-Gate Directive, a reposito
 ---
 
 ### 2.6 Concept: Remote Database TLS Security (`Trust Server Certificate=true`)
-- **Authoritative Rule**: Authenticated TLS (`SSL Mode=VerifyFull` or `SSL Mode=Require;Trust Server Certificate=false` with validated CA). `Trust Server Certificate=true` is strictly prohibited.
+- **Authoritative Rule**: Peer-authenticated TLS (**`SSL Mode=VerifyFull`** with validated CA and hostname verification). `Trust Server Certificate=true` and unauthenticated `Require` mode without peer authentication are strictly prohibited.
 - **Scan Query**: `Trust Server Certificate=true`, `Trust Server Certificate=false`.
 
 | Document | Line / Section | Text Context | Classification | Remediation Action / Disposition |
 |---|---|---|---|---|
-| `docs/remediation/phase-0-codex-remediation/05_WINDOWS_TOPOLOGY_CORRECTION.md` | Line 84 | *"SSL Mode=Require;Trust Server Certificate=true or validated CA"* | **INCORRECT AND CORRECTED** | Excised `Trust Server Certificate=true`. Required authenticated TLS with `Trust Server Certificate=false`. |
+| `docs/remediation/phase-0-codex-remediation/05_WINDOWS_TOPOLOGY_CORRECTION.md` | Line 84 | *"SSL Mode=Require;Trust Server Certificate=true or validated CA"* | **INCORRECT AND CORRECTED** | Excised `Trust Server Certificate=true` and `Require` mode alternative. Mandated canonical `SSL Mode=VerifyFull` with validated CA and hostname verification. |
 | `docs/remediation/phase-0/04_TARGET_ARCHITECTURE.md` | §4.2 | Application connection to DB | **CURRENT VALID** | Requires authenticated TLS (`Trust Server Certificate=false`). |
 | `docs/remediation/phase-0/05_SUPPORTED_OS_MATRIX.md` | §2.2 | Database endpoint connection | **CURRENT VALID** | Prohibits unauthenticated `Trust Server Certificate=true`. |
 | `docs/remediation/phase-0/06_DATABASE_SUPPORT_MATRIX.md` | §3.1 | Windows Database Topology | **CURRENT VALID** | Requires authenticated TLS with validated CA. |

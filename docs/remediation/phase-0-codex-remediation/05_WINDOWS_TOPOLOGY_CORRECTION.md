@@ -81,7 +81,7 @@ The Gate A Windows profile is defined as a **Native Windows IIS Application Host
 
 ### 3.3 Database Location & Connectivity
 - **Certified Gate-A Profile**: PostgreSQL 16 executes on a **Dedicated Remote Linux VM** or managed PostgreSQL 16 service within the private network.
-- **Application Connection**: The IIS-hosted application connects to PostgreSQL over TCP port 5432 using authenticated TLS connections (`SSL Mode=VerifyFull` or `SSL Mode=Require;Trust Server Certificate=false` with validated CA; unauthenticated `Trust Server Certificate=true` is strictly prohibited).
+- **Application Connection**: The IIS-hosted application connects to PostgreSQL over TCP port 5432 using authenticated TLS connections (**`SSL Mode=VerifyFull`** with validated CA and hostname verification; unauthenticated `Trust Server Certificate=true` and unauthenticated `SSL Mode=Require` without peer authentication are strictly prohibited).
 - **Prohibited**: Running PostgreSQL natively on Windows Server via ad-hoc Windows service binaries or running PostgreSQL inside WSL2.
 
 ### 3.4 Ingress & Port Architecture (Zero Conflict)

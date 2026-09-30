@@ -27,11 +27,14 @@ Direct inspection of the entity and database context source files confirms:
 ### 2.1 Entity Code Reality
 - **`BaseEntity.cs`** (`devops-manager/api/Data/Entities/BaseEntity.cs`):
   - Defines `Id` (Guid), `CreatedAt` (DateTime), `UpdatedAt` (DateTime?), and `IsActive` (bool = true).
-  - `IsActive` is an inherited property present in all domain entities. It already exists in baseline migrations and `ApplicationDbContextModelSnapshot.cs:774,862`. It is **NOT** a new maintenance column.
+  - `IsActive` already exists in baseline migrations and `ApplicationDbContextModelSnapshot.cs:774,862`. It is **NOT** a new maintenance column.
 - **`Product.cs`** (`devops-manager/api/Data/Entities/Product.cs`):
-  - Inherits `BaseEntity`. Defines exactly **8 maintenance properties** (lines 14–22).
+  - Inherits `BaseEntity`. Explicitly redeclares `public bool IsActive { get; set; } = true;` (line 12).
+  - Defines exactly **8 maintenance properties** (lines 14–22).
 - **`ProjectService.cs`** (`devops-manager/api/Data/Entities/ProjectService.cs`):
-  - Inherits `BaseEntity`. Defines exactly **5 maintenance properties** (lines 35–41).
+  - Inherits `BaseEntity` (and inherits `IsActive` from `BaseEntity`).
+  - Defines exactly **5 maintenance properties** (lines 35–41).
+  - *(Neither entity adds a new maintenance `IsActive` column; `IsActive` pre-exists in the database schema).*
 - **Fictitious Entities Non-existence**:
   - `MaintenanceWindow` and `ServiceMaintenance` **do not exist anywhere in the codebase**. Any prior references to them in historical drafts are formally excised.
 

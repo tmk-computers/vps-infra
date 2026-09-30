@@ -126,7 +126,9 @@ Every API endpoint must execute validation against its declared service acceptan
 2. **Service-Specific Issuer & Audience Validation**: Validate that `iss` matches the designated authority for that specific endpoint (e.g. user routes accept `auth.vps-infra.local`; CI artifact endpoints accept `ci.vps-infra.local`; AMS endpoints accept `devops-manager.vps-infra.local`) and `aud` matches target service identifier.
 3. **Expiration & Clock Skew**: Validate `exp > UtcNow` with max 60s clock skew. Reject expired tokens with HTTP 401 Unauthorized.
 4. **Tenant Context Binding (`tid`)**: For tenant-scoped routes, assert `tid` matches the URL route parameter. Return HTTP 403 Forbidden on mismatch (`SEC_TENANT_MISMATCH`).
-5. **Durable Capability-Based Revocation**: Check `jti` (JWT ID) against the multi-tiered revocation pipeline (`Local Cache -> Redis 7 -> PostgreSQL`). PostgreSQL (`RevokedTokens` table) is the durable authority. Revocation writes must reach PostgreSQL before being considered successful, followed by Redis cache update/invalidation. If Redis is unavailable, the pipeline falls back safely to PostgreSQL, never bypassing security truth.
+5. **Durable Capability-Based Revocation**: Check `jti` (JWT ID) against the multi-tiered revocation pipeline (`Local Cache -> Redis 7 -> PostgreSQL`). PostgreSQL (`RevokedTokens` table) is the durable authority. Revocation writes must commit durably to PostgreSQL before being considered successful, followed by Redis cache update/invalidation.
+   - **Revocation Effective Point**: Revocation is security-effective when the PostgreSQL revocation transaction commits. For any authorization decision initiated after that point, stale cache state MUST NOT authorize the revoked credential. The request MUST be denied (`DENY` / HTTP 401). Stale local or Redis cache entries and delayed invalidation Pub/Sub messages must NEVER permit authorization.
+   - **Degraded Fallback**: If Redis is unavailable or cache validity is uncertain, the pipeline falls back to PostgreSQL or fails closed; it NEVER fails open.
 6. **Key Lifecycle & Historical Key Rejection**: Signing keys must be cryptographically high-entropy and rotated periodically. Tokens signed by retired/historical keys outside the active grace window return HTTP 401 Unauthorized.
 7. **Default Key Halt**: Application startup halts immediately if configured signing secret matches known default strings.
 
@@ -144,7 +146,7 @@ Phase 1 security implementation must satisfy all explicit negative test criteria
 7. **Tenant Mismatch**: User with `tid: "A"` querying `/api/v1/tenants/B/resources` returns HTTP 403 Forbidden.
 8. **Platform Operation by Tenant Admin**: `TenantAdmin` attempting `POST /api/v1/platform/upgrade` returns HTTP 403 Forbidden.
 9. **Expired Token**: Request with expired token returns HTTP 401 Unauthorized.
-10. **Revoked Token / Credential**: Request with revoked `jti` or revoked credential returns HTTP 401 Unauthorized across application restarts.
+10. **Revoked Token / Credential**: Request with revoked `jti` or revoked credential returns HTTP 401 Unauthorized immediately across all instances and application restarts. For requests evaluated post-PostgreSQL revocation commit, stale cache state MUST NOT admit the credential; zero authorization grace period is permitted.
 11. **Unauthenticated Inter-Service**: Request to `/api/v1/ams/recalculate` without valid service token returns HTTP 401 Unauthorized.
 12. **Invalid Windows Agent Token**: Request to `TMK.Agent.Windows` on port 5055 with invalid/missing token returns HTTP 401 Unauthorized.
 13. **Least-Privilege Database Breach**: App database user attempting `SELECT * FROM "PlatformUsers"` returns permission denied.
