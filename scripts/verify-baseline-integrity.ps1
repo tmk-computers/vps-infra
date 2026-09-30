@@ -123,6 +123,7 @@ $dirsToVerify = @(
     "docs\remediation\phase-0-final-closure",
     "docs\remediation\phase-0-final-codex-correction",
     "docs\remediation\phase-0-final-c2-04-correction",
+    "docs\remediation\phase-0-final-c2-04-source-truth-reconciliation",
     "docs\remediation\phase-0-review"
 )
 
@@ -196,8 +197,11 @@ $forbiddenPatterns = @(
     @{ Pattern = 'Optional / Not Gate-A Certified Dependency'; Description = 'Stale Redis exclusion classification' },
     @{ Pattern = 'revocation grace (period|window)'; Description = 'Stale revocation grace period semantics' },
     @{ Pattern = 'SSL Mode\s*=\s*Require\s*;\s*Trust Server Certificate\s*=\s*false'; Description = 'Stale Npgsql Require TLS alternative' },
-    @{ Pattern = 'MonitoringService\.cs:213'; Description = 'False pruning attribution to MonitoringService.cs:213' },
-    @{ Pattern = 'active pruning.*MonitoringService'; Description = 'False claim that active pruning resides in MonitoringService' }
+    @{ Pattern = 'MonitoringService\.cs:213'; Description = 'False cleanup attribution to MonitoringService.cs:213' },
+    @{ Pattern = 'CleanVolumes'; Description = 'Fabricated CleanVolumes property or DTO' },
+    @{ Pattern = 'automatic (Docker )?(cleanup|pruning) (is )?NOT evidenced'; Description = 'False denial of automatic Docker cleanup' },
+    @{ Pattern = 'automatic (Docker )?(cleanup|pruning) does not exist'; Description = 'False denial of automatic Docker cleanup existence' },
+    @{ Pattern = 'execut(es|ed commands?:)\s+`?docker volume prune'; Description = 'Unsupported claim that platform executes docker volume prune' }
 )
 
 $forbiddenFound = 0
@@ -219,9 +223,9 @@ if ($forbiddenFound -gt 0) {
 
 # 6. Authoritative Security Invariants & Correction Dossier Existence
 Write-Host "`n[Check 6] Authoritative Invariant Language & Dossier Existence..." -ForegroundColor Yellow
-$correctionDir = Join-Path $serverRoot "docs\remediation\phase-0-final-codex-correction"
+$correctionDir = Join-Path $serverRoot "docs\remediation\phase-0-final-c2-04-source-truth-reconciliation"
 if (-not (Test-Path $correctionDir)) {
-    Write-Error "Assertion Failed: Required correction dossier missing: $correctionDir"
+    Write-Error "Assertion Failed: Required reconciliation dossier missing: $correctionDir"
 }
 
 $secDoc = Join-Path $authDir "08_SECURITY_BOUNDARIES.md"
