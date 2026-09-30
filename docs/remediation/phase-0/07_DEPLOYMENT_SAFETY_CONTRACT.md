@@ -158,23 +158,55 @@ stateDiagram-v2
 When the DevOps Manager API or host VM restarts:
 1. Startup worker queries all `DeploymentRecords` in non-terminal states (`PENDING`, `PRECHECK`, `PREPARED`, `APPLYING`, `VERIFYING`, `CUTOVER`, `POST_CUTOVER_VERIFY`, `ROLLBACK`).
 2. For each non-terminal record:
-   - Verify worker PID and heartbeat timestamp.
-   - If heartbeat is expired (> 60s) and state is prior to `CUTOVER`: Staging instance is pruned; previous release is confirmed active; record marked `FAILED`.
-   - If state is `CUTOVER` or `POST_CUTOVER_VERIFY`: Controller probes public endpoint and router configuration. If traffic was not cut over, mark `FAILED`. If traffic cutover was partially applied or failing, initiate automated `ROLLBACK` to restore previous release.
-   - If state is unresolvable: Mark `RECOVERY_REQUIRED` and trigger high-priority alert.
+   - Verify worker PID, host assignment, and heartbeat timestamp (`LastHeartbeatUtc`).
+   - If heartbeat is expired (> 60s) and state is prior to `CUTOVER`:
+     - Inspect whether database migrations were initiated or completed for this deployment.
+     - If an irreversible or backward-incompatible migration was applied, or if schema state cannot be deterministically verified as compatible with Release $N-1$, the deployment **MUST NOT** be blindly marked `FAILED`. It must transition to **`RECOVERY_REQUIRED`** to prevent traffic routing to an incompatible previous release.
+     - If no migration was applied, or if applied migrations are proven backward-compatible with Release $N-1$: Assert old worker PID termination, prune staging instance, verify previous release is actively serving healthy traffic, and transition record to `FAILED`.
+   - If state is `CUTOVER` or `POST_CUTOVER_VERIFY`: Controller probes public endpoint and router configuration. If traffic was not cut over, evaluate migration compatibility before marking `FAILED` or `RECOVERY_REQUIRED`. If traffic cutover was partially applied or failing, initiate automated `ROLLBACK` to restore previous release (if schema-compatible).
+   - If state or schema compatibility is unresolvable: Mark `RECOVERY_REQUIRED`, fence mutations, and dispatch high-priority P0 alert.
 3. No non-terminal deployment is ever automatically promoted to `SUCCEEDED` without verified live traffic serving.
 
 ---
 
 ## 5. Database Migration and Rollback Boundaries
 
-### 5.1 Application Rollback vs. Database Restoration
-- **Application Rollback** is safe, automated, and non-destructive: traffic is redirected back to the previous container.
+### 5.1 Authoritative Invariant: Application Rollback != Database Restoration
+- **Application Rollback** is safe, automated, and non-destructive: traffic is redirected back to the previous compatible container/AppPool ($N-1$).
 - **Database Restoration** is destructive: restoring a database dump wipes out all data written since the backup.
+- **APPLICATION ROLLBACK MUST NOT AUTOMATICALLY RESTORE THE DATABASE.**
+- Database recovery is strictly an explicit disaster recovery operation requiring human authorization (`--confirm-destructive-data-loss`), system quiescing, an ad-hoc pre-restore safety dump, and data-loss window assessment.
 
-### 5.2 Expand / Contract Migration Rules
-1. All migrations in Release $N$ must be strictly backward-compatible with Release $N-1$.
-2. Destructive migrations (dropping columns, changing data types) must be split into two releases:
-   - Release $N$: Add new column and dual-write.
-   - Release $N+1$: Read from new column, stop writing to old column, drop old column.
-3. Destructive restorations require explicit operator authorization (`--confirm-destructive-data-loss`), system quiescing, and an ad-hoc safety dump prior to execution.
+### 5.2 Expand / Contract Migration Rules Across Rollback Candidates
+Schema changes across versions must preserve compatibility for every declared rollback candidate:
+1. **Release $N$ (Expand Phase)**:
+   - Schema changes must be strictly additive and backward-compatible with Release $N-1$.
+   - Permitted: Adding nullable columns, adding new tables, adding views, adding indexes (concurrently).
+   - Prohibited in a single step: Renaming existing columns, deleting tables/columns, adding non-nullable columns without defaults, altering data types destructively.
+   - If Release $N$ introduces a new column to replace an old column, Release $N$ dual-writes to both old and new columns, and reads from the new column (with fallback to old).
+   - Rollback candidate: Release $N-1$ remains 100% operational against the Release $N$ expanded schema.
+2. **Release $N+1$ (Transition Phase)**:
+   - Application reads exclusively from new column and writes to new column.
+   - **Crucial Invariant**: Release $N+1$ **MUST NOT** drop the old column yet, because if Release $N+1$ fails in production and rolls back to Release $N$, Release $N$ still requires the old column for dual-writing.
+3. **Release $N+2$ (Contract Finalize Phase)**:
+   - Only after Release $N+1$ is verified stable, fully accepted in production, and Release $N$ is no longer an active rollback target, the old column may be safely dropped in Release $N+2$.
+   - Any release that drops schema elements must NOT declare an earlier release that depends on those elements as an automated rollback candidate.
+
+---
+
+## 6. Worker Fencing and Ingress Mutation Protection
+
+To prevent split-brain or late writes when a paused or partitioned worker resumes after heartbeat expiry:
+1. **Database Fencing**: Every database update uses optimistic concurrency checking `Version = @ExpectedVersion`, incrementing the version atomically. Late writes from stale workers fail with concurrency exceptions.
+2. **Physical Process Fencing**: When a recovering supervisor takes over a stale deployment, it must verify the prior worker PID and issue a forced process termination (`kill -9` on Linux, `TerminateProcess` on Windows) and assert process termination before modifying staging directories or router configurations.
+3. **Deployment Generation Epochs**: Staging directories and router configurations use generation tokens (e.g. `release-{deployId}-{generation}`). A stale worker writing to an obsolete staging generation cannot alter the active ingress symlink or IIS virtual directory mapping.
+
+---
+
+## 7. Application Health Parameterization
+
+Application health evaluation criteria are configurable profile defaults, not hardcoded platform constants:
+1. **Default Profile**: HTTP 200 on `/health` probe, 30-second observation window during `POST_CUTOVER_VERIFY`, 5xx error rate < 1.0%.
+2. **Service-Specific Declarations**: Individual services may declare customized health check paths (e.g. `/api/system/status`), expected HTTP status codes (e.g. 200-204), startup timeouts (e.g. 15s to 120s), and observation thresholds in their deployment metadata.
+3. **Affirmative Verification Invariant**: Regardless of parameters used, a deployment must collect affirmative evidence of successful serving under the declared contract before transitioning to `SUCCEEDED`.
+

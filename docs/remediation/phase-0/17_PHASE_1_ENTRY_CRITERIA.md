@@ -38,18 +38,19 @@ Before Phase 1 (Shared Security Foundation) can be entered, all prerequisite eng
 ## 3. Scope Specification for Phase 1 (Shared Security Foundation)
 
 ### 3.1 Prerequisite Database Alignment (Phase 0.5 / Pre-Validation)
-- **MR-34**: Create versioned EF Core migration `20261001000000_AddMaintenanceModeEntities.cs` for Maintenance Mode fields on `Product`, `ProjectService`, and `MaintenanceWindow`. Versioned EF Core migrations are the SOLE schema evolution authority (zero raw DDL in `DataSeeder.cs`; seeder bounded to data population; raw DDL removal in Phase 2 MR-13). Pass all 5 PostgreSQL acceptance test scenarios (P05-TC01 to P05-TC05) prior to Phase 1.
+- **MR-34**: Create versioned EF Core migration `20261001000000_AddMaintenanceModeFields.cs` for the exact 13 properties across `Product` (8 properties) and `ProjectService` (5 properties). Versioned EF Core migrations are the SOLE schema evolution authority; existing schema-changing DDL in `DataSeeder.cs` (lines 46-168) must be disabled or removed prior to Phase 0.5 acceptance. Pass the comprehensive PostgreSQL acceptance suite defined in `06_PHASE_0_5_SCHEMA_INVENTORY.md` prior to Phase 1 entry.
 
 ### 3.2 Phase 1 Core Security Implementation Scope (9 Items)
 Upon independent sign-off, Phase 1 execution will commence covering exclusively the following security foundation items:
 1. **MR-02**: Enforce secure signing/authentication defaults; eliminate hardcoded fallback JWT keys. Default key on startup HALTS application.
 2. **MR-03**: Revoke leaked service account RSA private key; purge `devops-manager/api/google-drive-credentials.json` from git history.
-3. **MR-04**: Strip Git tokens and sensitive fields from read DTOs; implement credential protection; sanitize logging. DEF-15: Canonicalize `ProjectDirectory` via `Path.GetFullPath` prefix check against tenant sandbox root.
+3. **MR-04**: Strip Git tokens and sensitive fields from read DTOs; implement credential protection; sanitize logging. DEF-15: Enforce normalized segment-boundary containment against tenant sandbox root; reject sibling-prefix collisions (`tenant-a` vs `tenant-ab`), UNC paths, and traversal escapes.
 4. **MR-05**: Implement least-privilege PostgreSQL database roles for application containers.
 5. **MR-06**: Eliminate public WAN exposure of database and administrative ports (bind to loopback/internal bridge).
-6. **MR-07**: Implement dynamic high-entropy secret generation on setup across provisioning scripts (`setup.sh`, `setup.ps1`). F16.1: Encrypt AI keys at rest. F16.2: Enforce monotonic streaming spend cap. (F16.3/F16.4 gated under Gate-A AI disablement).
-7. **MR-08**: Multi-tenant RBAC and role separation: formally decouple `PlatformSuperAdmin` from `TenantAdmin` (DEF-11). DEF-08: Container hardening (UID 10001, capability dropping, read-only rootfs, scoped socket proxy).
+6. **MR-07**: Implement dynamic high-entropy secret generation on setup across provisioning scripts (`setup.sh`, `setup.ps1`). F16.1: Encrypt AI keys at rest with rotation acceptance. F16.2: Enforce monotonic streaming spend cap with atomic concurrent spend reservations. (F16.3/F16.4 gated under Gate-A AI disablement).
+7. **MR-08**: Multi-tenant RBAC and role separation: formally decouple `PlatformSuperAdmin` from `TenantAdmin` (DEF-11); break-glass governance with customer consent, short-lived elevation, and audit. DEF-08: Container hardening (UID 10001, capability dropping, read-only rootfs, scoped socket proxy).
 8. **MR-28**: Replace hardcoded Windows Agent fallback bearer secret with dynamically provisioned mutual authentication secrets (Dual-OS parity).
-9. **MR-36**: Comprehensive Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, rotation, revocation). Pass all 9 negative test criteria.
+9. **MR-36**: Comprehensive Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, rotation, durable capability-based revocation in PostgreSQL without Redis). Pass all 15 negative test criteria (including wrong issuer, historical/retired signing key, and valid-token-with-wrong-scope).
+
 
 *(Note: MR-37 UI copywriting and documentation labeling is relocated to Phase 9 alongside MR-21, with pre-pilot disclosure provided for pilots).*

@@ -69,31 +69,31 @@ gantt
 ### Phase 0.5 — Centralized Maintenance Mode Schema Prerequisite
 - **Target MR ID**: **MR-34**
 - **Rationale & Scope**: Standalone architectural prerequisite preceding Phase 1 runtime testing.
-  - **Single Schema Authority**: Author versioned EF Core migration `20261001000000_AddMaintenanceModeEntities.cs` adding all 13 columns to `Products`, `ProjectServices`, and `MaintenanceWindows`.
-  - **DataSeeder Rule**: Prohibit adding competing raw `ALTER TABLE` DDL to `DataSeeder.cs`. Seeder is bounded purely to data population; raw DDL removal scheduled for Phase 2 (MR-13).
-  - **Acceptance Contract**: Pass all 5 test scenarios (fresh install, upgrade from existing schema, zero data loss, entity query test, idempotency) defined in `docs/remediation/phase-0-codex-remediation/07_PHASE_0_5_SCHEMA_AUTHORITY.md`.
+  - **Single Schema Authority**: Author versioned EF Core migration `20261001000000_AddMaintenanceModeFields.cs` adding the exact 13 properties across `Product` (8 properties) and `ProjectService` (5 properties) entities.
+  - **DataSeeder DDL Neutralization**: Disable or remove competing raw `ALTER TABLE` and `CREATE TABLE` DDL in `DataSeeder.cs:46-168` prior to Phase 0.5 acceptance, establishing EF Core migrations as the sole schema authority. Seeder is bounded purely to data population; legacy schema decoupling remains in Phase 2 (MR-13).
+  - **Acceptance Contract**: Pass comprehensive PostgreSQL acceptance suite (fresh install, upgrade from existing supported database, data preservation including inactive rows, Product and ProjectService entity hydration queries without SQLSTATE 42703 errors, and repeat startup stability) defined in `06_PHASE_0_5_SCHEMA_INVENTORY.md`.
 
 ### Phase 1 — Shared Security Foundation
 - **Core Security Scope (9 Items)**: **MR-02**, **MR-03**, **MR-04**, **MR-05**, **MR-06**, **MR-07**, **MR-08**, **MR-28**, **MR-36**.
 - **Scope & Explicit Sub-Obligation Traceability**:
-  - **MR-02 & MR-07** (Dynamic Secrets & Signing Defaults — P0/P1): Eliminate published JWT keys and default passwords across all setup scripts (`setup.sh`, `setup.ps1`); enforce startup failure on default secrets. F16.1: Encrypt AI API keys at rest (AES-256-GCM). F16.2: Enforce monotonic streaming spend budget cap. (F16.3/F16.4 gated under AI disablement for Gate A).
+  - **MR-02 & MR-07** (Dynamic Secrets & Signing Defaults — P0/P1): Eliminate published JWT keys and default passwords across all setup scripts (`setup.sh`, `setup.ps1`); enforce startup failure on default secrets. F16.1: Encrypt AI API keys at rest (AES-256-GCM) with key rotation acceptance. F16.2: Enforce monotonic streaming spend budget cap with atomic concurrent reservations. (F16.3/F16.4 gated under AI disablement for Gate A).
   - **MR-03** (Leaked Service Account Key — P0): Revoke Google Cloud service account RSA private key in Google Cloud IAM; purge `devops-manager/api/google-drive-credentials.json` from git history.
-  - **MR-04** (Git Tokens, Secret Disclosure & Path Traversal — P1): Strip Git PATs and sensitive secrets from read DTOs; implement credential protection; sanitize webhook and process logging. DEF-15: Canonicalize `ProjectDirectory` via `Path.GetFullPath` prefix check against tenant sandbox root.
-  - **MR-05 & MR-06** (Database Least Privilege & Network Exposure — P1/P0): Bind PostgreSQL, Redis, and admin ports to `127.0.0.1` or internal Docker overlay bridge (MR-06), and provision isolated least-privilege roles per application container (MR-05).
-  - **MR-08** (Multi-Tenant RBAC, Role Separation & Container Hardening — P1): DEF-11: Formally separate `PlatformSuperAdmin` from `TenantAdmin`; no tenant SuperAdmin global bypass. DEF-08: Drop Linux capabilities (`cap_drop: ALL`), run API container as non-root UID 10001, remove host root mount, use scoped Unix socket proxy. Enforce JWT tenant context extraction (`tid`) across all routes.
+  - **MR-04** (Git Tokens, Secret Disclosure & Path Traversal — P1): Strip Git PATs and sensitive secrets from read DTOs; implement credential protection; sanitize webhook and process logging. DEF-15: Enforce normalized segment-boundary containment against tenant sandbox root; reject sibling-prefix collisions (`tenant-a` vs `tenant-ab`), UNC paths, and traversal escapes.
+  - **MR-05 & MR-06** (Database Least Privilege & Network Exposure — P1/P0): Bind PostgreSQL and admin ports to `127.0.0.1` or internal Docker overlay bridge (MR-06), and provision isolated least-privilege roles per application container (MR-05). Redis is `Optional / Not Gate-A Certified Dependency`.
+  - **MR-08** (Multi-Tenant RBAC, Role Separation & Container Hardening — P1): DEF-11: Formally separate `PlatformSuperAdmin` from `TenantAdmin`; no tenant SuperAdmin global bypass; exceptional break-glass access under customer-consented ticket authorization with audit. DEF-08: Drop Linux capabilities (`cap_drop: ALL`), run API container as non-root UID 10001, remove host root mount, use scoped Unix socket proxy. Enforce JWT tenant context extraction (`tid`) across all routes.
   - **MR-28** (Windows Agent Dynamic Authentication — P0): Replace hardcoded static fallback secret `"SuperCiSecretKey123!"` with dynamically provisioned mutual authentication secrets between `devops-manager` and `tmk-iis-agent`.
-  - **MR-36** (Token Trust Contract & Inter-Service Auth — P1): Enforce Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, rotation, revocation). Secure AMS endpoints in `ci-server`; inject service bearer tokens in inter-service calls. All 9 Phase 1 negative tests must pass.
+  - **MR-36** (Token Trust Contract & Inter-Service Auth — P1): Enforce service-specific Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, rotation, durable capability-based revocation in PostgreSQL without Redis). Secure AMS endpoints in `ci-server`; inject service bearer tokens in inter-service calls. All 15 Phase 1 negative tests must pass (including wrong issuer, retired signing key, and valid-token-with-wrong-scope).
 - **Scope Exclusion**:
   - **MR-37** (AMS Semantics & UI Labeling): Relates to calculation heuristics and marketing truthfulness rather than security boundaries. Relocated to Phase 9 alongside MR-21, with pre-pilot disclosure provided for pilots.
 
 ### Phase 2 — Shared Release Safety Engine
 - **Target MR IDs**: **MR-09**, **MR-10**, **MR-11**, **MR-12**, **MR-13**, **MR-35**.
 - **Scope**:
-  - Implement durable Deployment State Machine (`PRECHECK` → `PREPARED` → `APPLYING` → `VERIFYING` → `SUCCEEDED`).
+  - Implement durable Deployment State Machine (`PENDING` → `PRECHECK` → `PREPARED` → `APPLYING` → `VERIFYING` → `CUTOVER` → `POST_CUTOVER_VERIFY` → `SUCCEEDED`).
   - Replace unmanaged fire-and-forget tasks with bounded background queue (MR-09).
-  - Gated release success on passing HTTP readiness probes (MR-10).
+  - Gated release success on passing HTTP readiness probes and affirmative live serving proof (MR-10).
   - Enforce immutable content-addressed release identifiers; ban `main` / `latest` (MR-11).
-  - Implement automated pre-deployment snapshots and transactional rollback (MR-12).
+  - Implement automated pre-deployment snapshots and transactional application rollback without automatic database restoration (MR-12).
   - Replace regex Compose string manipulation with AST-aware YAML parser (MR-35).
 
 ### Phase 3 — Linux Production Adapter
@@ -105,27 +105,30 @@ gantt
 ### Phase 4 — Windows Production Agent & IIS Adapter (Equal First-Class Priority)
 - **Target MR IDs**: **MR-22**, **MR-23**, **MR-24**, **MR-25**, **MR-26**, **MR-27**, **MR-29**.
 - **Scope**:
-  - Implement compiled .NET Worker Windows Service (`TMK.Agent.Windows`) with SCM integration, replacing `tmk-iis-agent.ps1` (MR-22).
-  - Configure HttpListener to accept container network requests (MR-23).
-  - Constrain extraction to approved application sandbox; enforce NTFS ACLs (MR-24).
+  - Implement compiled .NET Worker Windows Service (`TMK.Agent.Windows`) with SCM integration, running under a dedicated least-privilege Windows service identity (MR-22).
+  - Configure HttpListener to accept container network requests over mTLS on port 5055 paired with scoped authorization tokens (MR-23).
+  - Constrain extraction to approved application sandbox; enforce NTFS ACLs and segment-boundary containment (MR-24).
   - Fix telemetry to map AppPool names to specific worker process PIDs (MR-25).
   - Implement asynchronous request processing in daemon (MR-26).
-  - Establish port coexistence between Traefik and IIS without stopping `W3SVC` (MR-27).
+  - Establish native Windows ingress via IIS 10 and HTTP.sys on ports 80 and 443 with SNI SSL bindings; Traefik is NOT deployed on the Windows host (MR-27).
+  - Require authenticated TLS connections to remote PostgreSQL 16 endpoint (`Trust Server Certificate=false`).
+  - Implement safe agent update with automated rollback, post-restart functional health validation (`/health`), and deterministic recovery across interrupted updates or host reboots.
   - Implement cross-compilation pipeline for Windows .NET artifacts (MR-29).
   *(Note: MR-28 Windows Agent Dynamic Authentication is delivered in Phase 1 for dual-OS security parity).*
 
 ### Phase 5 — Backup, Restore & Disaster Recovery
 - **Target MR IDs**: **MR-14**, **MR-15**.
 - **Scope**:
-  - Implement 4-stage backup pipeline with independent remote checksum verification (MR-14).
-  - Implement automated pre-restore database snapshot (MR-15).
-  - Fail restores on non-zero exit codes; validate row-count integrity invariants.
-  - Test bare-metal source-host-loss recovery simulation on disposable VM.
+  - Implement 7-stage backup pipeline with `pg_restore --list` format check (TOC parseability) and remote digest verification (MR-14).
+  - Implement client-side AES-256-GCM envelope encryption with self-sufficient offsite key recovery kit surviving total host loss.
+  - Implement automated pre-restore database safety dump (MR-15).
+  - Execute full Phase 5 failure acceptance matrix (tamper, null upload, key rotation, retention, source host loss, RPO/RTO validation).
+  - Test bare-metal source-host-loss recovery simulation on disposable VM for both OS profiles.
 
 ### Phase 6 — Resource Safety & Storage Governance
 - **Target MR IDs**: **MR-16**, **MR-17**.
 - **Scope**:
-  - Enforce hard cgroup memory, CPU, and PID limits on builds and containers (MR-16).
+  - Enforce hard cgroup memory, CPU, and PID limits on builds and containers; enforce local model resource governor admission control with fail-closed behavior on missing telemetry (MR-16, F16.5).
   - Implement capacity admission control checking host free RAM and disk headroom.
   - Implement non-destructive storage cleanup preserving minimum 3 rollback digests (MR-17).
   - Add 30-day scheduled retention pruning for `SystemLogs` table.

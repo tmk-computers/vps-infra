@@ -88,9 +88,10 @@ This forensic investigation confirms two critical defects:
 ## 3. Required Remediation Specifications (Phase 0.5 & Phase 2)
 
 1. **For MR-34 (Phase 0.5 — Isolated Schema Prerequisite)**:
-   - **Single Schema Authority**: Create the versioned EF Core migration: `20261001000000_AddMaintenanceModeEntities.cs` as the SOLE schema evolution authority.
-   - **DataSeeder Rule**: Prohibit adding competing raw `ALTER TABLE` DDL to `DataSeeder.cs`. `DataSeeder.cs` is strictly bounded to initial data seeding. Complete removal of existing raw DDL in `DataSeeder.cs` is scheduled for Phase 2 under MR-13.
-   - **Acceptance Verification**: Execute the 5-case PostgreSQL acceptance contract (fresh database, upgrade from existing schema, zero data loss, entity query test, idempotency) defined in `docs/remediation/phase-0-codex-remediation/07_PHASE_0_5_SCHEMA_AUTHORITY.md`.
+   - **Single Schema Authority**: Create the versioned EF Core migration: `20261001000000_AddMaintenanceModeFields.cs` as the SOLE schema evolution authority, introducing the exact 8 `Product` and 5 `ProjectService` properties.
+   - **Neutralization of Existing DataSeeder DDL**: Prior to Phase 0.5 acceptance, the competing raw `ALTER TABLE` and `CREATE TABLE` DDL block in `DataSeeder.cs:46-168` must be disabled or removed. Startup execution of EF Core migrations must be the sole mechanism that establishes and evolves the database schema; the seeder must not execute schema-modifying DDL or catch migration errors. Unrelated data-seeding decoupling logic remains in Phase 2 under MR-13.
+   - **Acceptance Verification**: Execute the comprehensive PostgreSQL acceptance suite (fresh database creation, upgrade of existing supported database, data preservation including inactive rows, Product hydration query, ProjectService hydration query, and repeat startup stability) defined in `06_PHASE_0_5_SCHEMA_INVENTORY.md`.
+
 2. **For MR-35 (Phase 2 — Service Isolation & Container Lifecycle)**:
    - Replace regex string replacement with an AST-aware YAML parser (e.g. `YamlDotNet`).
    - Confine environment variable mutation strictly to the target service node in the Compose document.

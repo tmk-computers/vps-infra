@@ -71,26 +71,36 @@ The table below establishes the formal architectural separation between F01 and 
 ## 4. Reconciliation of DEF-15 (Path Traversal Containment)
 
 - **Finding Context**: DEF-15 originally identified that `ci-server` and `devops-manager` accepted file path parameters without sanitization, allowing arbitrary filesystem reads/writes outside the project directory.
-- **Traceability Assignment**: Formally assigned to **MR-04** (Secret Disclosure & Path Containment) in **Phase 1**.
+- **Traceability Assignment**: Formally mapped across **MR-04** (Secret Disclosure & Path Containment — Phase 1), **MR-08** (Tenant Boundary Isolation — Phase 1), and **MR-24** (Windows Deployment Sandbox — Phase 4).
 - **Implementation Requirement**:
-  1. Every path parameter (`ProjectDirectory`, `ArtifactPath`, `LogFilePath`) must be passed through a strict path canonicalizer:
+  1. Every path parameter (`ProjectDirectory`, `ArtifactPath`, `LogFilePath`) must be validated against the server-registered deployment root assigned to the authorized tenant/service/environment using normalized segment-boundary containment:
      ```csharp
-     string fullPath = Path.GetFullPath(Path.Combine(tenantSandboxRoot, userPath));
-     if (!fullPath.StartsWith(tenantSandboxRoot, StringComparison.OrdinalIgnoreCase))
+     // Normalize root with guaranteed directory separator suffix
+     string normalizedRoot = Path.GetFullPath(tenantSandboxRoot).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+     
+     // Resolve user path relative to normalized root
+     string normalizedTarget = Path.GetFullPath(Path.Combine(normalizedRoot, userPath));
+     
+     // Segment-boundary containment check (prevents sibling prefix attacks like tenant-a vs tenant-ab)
+     if (!normalizedTarget.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase))
      {
-         throw new SecurityException("Access denied: Path traversal detected.");
+         throw new SecurityException("Access denied: Path traversal detected outside sandbox root.");
      }
      ```
-  2. Any path containing `..`, null bytes (`%00`), or resolving outside `tenantSandboxRoot` must be rejected immediately with HTTP 400 Bad Request.
+  2. Any path containing `..`, null bytes (`%00`), alternate drive roots (e.g. `D:\`), UNC network shares (`\\server\share`), or archive entry traversal escapes must be rejected immediately with HTTP 400 Bad Request or HTTP 403 Forbidden.
 
 ---
 
-## 5. Reconciliation of F22 (Telemetry & Metrics Reconciliation)
+## 5. Reconciliation of F22 (Tenant Cache Isolation, Memory Telemetry & Bounded Buffers)
 
-- **Finding Context**: Historical finding F22 addressed unconstrained, unbuffered telemetry collection causing I/O saturation.
-- **Scope Division**:
-  - **Shared Platform Core (MR-17 / MR-25)**: Core metric collection pipeline implements in-memory circular ring buffers with bounded flush intervals (10 seconds) and drop-on-saturation policies.
-  - **Windows Telemetry (MR-25)**: `TMK.Agent.Windows` queries Windows Performance Counters and IIS W3C log buffers using a non-blocking asynchronous worker task, preventing UI and HTTP thread stalling.
+- **Finding Context**: Historical finding F22 originally identified unconstrained cache key collisions across tenants, unbounded session lifespans, fabricated OS memory telemetry, and unbuffered metric collection causing I/O saturation.
+- **Traceability Assignment & Obligations**:
+  - **Tenant & Resource Cache Keys (MR-08)**: All cache entries in distributed/local caches must be strictly namespaced with `TenantId` (`cache:{tenantId}:{resourceId}`). Cross-tenant cache lookups are strictly prohibited.
+  - **Bounded Session & Cache TTLs (MR-08 / MR-36)**: Cache entries and user sessions enforce mandatory TTLs (max 15m sliding, 8h absolute maximum lifetime).
+  - **Actual OS Memory Reporting (MR-25)**: Replace mock/hardcoded memory metrics with actual kernel telemetry:
+    - Linux: Parse `/proc/meminfo` (`MemTotal`, `MemAvailable`).
+    - Windows: Call Win32 `GlobalMemoryStatusEx` via P/Invoke.
+  - **Bounded Telemetry Buffers & Fail-Closed Unknown Metrics (MR-25)**: Core metric collection pipeline implements in-memory circular ring buffers with bounded flush intervals (10 seconds) and drop-on-saturation policies. Unknown or malformed metric payloads fail closed and are discarded.
 
 ---
 
@@ -102,13 +112,13 @@ The table below establishes the formal architectural separation between F01 and 
 | **DEF-08** | DEF-08.1 | Control-plane Docker socket proxying & capability dropping | MR-01 / MR-08 | Phase 1 | Preserved (Distinct from F01) |
 | **DEF-08** | DEF-08.2 | Removal of privileged host root directory mounts | MR-08 | Phase 1 | Preserved |
 | **DEF-11** | DEF-11.1 | Tenant admin scoped strictly to TenantId without platform bypass | MR-08 / MR-36 | Phase 1 | Preserved (No tenant SuperAdmin) |
-| **DEF-15** | DEF-15.1 | Path traversal containment via canonicalization | MR-04 | Phase 1 | Preserved in MR-04 scope |
+| **DEF-15** | DEF-15.1 | Path traversal containment via segment-boundary verification | MR-04 / MR-08 / MR-24 | Phase 1 (Core) / Phase 4 (Win) | Preserved across boundaries |
 | **F16** | F16.1 | Provider API key encryption at rest (AES-256-GCM) | MR-07 | Phase 1 | Preserved |
 | **F16** | F16.2 | Monotonic streaming spend budget hard cap | MR-07 | Phase 1 | Preserved |
 | **F16** | F16.3 | `LocalOnly` privacy policy precedence enforcement | MR-07 / MR-31 | Phase 1 (Disable) / Phase 9 (Re-enable) | Preserved behind feature gate |
 | **F16** | F16.4 | Cloud fallback authorization and budget re-evaluation | MR-07 / MR-31 | Phase 1 (Disable) / Phase 9 (Re-enable) | Preserved behind feature gate |
-| **F16** | F16.5 | Admission control and resource governor for local LLM | MR-17 | Phase 6 | Preserved |
-| **F22** | F22.1 | Bounded in-memory telemetry buffers with backpressure | MR-25 | Phase 4 (Win) / Phase 7 (Core) | Preserved |
+| **F16** | F16.5 | Admission control and resource governor for local LLM | MR-16 | Phase 6 | Preserved (Mapped to MR-16) |
+| **F22** | F22.1 | Tenant cache keys, bounded TTLs, real OS memory, bounded telemetry | MR-08 / MR-25 / MR-36 | Phase 1 (Cache) / Phase 4 & 7 (Telemetry) | Preserved |
 
 ---
 

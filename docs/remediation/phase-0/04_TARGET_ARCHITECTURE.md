@@ -59,16 +59,18 @@ graph TD
 
 The Shared Platform Core executes platform-level business logic independently of the underlying operating system:
 
-1. **Identity / RBAC**:
+1. **Identity / RBAC & Break-Glass Governance**:
    - Multi-tenant principal context injected into every request.
    - Resource-scoped authorization (TenantId + ProjectId + ServiceId).
-   - Strict separation of `PlatformSuperAdmin` (global host/infrastructure management only, zero customer data access) from `TenantAdmin` (customer administration scoped strictly to `TenantId`). No "tenant SuperAdmin" global bypass.
+   - Strict separation of `PlatformSuperAdmin` (global host/infrastructure management only, zero customer data access under normal operations) from `TenantAdmin` (customer administration scoped strictly to `TenantId`). No "tenant SuperAdmin" global bypass.
+   - Exceptional break-glass support access requires explicit customer-consented ticket authorization, time-bounded short-lived elevation, immutable audit logging, and immediate post-session revocation.
 
 2. **Secrets & Cryptographic Key Management**:
    - Zero committed plaintext secrets or fallback keys.
    - Per-installation encrypted secret vault using OS DPAPI or AES-256-GCM.
    - In-memory redaction of secrets in log templates, process arguments, and trace outputs.
    - Comprehensive Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, lifetime, rotation, revocation).
+   - Durable capability-based token revocation repository in PostgreSQL, synchronized with local in-memory cache, surviving service restarts. Redis is classified as `Optional / Not Gate-A Certified Dependency`.
 
 3. **Release Model & Artifact Provenance**:
    - Mandatory immutable release identifiers (SemVer + Git SHA or Content Digest).
@@ -80,12 +82,12 @@ The Shared Platform Core executes platform-level business logic independently of
      `PENDING` → `PRECHECK` → `PREPARED` → `APPLYING` → `VERIFYING` → `CUTOVER` → `POST_CUTOVER_VERIFY` → `SUCCEEDED`
    - Explicit failure states:
      `FAILED` (pre-mutation) or `ROLLBACK` → `ROLLED_BACK` / `RECOVERY_REQUIRED`
-   - Single-host per-service atomic locking via PostgreSQL advisory locks and idempotency keys.
+   - Single-host per-service atomic locking via PostgreSQL advisory locks, idempotency keys, and physical process fencing.
    - Process crash / server reboot recovery: deterministic reconciliation of in-flight states upon startup without premature promotion.
 
 5. **Health & Readiness Contract**:
-   - Multi-probe verification: Liveness (is process running?), Staging Readiness (is staging endpoint healthy on `/health` for 3 consecutive probes over 15s?), and Post-Cutover Public Stability Window (30s observation with 5xx < 1%).
-   - Deployment success (`SUCCEEDED`) gated strictly on passing post-cutover verification and live serving proof.
+   - Multi-probe verification: Liveness (is process running?), Staging Readiness (is staging endpoint healthy on declared health path for consecutive probes?), and Post-Cutover Public Stability Window (observation window with error threshold). Parameterized as profile defaults.
+   - Deployment success (`SUCCEEDED`) gated strictly on passing post-cutover verification and affirmative live serving proof.
 
 6. **Rollback & Database Compatibility Contract**:
    - Deterministic automated rollback to verified preceding immutable release standby instance.
@@ -95,13 +97,14 @@ The Shared Platform Core executes platform-level business logic independently of
 
 7. **Migration & Schema Contract**:
    - Single authoritative schema manager: Versioned EF Core Migrations.
-   - Zero competing raw `ALTER TABLE` DDL in `DataSeeder.cs`; seeder bounded purely to initial data population; raw DDL removal milestone in Phase 2 (MR-13).
+   - Neutralization/removal of schema-changing raw DDL in `DataSeeder.cs` prior to Phase 0.5 migration acceptance, establishing single schema authority from the start. Seeder bounded purely to initial data population; raw DDL removal milestone in Phase 2 (MR-13).
    - Forward and backward schema compatibility checks prior to deployment.
 
 8. **Backup & Disaster Recovery Contract**:
-   - 7-stage pipeline: `Capture` → `Format-Aware Verify` (`pg_restore --list`) → `Client-Side Encrypt` (AES-256-GCM) → `Offsite Dispatch` → `Remote Digest Verify` → `Catalog Recovery Point` → `Retain/Expire`.
-   - Offsite key escrow via BIP-39 recovery passphrase surviving total host loss.
-   - Measurable targets: RPO 24h (scheduled) / 1h (pre-deploy); RTO 30 min.
+   - 7-stage pipeline: `Capture` → `Format-Aware Verify` (`pg_restore --list` for TOC parseability) → `Client-Side Encrypt` (AES-256-GCM) → `Offsite Dispatch` → `Remote Digest Verify` → `Catalog Recovery Point` → `Retain/Expire`.
+   - Data integrity and restore correctness proven via scheduled restore drills.
+   - Self-sufficient offsite key recovery kit with derivation metadata (Argon2id salt, KEK version, IV) surviving total host loss.
+   - Measurable operational targets: RPO 24h (scheduled) / 1h (pre-deploy); RTO 30 min.
 
 9. **Resource Governance**:
    - Capacity admission check before initiating resource-heavy operations (builds, deployments, backups).
@@ -152,7 +155,7 @@ The Windows Adapter replaces historical PowerShell scripts with a robust, compil
 1. **Compiled .NET Worker / Windows Service (`TMK.Agent.Windows`)**:
    - Replaces `tmk-iis-agent.ps1` as the production long-running IIS deployment daemon.
    - Native integration with Windows Service Control Manager (SCM), eliminating Error 1053.
-   - Runs as `NT AUTHORITY\LocalService` with restricted filesystem ACLs.
+   - Runs under a **dedicated least-privilege Windows service identity** (e.g. `NT SERVICE\TMKAgent`) with explicitly granted rights: IIS administration / AppPool control, deployment filesystem rights (`C:\inetpub\staging\` and `C:\inetpub\wwwroot\`), and SCM inspection; explicitly restricted from unrelated OS directories and LocalSystem privileges.
    - PowerShell retained exclusively for one-time host bootstrap and prerequisites setup.
 
 2. **IIS Management via Microsoft.Web.Administration**:
@@ -167,15 +170,16 @@ The Windows Adapter replaces historical PowerShell scripts with a robust, compil
    - Elimination of `setup.ps1` W3SVC stop command; IIS runs continuously.
 
 4. **Certified Windows Gate-A Database Topology**:
-   - Application workloads on Windows IIS connect to a **Remote PostgreSQL 16 Endpoint** (dedicated Linux VM or managed PostgreSQL service) over TLS port 5432.
+   - Application workloads on Windows IIS connect to a **Remote PostgreSQL 16 Endpoint** (dedicated Linux VM or managed PostgreSQL service) over authenticated TLS port 5432 (`SSL Mode=VerifyFull` or `SSL Mode=Require;Trust Server Certificate=false` with validated CA/pinning; unauthenticated server certificate trust or validation bypass is strictly prohibited).
    - WSL2 and Docker Desktop on Windows Server are explicitly uncertified and prohibited for Gate A.
 
 5. **Constrained Deployment Filesystem Sandbox**:
-   - Enforced target root (e.g. `C:\inetpub\wwwroot\apps\{AppName}\releases\{ReleaseId}`).
-   - Path normalization and directory traversal prevention (`Path.GetFullPath` prefix validation).
+   - Enforced target root (e.g. `C:\inetpub\wwwroot\apps\{tenant}\{AppName}\releases\{ReleaseId}`).
+   - Normalized segment-boundary containment preventing directory traversal and sibling-prefix collisions (`tenant-a` vs `tenant-ab`), UNC paths, and alternate drive escapes.
    - Windows NTFS ACL enforcement: Application Pool identities granted least-privilege permissions.
 
 6. **Windows Telemetry & Concurrency**:
-   - Asynchronous multi-threaded HTTP/API binding on port 5055 with mTLS authentication.
+   - Asynchronous multi-threaded HTTP/API binding on port 5055 with mTLS transport authentication paired with scoped operation authorization tokens.
    - Exact per-AppPool memory accounting via worker process PID tracking (eliminating the all-w3wp summation defect).
-   - Atomic agent self-update wrapper (`TMK.Agent.Updater.exe`) with automatic rollback on service start failure.
+   - Safe agent update with automated rollback on service start failure, post-restart functional health inspection (`/health`), and deterministic recovery across interrupted updates or reboot events.
+
