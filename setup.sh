@@ -341,6 +341,13 @@ if [ "$DEPLOYMENT_MODE" != "ci-only" ]; then
     if [ ! -f "$SCRIPT_DIR/volumes/db/pgadmin-config/config_local.py" ]; then
         echo 'SESSION_DB_PATH = "/var/lib/pgadmin/pgadmin_sessions"' > "$SCRIPT_DIR/volumes/db/pgadmin-config/config_local.py"
     fi
+
+    # Ensure .env symlinks exist in db subdirectories for direct docker compose usage
+    for db_dir in "$SCRIPT_DIR/db"/*/; do
+        if [ -d "$db_dir" ]; then
+            ln -sf ../../.env "${db_dir}.env"
+        fi
+    done
 fi
 
 # 6. Prepare Traefik SSL Certificate Storage & Dashboard Auth
