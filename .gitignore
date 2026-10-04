@@ -91,3 +91,6 @@ Thumbs.db
 .env
 .env.local
 volumes/env-backups/
+.env.backup*
+__pycache__/
+*.pyc
