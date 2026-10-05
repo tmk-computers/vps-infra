@@ -34,7 +34,7 @@ services:
       - SeedData__SuperAdmin__FullName=${SUPERADMIN_FULLNAME:-Super Admin}
 
       # Cross-Machine CI Deployment & REST Sync Secret
-      - DeploySettings__CiSecret=${CI_SECRET:-SuperCiSecretKey123!}
+      - DeploySettings__CiSecret=${CI_SECRET:?CI_SECRET must be set and non-empty}
 
       # Secure CORS Domain & Origin Restrictions
       - PRIMARY_DOMAIN=${PRIMARY_DOMAIN:-example.com}
@@ -139,7 +139,7 @@ services:
       - DOCKER_REGISTRY_PASSWORD=${DOCKER_REGISTRY_PASSWORD:-${REGISTRY_PASSWORD:-tmkregistry2026}}
       - DOCKER_REGISTRY_TYPE=${DOCKER_REGISTRY_TYPE:-private}
       - SYNC_MODE=${SYNC_MODE:-db}
-      - CI_SECRET=${CI_SECRET:-SuperCiSecretKey123!}
+      - CI_SECRET=${CI_SECRET:?CI_SECRET must be set and non-empty}
     volumes:
       - ${DOCKER_SOCK_PATH:-/var/run/docker.sock}:/var/run/docker.sock
       - ${WWW_ROOT:-/var/www}:/var/www
