@@ -184,6 +184,7 @@ async def handle_client(client_reader, client_writer):
         # Check Content-Length and Transfer-Encoding for reading request body
         content_length = 0
         is_chunked = False
+        is_upgrade = False
         new_header_lines = []
         for idx, hline in enumerate(header_text.splitlines()):
             clean_line = hline.strip()
@@ -193,6 +194,12 @@ async def handle_client(client_reader, client_writer):
                 new_header_lines.append(clean_line)
                 continue
             lower_line = clean_line.lower()
+            if lower_line.startswith("upgrade:") or "upgrade" in lower_line:
+                is_upgrade = True
+            if lower_line.startswith("connection:"):
+                if "upgrade" in lower_line:
+                    is_upgrade = True
+                continue
             if lower_line.startswith("content-length:"):
                 try:
                     content_length = int(lower_line.split(":", 1)[1].strip())
@@ -203,6 +210,11 @@ async def handle_client(client_reader, client_writer):
                 is_chunked = True
             else:
                 new_header_lines.append(clean_line)
+
+        if is_upgrade:
+            new_header_lines.append("Connection: Upgrade")
+        else:
+            new_header_lines.append("Connection: close")
 
         body_bytes = b""
         if is_chunked:
@@ -253,9 +265,7 @@ async def handle_client(client_reader, client_writer):
         # If it was chunked and we de-chunked it, reconstruct headers with Content-Length
         if is_chunked:
             new_header_lines.append(f"Content-Length: {len(body_bytes)}")
-            header_to_send = ("\r\n".join(new_header_lines) + "\r\n\r\n").encode('latin1')
-        else:
-            header_to_send = header_bytes
+        header_to_send = ("\r\n".join(new_header_lines) + "\r\n\r\n").encode('latin1')
 
         target_writer.write(header_to_send)
         if body_bytes:
