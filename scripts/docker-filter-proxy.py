@@ -101,13 +101,6 @@ def is_path_allowed(path_str):
         if resolved == allowed or resolved.startswith(allowed + "/"):
             return True
 
-    # Check optional test prefix for test harness isolation
-    extra_allowed = os.getenv("FILTER_PROXY_EXTRA_ALLOWED_PREFIX")
-    if extra_allowed:
-        extra_resolved = os.path.realpath(extra_allowed.strip())
-        if resolved == extra_resolved or resolved.startswith(extra_resolved + "/"):
-            return True
-
     return False
 
 def validate_container_create_payload(body_bytes):

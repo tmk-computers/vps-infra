@@ -180,8 +180,6 @@ async def run_test_suite():
     env["FILTER_PROXY_TARGET_SOCK"] = mock_sock
     env["FILTER_PROXY_LISTEN_SOCK"] = filter_sock
     env["FILTER_PROXY_SOCKET_MODE"] = "0600"
-    env["FILTER_PROXY_EXTRA_ALLOWED_PREFIX"] = test_dir
-
     proxy_proc = subprocess.Popen(
         [sys.executable, script_path],
         env=env,
@@ -207,9 +205,21 @@ async def run_test_suite():
     passed = 0
     failed = 0
     test_results = []
+    rejection_cases = 0
+    forwarded_rejection_requests = 0
 
     def record_test(name, success, detail=""):
-        nonlocal passed, failed
+        nonlocal passed, failed, rejection_cases, forwarded_rejection_requests
+        expects_rejection = "returns 400 Bad Request" in name or "denied with 403" in name
+        if expects_rejection:
+            rejection_cases += 1
+            forwarded = len(mock_server.received_requests)
+            forwarded_rejection_requests += forwarded
+            if forwarded:
+                success = False
+                detail = f"{detail}; rejected request(s) reached mock daemon: {forwarded}"
+            # Keep each assertion independent even after a regression is detected.
+            mock_server.received_requests.clear()
         if success:
             passed += 1
             print(f"  ✅ PASS: {name}")
@@ -595,6 +605,7 @@ async def run_test_suite():
 
     print("\n" + "=" * 80)
     print(f"ISOLATED TEST HARNESS SUMMARY: {passed} PASSED, {failed} FAILED, 0 SKIPPED (Total: {passed + failed})")
+    print(f"Rejected-request forwarding: {forwarded_rejection_requests} forwarded across {rejection_cases} rejection cases")
     print("=" * 80)
     return failed == 0
 
