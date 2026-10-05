@@ -69,12 +69,27 @@ Under `/var/www/vps-infra/apps/<your-service-name>/docker-compose.yml`:
 ```yaml
 services:
   my-api-prod:
-    image: my-company/my-api:latest
+    image: localhost:5000/my-api:${IMAGE_TAG:-prod}
     container_name: my-api-prod
     restart: always
+
+    # 🔐 Security Best Practice: Load database credentials and API secrets
+    # from the host secrets directory (mode 0600 root:root)
+    env_file:
+      - /etc/vps-infra/secrets/my-api/prod.env
+
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=shared_postgres;Port=5432;Database=my_api_db;Username=postgres;Password=YourPostgresPassword;
+      - ASPNETCORE_URLS=http://+:8080
+
+      # Centralized Maintenance Mode Config (Managed via DevOps Manager UI)
+      - SystemStatus__IsMaintenance=false
+      - SystemStatus__StatusMessage=All systems operational.
+      - SystemStatus__Version=1.0.0
+      - SystemStatus__MinSupportedVersion=1.0.0
+      - SystemStatus__ShowMaintenanceForMobile=true
+      - SystemStatus__ShowMaintenanceForWeb=true
+
     volumes:
       - /var/www/vps-infra/volumes/apps/my-api/prod/uploads:/app/uploads
       - /var/www/vps-infra/volumes/apps/my-api/prod/logs:/app/logs
@@ -92,6 +107,14 @@ networks:
   traefik_net:
     external: true
 ```
+
+> [!IMPORTANT]
+> **Host Secrets Directory (`/etc/vps-infra/secrets/`)**:  
+> Create your application-scoped secret file at `/etc/vps-infra/secrets/<your-service-name>/prod.env`:
+> ```ini
+> ConnectionStrings__DefaultConnection=Host=shared_postgres;Port=5432;Database=my_api_prod;Username=my_api_prod_user;Password=YourSecureRandomPassword32Chars!;Pooling=true;MaxPoolSize=10;
+> ```
+> Ensure file permissions are locked down with `chmod 0600 /etc/vps-infra/secrets/<your-service-name>/prod.env` and directory with `chmod 0700`. Never commit secrets or connection strings to git repositories.
 
 ---
 

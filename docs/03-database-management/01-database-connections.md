@@ -9,15 +9,20 @@ VPS-Infra includes an integrated, isolated multi-database engine suite. Microser
 ### 1. PostgreSQL 16 (Default Shared Engine)
 * **Internal Docker Hostname**: `shared_postgres`
 * **Port**: `5432`
-* **Default Admin User**: `postgres`
-* **Connection String Format**:
+* **Administrative Superuser**: `postgres` *(for DBA setup & migrations only)*
+* **Application Connection Format (Least-Privilege User)**:
   ```text
-  Host=shared_postgres;Port=5432;Database=<your_db>;Username=postgres;Password=<your_password>;Pooling=true;
+  Host=shared_postgres;Port=5432;Database=<app_db>;Username=<app_db>_user;Password=<secure_password>;Pooling=true;MaxPoolSize=10;
   ```
 * **URI Format**:
   ```text
-  postgresql://postgres:<your_password>@shared_postgres:5432/<your_db>
+  postgresql://<app_db>_user:<secure_password>@shared_postgres:5432/<app_db>
   ```
+
+> [!WARNING]
+> **Zero Superuser Credential Sharing:**  
+> Never configure client applications to connect with the `postgres` superuser. Always provision a dedicated user per database (e.g., `clever_bill_prod_user` for `clever_bill_prod`) and store connection strings in `/etc/vps-infra/secrets/<app>/<env>.env` (`chmod 0600 root:root`).
+
 
 ### 2. Microsoft SQL Server 2022
 * **Internal Docker Hostname**: `shared_sql`

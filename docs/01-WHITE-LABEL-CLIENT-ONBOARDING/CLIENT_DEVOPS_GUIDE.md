@@ -227,7 +227,171 @@ When your license duration reaches `0 days` (or if your agreement is suspended):
 
 ---
 
-## 🔄 6. Release & Hotfix Updates (Client Upgrade Runbook)
+## 🔐 6. Production Secret Management & Host Secrets Architecture (`/etc/vps-infra/secrets/`)
+
+To achieve enterprise-grade isolation, compliance, and prevent credential leakage into version control, VPS-Infra enforces strict secret externalization and host-level filesystem security.
+
+### 🛡️ Core Security Principles
+1. **Zero Hardcoded Secrets in Git**: Never place database passwords, third-party API tokens (e.g., MailGun, Twilio, SendGrid), private keys, or JWT signing secrets directly inside `docker-compose.yml`, source code, or repository `.env` files.
+2. **Application-Scoped Secret Isolation**: Never inject the global platform `.env` file into client containers. Every microservice must receive strictly its own application-specific environment file.
+3. **Least-Privilege Database Roles**: Application containers must **never** connect using database superuser accounts (such as PostgreSQL `postgres` or MySQL `root`). Each application database must have its own dedicated user account with privileges strictly limited to that database.
+4. **Build-Time Leak Prevention**: Every repository must contain a hardened `.dockerignore` file so secret files (`.env*`, `*.pem`, `*.key`), dumps, and local test artifacts are never baked into Docker images during CI builds.
+
+---
+
+### 📂 Host Secrets Directory Structure (`/etc/vps-infra/secrets/`)
+
+Application secrets reside outside the `/var/www/vps-infra` git repository under the secure root directory `/etc/vps-infra/secrets/`:
+
+```text
+/etc/vps-infra/secrets/
+├── [drwx------ root:root]  clever-bill-api/
+│   ├── [-rw------- root:root]  prod.env
+│   └── [-rw------- root:root]  uat.env
+├── [drwx------ root:root]  clever-farmer-api/
+│   ├── [-rw------- root:root]  prod.env
+│   └── [-rw------- root:root]  uat.env
+├── [drwx------ root:root]  clever-lord-api/
+│   ├── [-rw------- root:root]  prod.env
+│   └── [-rw------- root:root]  uat.env
+├── [drwx------ root:root]  clever-sales-api/
+│   ├── [-rw------- root:root]  prod.env
+│   └── [-rw------- root:root]  uat.env
+├── [drwx------ root:root]  kaksha-plus-api/
+│   ├── [-rw------- root:root]  prod.env
+│   ├── [-rw------- root:root]  uat.env
+│   ├── [-rw------- root:root]  dev.env
+│   └── [-rw------- root:root]  qa.env
+└── [drwx------ root:root]  omr-api/
+    ├── [-rw------- root:root]  prod.env
+    └── [-rw------- root:root]  uat.env
+```
+
+### 🔒 Permission Matrix & Hardening Commands
+
+The host secrets directory is secured so that only the Linux `root` user can read or modify credentials:
+
+```bash
+# Set directory permissions (accessible only by root)
+sudo chown -R root:root /etc/vps-infra/secrets
+sudo find /etc/vps-infra/secrets -type d -exec chmod 0700 {} +
+
+# Set file permissions (read/write only by root)
+sudo find /etc/vps-infra/secrets -type f -exec chmod 0600 {} +
+```
+
+---
+
+### 📝 Client Manifest Integration (`docker-compose.yml`)
+
+Microservice Compose manifests in `/var/www/vps-infra/apps/<app>/docker-compose.yml` load secrets at runtime using the `env_file:` declaration. Non-secret configurations remain cleanly separated under `environment:`:
+
+```yaml
+services:
+  my-api-prod:
+    image: localhost:5000/my-api:${IMAGE_TAG:-prod}
+    container_name: my-api-prod
+    restart: always
+
+    # 1. Load sensitive credentials from application-scoped host secrets
+    env_file:
+      - /etc/vps-infra/secrets/my-api/prod.env
+
+    # 2. Non-sensitive operational configuration
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+
+      # Centralized Maintenance Mode Support
+      - SystemStatus__IsMaintenance=false
+      - SystemStatus__StatusMessage=All systems operational.
+      - SystemStatus__Version=1.0.0
+      - SystemStatus__MinSupportedVersion=1.0.0
+      - SystemStatus__ShowMaintenanceForMobile=true
+      - SystemStatus__ShowMaintenanceForWeb=true
+
+    volumes:
+      - /var/www/vps-infra/volumes/apps/my-api/prod/uploads:/app/uploads
+      - /var/www/vps-infra/volumes/apps/my-api/prod/logs:/app/logs
+    networks:
+      - traefik_net
+```
+
+### 📄 Example Secret File (`/etc/vps-infra/secrets/my-api/prod.env`)
+```ini
+# Application Database Connection (Dedicated Least-Privilege Role)
+ConnectionStrings__DefaultConnection=Host=shared_postgres;Port=5432;Database=my_api_prod;Username=my_api_prod_user;Password=SecureCryptographicPassword32Chars!;Pooling=true;MaxPoolSize=10;
+
+# Third-Party API Keys & Tokens
+MailGun__ApiKey=key-abcdef1234567890
+MailGun__Domain=mail.yourdomain.com
+
+# Security Tokens
+JwtSettings__SecretKey=Your64CharacterHighEntropyHmacSha256SecretKeyHere!
+```
+
+---
+
+### 🛡️ Least-Privilege Database User Provisioning
+
+When provisioning a new application database on `shared_postgres`:
+
+1. **Create the dedicated user with a strong unique password**:
+   ```sql
+   CREATE USER my_api_prod_user WITH PASSWORD 'Generate32CharSecretHere!';
+   CREATE DATABASE my_api_prod OWNER my_api_prod_user;
+   ```
+2. **Transfer schema ownership to support startup migrations (EF Core / Flyway)**:
+   ```sql
+   \c my_api_prod
+   GRANT ALL ON SCHEMA public TO my_api_prod_user;
+   ALTER SCHEMA public OWNER TO my_api_prod_user;
+   ```
+3. **Revoke cross-database permissions**:
+   ```sql
+   REVOKE ALL ON DATABASE my_api_prod FROM PUBLIC;
+   GRANT CONNECT ON DATABASE my_api_prod TO my_api_prod_user;
+   ```
+
+---
+
+### 📦 Mandatory `.dockerignore` Rules
+
+To ensure secrets, local environments, and build artifacts never leak into Docker image layers, every repository must include a `.dockerignore` file containing:
+
+```text
+# Dependency & build directories
+node_modules/
+dist/
+bin/
+obj/
+__pycache__/
+
+# Secret & environment files
+.env*
+*.pem
+*.key
+*.pfx
+
+# Database dumps & backup archives
+*.dump
+*.sql
+*.tar.gz
+*.zip
+*.rar
+
+# Source control & CI logs
+.git/
+.github/
+*.log
+coverage/
+playwright-report/
+test-results/
+```
+
+---
+
+## 🔄 7. Release & Hotfix Updates (Client Upgrade Runbook)
 
 When TMK Computers releases new features, performance updates, or security hotfixes:
 
@@ -255,7 +419,7 @@ docker compose up -d --remove-orphans
 
 ---
 
-## 🛠️ 7. Day-2 Operations Runbook
+## 🛠️ 8. Day-2 Operations Runbook
 
 ### Service Lifecycle Management:
 ```bash
@@ -285,7 +449,7 @@ VPS-Infra includes a dedicated database management CLI tool in `db/`:
 
 ---
 
-## 📞 8. Enterprise Support & Contact
+## 📞 9. Enterprise Support & Contact
 
 For assistance, custom extensions, or licensing renewals:
 * **Support Email**: `support@tmkcomputers.in`
