@@ -485,6 +485,38 @@ async def run_test_suite():
         record_test("Dangerous capability CAP_SYS_ADMIN denied with 403 Forbidden",
                     status == 403, f"Status: {status}, msg: {jdata.get('message')}")
 
+        # 4.5 HostConfig.Devices non-empty
+        status, _, jdata = await send_raw_http_request(
+            filter_sock, "POST", "/v1.45/containers/create",
+            body=json.dumps({"HostConfig": {"Devices": [{"PathOnHost": "/dev/sda", "PathInContainer": "/dev/sda", "CgroupPermissions": "rwm"}]}})
+        )
+        record_test("HostConfig.Devices non-empty denied with 403 Forbidden",
+                    status == 403, f"Status: {status}, msg: {jdata.get('message')}")
+
+        # 4.6 HostConfig.DeviceRequests non-empty
+        status, _, jdata = await send_raw_http_request(
+            filter_sock, "POST", "/v1.45/containers/create",
+            body=json.dumps({"HostConfig": {"DeviceRequests": [{"Driver": "cdi", "Count": -1, "DeviceIDs": ["gpu0"]}]}})
+        )
+        record_test("HostConfig.DeviceRequests non-empty denied with 403 Forbidden",
+                    status == 403, f"Status: {status}, msg: {jdata.get('message')}")
+
+        # 4.7 HostConfig.SecurityOpt unconfined profile
+        status, _, jdata = await send_raw_http_request(
+            filter_sock, "POST", "/v1.45/containers/create",
+            body=json.dumps({"HostConfig": {"SecurityOpt": ["seccomp=unconfined"]}})
+        )
+        record_test("HostConfig.SecurityOpt unconfined profile denied with 403 Forbidden",
+                    status == 403, f"Status: {status}, msg: {jdata.get('message')}")
+
+        # 4.8 HostConfig.SecurityOpt disable profile
+        status, _, jdata = await send_raw_http_request(
+            filter_sock, "POST", "/v1.45/containers/create",
+            body=json.dumps({"HostConfig": {"SecurityOpt": ["label=disable"]}})
+        )
+        record_test("HostConfig.SecurityOpt disable profile denied with 403 Forbidden",
+                    status == 403, f"Status: {status}, msg: {jdata.get('message')}")
+
         # ======================================================================
         # Group 5: Local Volume Driver Creation POST /volumes/create (403 Forbidden)
         # ======================================================================
@@ -591,6 +623,22 @@ async def run_test_suite():
         )
         record_test("Legitimate volume create forwarded and returns 201 Created",
                     status == 201 and len(mock_server.received_requests) == 1,
+                    f"Status: {status}, mock requests: {len(mock_server.received_requests)}")
+
+        # 6.9 Legitimate HostConfig.Mounts tmpfs mount (forwarded, memory-backed, no host filesystem access)
+        mock_server.received_requests.clear()
+        status, _, jdata = await send_raw_http_request(
+            filter_sock, "POST", "/v1.45/containers/create",
+            body=json.dumps({"HostConfig": {"Mounts": [{"Type": "tmpfs", "Target": "/app/cache", "TmpfsOptions": {"SizeBytes": 67108864}}]}})
+        )
+        forwarded_ok = len(mock_server.received_requests) == 1
+        has_no_host_source = True
+        if forwarded_ok:
+            req_body = json.loads(mock_server.received_requests[0]["body"].decode('utf-8'))
+            mounts = req_body.get("HostConfig", {}).get("Mounts", [])
+            has_no_host_source = bool(mounts) and mounts[0].get("Type") == "tmpfs" and not mounts[0].get("Source")
+        record_test("Legitimate HostConfig.Mounts tmpfs mount forwarded and returns 201 Created",
+                    status == 201 and forwarded_ok and has_no_host_source,
                     f"Status: {status}, mock requests: {len(mock_server.received_requests)}")
 
     finally:
