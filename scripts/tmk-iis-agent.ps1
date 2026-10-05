@@ -18,7 +18,7 @@ param(
 )
 
 if ([string]::IsNullOrWhiteSpace($Secret)) {
-    $Secret = "SuperCiSecretKey123!"
+    throw "CI_SECRET must be configured before starting the IIS agent."
 }
 
 # Ensure IIS WebAdministration module is available

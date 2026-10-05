@@ -42,7 +42,7 @@ The Reviewer independently verified the five core security boundaries defined in
 - **Current Reality**:
   - `ci-server/api/auth.js:4` falls back to static secret `'5b5fea8f9a4b8f2c2e2c5b6f7d4c6b4c7b9d8e6e5e5f5c6b7d8e6e5b5f9c2e4'`.
   - `setup.sh:176` copies `.env.example` with default passwords (`StrongPostgres@123`).
-  - `setup.ps1` and `tmk-iis-agent.ps1` default to `"SuperCiSecretKey123!"` (DEF-36, MR-28).
+  - `setup.ps1` and `tmk-iis-agent.ps1` default to `"[REDACTED_COMPROMISED_DEFAULT]"` (DEF-36, MR-28).
 - **Reviewer Assessment**: **Critical P0 Security Finding**. Setup scripts must generate cryptographically random high-entropy strings during fresh installation, and the application must fail to boot if known static fallback strings are detected in production mode.
 
 ### 2.3 Network Exposure & Firewall Bypass (F07, DEF-03, MR-06 - P0)

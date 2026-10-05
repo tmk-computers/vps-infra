@@ -59,7 +59,7 @@ The Reviewer independently audited the Windows baseline across [`setup.ps1`](fil
 ### 2.7 MR-28: Windows Agent Authentication & Dynamic Secret Generation (P0)
 - **Code Reality**:
   - In `tmk-iis-agent.ps1:21` and `IisClientService.cs:42`, both caller and receiver default to:  
-    `$Secret = "SuperCiSecretKey123!"`
+    `$Secret = "[REDACTED_COMPROMISED_DEFAULT]"`
   - Any network caller possessing this known static string can invoke the `/api/iis/deploy` endpoint and extract arbitrary code onto the Windows host.
 - **Reviewer Assessment**: **CONFIRMED P0 DEFECT**. Setup must generate a cryptographically strong installation secret and reject static fallbacks on boot.
 

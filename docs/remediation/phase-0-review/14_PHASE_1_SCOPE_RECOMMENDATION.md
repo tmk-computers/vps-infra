@@ -39,7 +39,7 @@ The Reviewer evaluated the technical cohesion and security rigor of the proposed
 
 ### 2.4 Are Any Critical Security Findings Missing from Proposed Phase 1?
 - **Reviewer Analysis**:
-  1. **MR-28 (Windows Agent Authentication & Static Fallback Secret - P0)**: The Developer scheduled `MR-02` (Linux JWT secrets) and `MR-07` (Linux setup secrets) for Phase 1, but deferred `MR-28` (`"SuperCiSecretKey123!"` hardcoded in `tmk-iis-agent.ps1` and `IisClientService.cs`) to Phase 4! Leaving a hardcoded static bearer token in the Windows deployment agent violates the Dual-OS Non-Negotiable Mandate requiring equal security outcomes.
+  1. **MR-28 (Windows Agent Authentication & Static Fallback Secret - P0)**: The Developer scheduled `MR-02` (Linux JWT secrets) and `MR-07` (Linux setup secrets) for Phase 1, but deferred `MR-28` (`"[REDACTED_COMPROMISED_DEFAULT]"` hardcoded in `tmk-iis-agent.ps1` and `IisClientService.cs`) to Phase 4! Leaving a hardcoded static bearer token in the Windows deployment agent violates the Dual-OS Non-Negotiable Mandate requiring equal security outcomes.
   2. **MR-06 (Database Network Exposure - P0)**: Ports 5432 and 5050 are exposed to `0.0.0.0`, accessible to the public internet with default credentials. Deferring public port exposure to Phase 3 while fixing JWT tokens in Phase 1 leaves the master database vulnerable.
 
 ---
@@ -53,7 +53,7 @@ The Reviewer recommends that Conversation 1 restructure Phase 1 into a tightly f
 | **MR-03** | Leaked / Committed Credentials | Shared | **P0** | Revoke GCP service account key in Cloud IAM; purge tracked JSON from git. |
 | **MR-02** | Signing & Auth Defaults | Shared | **P0** | Enforce startup halt on default JWT secrets; generate random signing keys. |
 | **MR-07** | Secure Secret Provisioning | Shared | **P1** | Implement cryptographically random password generation in setup scripts. |
-| **MR-28** | Windows Agent Authentication | Windows | **P0** | Eliminate `"SuperCiSecretKey123!"`; generate random Windows agent token on setup. |
+| **MR-28** | Windows Agent Authentication | Windows | **P0** | Eliminate `"[REDACTED_COMPROMISED_DEFAULT]"`; generate random Windows agent token on setup. |
 | **MR-04** | Secret Disclosure & Log Redaction | Shared | **P1** | Strip Git tokens from read DTOs; encrypt in DB; sanitize webhook logging. |
 | **MR-08** | Multi-Tenant RBAC & BOLA | Shared | **P1** | Derivate TenantId from JWT; enforce tenant scoping on all queries and CI actions. |
 | **MR-36** | AMS API Authorization | Shared | **P1** | Protect AMS routes with `authenticateToken`; inject Bearer token in proxy client. |

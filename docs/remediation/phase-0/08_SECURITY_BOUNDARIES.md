@@ -100,7 +100,7 @@ graph TD
   - Every API request derives `TenantId` from the cryptographically validated JWT token. Entity queries enforce `WHERE TenantId = @currentTenantId` at the repository/DbContext layer.
 
 ### 2.5 Boundary 5: Windows Filesystem Sandbox & Dedicated Service Identity (MR-24, MR-25)
-- **Vulnerability Solved**: Historical DEF-32 and DEF-36 allowed unconstrained `PhysicalPath` extraction to sensitive OS paths (`C:\Windows`) using hardcoded bearer token `"SuperCiSecretKey123!"`.
+- **Vulnerability Solved**: Historical DEF-32 and DEF-36 allowed unconstrained `PhysicalPath` extraction to sensitive OS paths (`C:\Windows`) using hardcoded bearer token `"[REDACTED_COMPROMISED_DEFAULT]"`.
 - **Enforced Boundary**:
   - `TMK.Agent.Windows` runs as a compiled .NET Worker Windows Service under a **dedicated least-privilege Windows service identity** (e.g. `NT SERVICE\TMKAgent`) with explicitly granted rights: IIS administration / AppPool control, deployment filesystem rights (`C:\inetpub\staging\` and `C:\inetpub\wwwroot\`), and SCM inspection; explicitly restricted from unrelated OS directories and LocalSystem privileges.
   - Communication between DevOps Manager and `TMK.Agent.Windows` is secured via mutual TLS (mTLS) with pinned CA certificate validation on port 5055, supplemented by scoped short-lived request tokens.

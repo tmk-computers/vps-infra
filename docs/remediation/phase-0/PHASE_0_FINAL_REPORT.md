@@ -70,7 +70,7 @@ The following **14 items** represent critical vulnerabilities or fatal defects t
 9. **MR-22**: IIS Agent script in `vps-infra` has fatal AST syntax error (missing catch block); SCM fails with Error 1053 (F09, DEF-28, DEF-29).
 10. **MR-23**: Windows Agent binds only to `127.0.0.1:5055`, preventing Docker control-plane connectivity (DEF-30).
 11. **MR-27**: `setup.ps1` prompts user to stop IIS (`W3SVC`) to free ports 80/443, breaking native Windows hosting (DEF-35).
-12. **MR-28**: Windows Agent uses hardcoded fallback bearer secret `"SuperCiSecretKey123!"` (DEF-36).
+12. **MR-28**: Windows Agent uses hardcoded fallback bearer secret `"[REDACTED_COMPROMISED_DEFAULT]"` (DEF-36).
 13. **MR-34**: Maintenance Mode fields added to entities without EF Core migration or seeding DDL; existing schemas lack maintenance columns causing PostgreSQL SQLSTATE 42703 errors and HTTP 500 responses on entity queries (PostgreSQL server does not crash) (Current-Main).
 14. **MR-35**: Compose regex replacement in `MaintenanceService.cs` contaminates all services in `docker-compose.yml` (Current-Main).
 
@@ -176,7 +176,7 @@ Phase 1 (Shared Security Foundation) will implement exclusively:
 - **MR-04**: Strip Git tokens and sensitive secrets from read DTOs; implement credential encryption at rest; sanitize webhook and process logging. DEF-15: Canonicalize `ProjectDirectory` via `Path.GetFullPath` with trailing directory separator / segment-boundary validation against tenant sandbox root.
 - **MR-05 & MR-06**: Eliminate public WAN exposure of database and administrative ports (bind to loopback/internal bridge) and provision isolated least-privilege PostgreSQL roles per application container.
 - **MR-08**: Multi-tenant RBAC and role separation: formally decouple `PlatformSuperAdmin` from `TenantAdmin` (DEF-11; no tenant SuperAdmin global bypass). DEF-08: Container hardening (UID 10001, drop capabilities, read-only rootfs, scoped socket proxy).
-- **MR-28**: Replace hardcoded Windows Agent fallback bearer secret (`"SuperCiSecretKey123!"` currently present in `scripts/tmk-iis-agent.ps1:21`) with dynamically generated mutual authentication secrets (Dual-OS parity target contract; agent and API fail startup if static fallback secret is present).
+- **MR-28**: Replace hardcoded Windows Agent fallback bearer secret (`"[REDACTED_COMPROMISED_DEFAULT]"` currently present in `scripts/tmk-iis-agent.ps1:21`) with dynamically generated mutual authentication secrets (Dual-OS parity target contract; agent and API fail startup if static fallback secret is present).
 - **MR-36**: Comprehensive Token Trust Contract (`iss`, `aud`, `sub`, `tid`, algorithm, rotation, revocation). Pass all 15 Phase 1 negative test criteria (SEC-NEG-01 to SEC-NEG-15).
 
 *(Note: MR-37 is relocated to Phase 9 alongside MR-21; pilot participants receive an explicit Pre-Pilot Operational Disclosure Note).*

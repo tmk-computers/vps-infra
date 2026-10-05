@@ -37,6 +37,6 @@ In accordance with Section 19 of the directive:
 
 All statements across Phase 0 documentation continue to adhere to the four-way epistemic taxonomy:
 1. **Target Architecture / Specification**: Forward-looking requirements formulated with `MUST`, `SHALL`, and `REQUIRED`.
-2. **Current Static Source Reality**: Existing code in tracked repositories, including static defects (e.g. `"SuperCiSecretKey123!"` in `tmk-iis-agent.ps1:21`).
+2. **Current Static Source Reality**: Existing code in tracked repositories, including static defects (e.g. `"[REDACTED_COMPROMISED_DEFAULT]"` in `tmk-iis-agent.ps1:21`).
 3. **Planned Test Criteria**: Defined gate acceptance scenarios (e.g. 6 Redis Gate-A scenarios, 15 Phase 1 negative criteria).
 4. **Executed Checks**: Verifications executed during Phase 0 audit (`verify-baseline-integrity.ps1`, in-memory fault injections, byte hashes). Zero runtime benchmarks or live database mutations are claimed as executed evidence.

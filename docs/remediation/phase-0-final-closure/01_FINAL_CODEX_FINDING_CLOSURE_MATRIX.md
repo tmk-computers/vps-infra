@@ -58,7 +58,7 @@ Per executive architectural instruction prior to final independent review, the p
 
 ### 3.4 C2-04: Evidence Truth Corrections
 - **Nonexistent Wrapper Path**: `15_DOCUMENTATION_TRUTH_MATRIX.md:31-35` cited `d:/company/products/vps-infra/README.md`. Corrected to actual repo paths (`vps-infra/vps-infra/README.md`) and explicitly identified early promotional assertions ("instantaneous rollback", "automated daily offsite backup to AWS S3 and Cloudflare R2") as historical marketing claims.
-- **Windows Agent Fallback Secret**: Current source in `scripts/tmk-iis-agent.ps1:21` and `IisClientService.cs:42` contains static fallback `"SuperCiSecretKey123!"`. Reconciled in `05_EVIDENCE_TRUTH_CORRECTIONS.md` to state:
+- **Windows Agent Fallback Secret**: Current source in `scripts/tmk-iis-agent.ps1:21` and `IisClientService.cs:42` contains static fallback `"[REDACTED_COMPROMISED_DEFAULT]"`. Reconciled in `05_EVIDENCE_TRUTH_CORRECTIONS.md` to state:
   - CURRENT IMPLEMENTATION: Fallback secret is currently present in source code.
   - TARGET CONTRACT: Must be eliminated and replaced with dynamic authentication.
   - OWNER: MR-28 (Phase 1 Shared Security Foundation).

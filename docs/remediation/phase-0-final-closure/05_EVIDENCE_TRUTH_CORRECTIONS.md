@@ -28,9 +28,9 @@ In strict accordance with audit integrity rules:
 - **Marketing Claims**: Phrases such as *"Instantaneous rollback to previous release"* and *"Automated daily offsite backup synchronization to AWS S3 and Cloudflare R2"* are explicitly labeled as **historical promotional assertions / early marketing claims**, contrasting directly with the executable codebase reality.
 
 ### 2.2 Windows Agent Static Fallback Secret Status
-- **Historical Defect**: Independent Review R4 (`05_BACKUP_WINDOWS_REVIEW.md:119`) erroneously stated that the static fallback secret `"SuperCiSecretKey123!"` had been completely eliminated from architecture and code.
+- **Historical Defect**: Independent Review R4 (`05_BACKUP_WINDOWS_REVIEW.md:119`) erroneously stated that the static fallback secret `"[REDACTED_COMPROMISED_DEFAULT]"` had been completely eliminated from architecture and code.
 - **Source Code Reality**: Inspection of the actual codebase confirms that the hardcoded fallback secret **still exists in active source code**:
-  - `scripts/tmk-iis-agent.ps1:21`: `$Secret = "SuperCiSecretKey123!"`
+  - `scripts/tmk-iis-agent.ps1:21`: `$Secret = "[REDACTED_COMPROMISED_DEFAULT]"`
   - `devops-manager/api/Infrastructure/Services/IisClientService.cs:42`: Fallback configuration string.
 - **Authoritative Contract Classification**:
   - **CURRENT IMPLEMENTATION**: The static fallback secret is **currently present** in the repository.

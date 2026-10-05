@@ -57,14 +57,14 @@ The Reviewer inspected the Windows agent code:
 - [`vps-infra-server/scripts/tmk-iis-agent.ps1:21`](file:///d:/company/products/vps-infra/vps-infra-server/scripts/tmk-iis-agent.ps1#L21):
   ```powershell
   if ([string]::IsNullOrWhiteSpace($Secret)) {
-      $Secret = "SuperCiSecretKey123!"
+      $Secret = "[REDACTED_COMPROMISED_DEFAULT]"
   }
   ```
 - [`vps-infra-server/devops-manager/api/Infrastructure/Services/IisClientService.cs:42`](file:///d:/company/products/vps-infra/vps-infra-server/devops-manager/api/Infrastructure/Services/IisClientService.cs#L42):
   ```csharp
   _secret = _configuration["DeploySettings:CiSecret"] 
       ?? Environment.GetEnvironmentVariable("CI_SECRET") 
-      ?? "SuperCiSecretKey123!";
+      ?? "[REDACTED_COMPROMISED_DEFAULT]";
   ```
 
 ### 3.2 Epistemic Reconciliation

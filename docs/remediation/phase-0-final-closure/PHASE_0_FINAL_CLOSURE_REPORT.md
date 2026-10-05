@@ -63,7 +63,7 @@ All findings are now fully resolved.
 
 ### 3.3 Evidence Integrity & Source Citations
 - **File Citations**: Corrected all wrapper path references in `15_DOCUMENTATION_TRUTH_MATRIX.md` to point to `vps-infra/vps-infra/README.md`.
-- **Windows Agent Secret Truth**: Explicitly acknowledged that `"SuperCiSecretKey123!"` still exists in active source code (`scripts/tmk-iis-agent.ps1:21` and `IisClientService.cs:42`). Its elimination is a binding target contract for Phase 1 under **MR-28**.
+- **Windows Agent Secret Truth**: Explicitly acknowledged that `"[REDACTED_COMPROMISED_DEFAULT]"` still exists in active source code (`scripts/tmk-iis-agent.ps1:21` and `IisClientService.cs:42`). Its elimination is a binding target contract for Phase 1 under **MR-28**.
 - **Backup Verification**: Clarified that `pg_restore -l` performs Table of Contents (TOC) archive structural validation, while full data block verification occurs during automated DR drills.
 
 ### 3.4 Authenticated TLS Endpoint Verification

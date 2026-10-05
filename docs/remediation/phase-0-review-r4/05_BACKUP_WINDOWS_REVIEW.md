@@ -116,7 +116,7 @@ The Reviewer confirms that the security contract mandates:
 Management communication from the DevOps Manager to `TMK.Agent.Windows` on port 5055 implements two distinct layers:
 1. **Transport Layer**: Mutual TLS (mTLS) with pinned client certificates, ensuring only the authorized DevOps Manager control plane can establish a TCP connection.
 2. **Application Layer**: Scoped, short-lived JWT tokens (`aud: tmk-agent-windows`, `scope: agent:deploy:execute`) passed in the Authorization header.
-3. **Static Fallback Elimination**: The hardcoded static secret `"SuperCiSecretKey123!"` has been completely eliminated from all architecture and code references.
+3. **Static Fallback Elimination**: The hardcoded static secret `"[REDACTED_COMPROMISED_DEFAULT]"` has been completely eliminated from all architecture and code references.
 
 ### 6.2 Agent Self-Update & Rollback
 Agent updates follow an atomic binary swap pattern:

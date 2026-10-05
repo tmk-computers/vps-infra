@@ -106,7 +106,7 @@ DOCKER_REGISTRY_HOST=localhost:5000 # or ghcr.io/your-org or registry.yourdomain
 DOCKER_REGISTRY_USER=admin         # Default for private registry
 DOCKER_REGISTRY_PASSWORD=tmkregistry2026
 SYNC_MODE=api                      # api (REST Sync) | db (Direct DB)
-CI_SECRET=SuperCiSecretKey123!     # Shared token for cross-machine REST sync
+CI_SECRET=[REDACTED_COMPROMISED_DEFAULT]     # Shared token for cross-machine REST sync
 
 # 5. SECURE CORS RESTRICTIONS (Optional, for separate CI domains)
 # ALLOWED_CORS_ORIGINS=https://ci.machine-a.yourdomain.com

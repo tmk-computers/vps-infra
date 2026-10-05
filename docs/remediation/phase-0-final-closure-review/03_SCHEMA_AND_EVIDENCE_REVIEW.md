@@ -98,7 +98,7 @@ The Reviewer verified that the Developer has corrected earlier evidence overclai
 
 1. **Nonexistent Wrapper Path**: Corrected `15_DOCUMENTATION_TRUTH_MATRIX.md:31-35` to cite real repo paths (`vps-infra/README.md`) and labeled early claims as promotional marketing assertions.
 2. **Windows Agent Fallback Secret**: Honestly distinguishes:
-   - **Current Implementation**: Hardcoded static fallback secret `"SuperCiSecretKey123!"` is currently present in `scripts/tmk-iis-agent.ps1:21` and `IisClientService.cs:42`.
+   - **Current Implementation**: Hardcoded static fallback secret `"[REDACTED_COMPROMISED_DEFAULT]"` is currently present in `scripts/tmk-iis-agent.ps1:21` and `IisClientService.cs:42`.
    - **Target Architecture Contract**: Must be eliminated and dynamically secured under **MR-28** in **Phase 1: Shared Security Foundation**.
 3. **Backup TOC Listing vs Payload Validation**: Clarifies that `pg_restore -l` validates TOC archive structure and header integrity, while full payload data validation is performed during automated Disaster Recovery drills (**MR-15**).
 4. **Historical Immutability**: Historical audit reports remain unaltered; corrections are applied exclusively to active authoritative documents and reconciliation dossiers.

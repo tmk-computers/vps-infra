@@ -93,7 +93,7 @@ The Reviewer recommends that Phase 1 (Shared Security Foundation) be restructure
 - **Include**:
   - `MR-03`: Revoke leaked GCP service account key; purge JSON from git.
   - `MR-02 & MR-07`: Generate cryptographically random secrets on setup; halt on static default keys.
-  - `MR-28`: Eliminate `"SuperCiSecretKey123!"` from Windows Agent; generate random agent token on setup.
+  - `MR-28`: Eliminate `"[REDACTED_COMPROMISED_DEFAULT]"` from Windows Agent; generate random agent token on setup.
   - `MR-04`: Strip Git tokens from read DTOs; encrypt secrets in DB; sanitize webhook logging.
   - `MR-08`: Enforce JWT tenant context extraction and tenant-scoped query filtering.
   - `MR-36`: Secure AMS routes with `authenticateToken`; inject Bearer token in proxy client.
