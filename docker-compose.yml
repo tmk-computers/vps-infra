@@ -84,9 +84,9 @@ services:
 
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.devops-api-prod-http.rule=Host(`${DEVOPS_API_HOST:-devops-api.example.com}`) || (Host(`${PRIVATE_IP:-127.0.0.1}`) && PathPrefix(`/api`))"
+      - "traefik.http.routers.devops-api-prod-http.rule=Host(`${DEVOPS_API_HOST:-devops-api.example.com}`) || ((Host(`${PRIVATE_IP:-127.0.0.1}`) || Host(`${PRIMARY_DOMAIN:-example.com}`)) && PathPrefix(`/api`))"
       - "traefik.http.routers.devops-api-prod-http.entrypoints=web"
-      - "traefik.http.routers.devops-api-prod.rule=Host(`${DEVOPS_API_HOST:-devops-api.example.com}`) || (Host(`${PRIVATE_IP:-127.0.0.1}`) && PathPrefix(`/api`))"
+      - "traefik.http.routers.devops-api-prod.rule=Host(`${DEVOPS_API_HOST:-devops-api.example.com}`) || ((Host(`${PRIVATE_IP:-127.0.0.1}`) || Host(`${PRIMARY_DOMAIN:-example.com}`)) && PathPrefix(`/api`))"
       - "traefik.http.routers.devops-api-prod.entrypoints=websecure"
       - "traefik.http.routers.devops-api-prod.tls=true"
       - "traefik.http.routers.devops-api-prod.tls.certresolver=myresolver"
@@ -102,13 +102,15 @@ services:
     image: ${DEVOPS_WEB_IMAGE:-ghcr.io/tmk-computers/tmk-devops-web:latest}
     container_name: devops-web-prod
     restart: always
+    volumes:
+      - ${WWW_ROOT:-/var/www}/vps-infra-server/devops-manager/web/dist:/usr/share/nginx/html:ro
     networks:
       - traefik_net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.devops-web-prod-http.rule=Host(`${DEVOPS_WEB_HOST:-devops.example.com}`) || Host(`devops-manager.${PRIMARY_DOMAIN:-example.com}`) || Host(`${PRIVATE_IP:-127.0.0.1}`)"
+      - "traefik.http.routers.devops-web-prod-http.rule=Host(`${DEVOPS_WEB_HOST:-devops.example.com}`) || Host(`devops-manager.${PRIMARY_DOMAIN:-example.com}`) || Host(`${PRIMARY_DOMAIN:-example.com}`) || Host(`${PRIVATE_IP:-127.0.0.1}`)"
       - "traefik.http.routers.devops-web-prod-http.entrypoints=web"
-      - "traefik.http.routers.devops-web-prod.rule=Host(`${DEVOPS_WEB_HOST:-devops.example.com}`) || Host(`devops-manager.${PRIMARY_DOMAIN:-example.com}`) || Host(`${PRIVATE_IP:-127.0.0.1}`)"
+      - "traefik.http.routers.devops-web-prod.rule=Host(`${DEVOPS_WEB_HOST:-devops.example.com}`) || Host(`devops-manager.${PRIMARY_DOMAIN:-example.com}`) || Host(`${PRIMARY_DOMAIN:-example.com}`) || Host(`${PRIVATE_IP:-127.0.0.1}`)"
       - "traefik.http.routers.devops-web-prod.entrypoints=websecure"
       - "traefik.http.routers.devops-web-prod.tls=true"
       - "traefik.http.routers.devops-web-prod.tls.certresolver=myresolver"
@@ -165,6 +167,8 @@ services:
     image: ${CI_WEB_IMAGE:-ghcr.io/tmk-computers/tmk-ci-web:latest}
     container_name: ci-web-prod
     restart: always
+    volumes:
+      - ${WWW_ROOT:-/var/www}/vps-infra-server/ci-server/web/dist:/usr/share/nginx/html:ro
     networks:
       - traefik_net
     labels:

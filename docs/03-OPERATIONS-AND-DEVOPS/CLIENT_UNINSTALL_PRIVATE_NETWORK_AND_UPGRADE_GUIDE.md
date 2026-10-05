@@ -92,16 +92,18 @@ PRIVATE_IP=192.168.1.100
 ENABLE_HTTPS_REDIRECT=false
 ```
 
-### 2.3 Automatic Network Mode Detection in `setup.sh`
-`setup.sh` automatically evaluates the network environment:
-* If `PRIMARY_DOMAIN` is an IP address matching RFC 1918 ranges, or ends with `.lan` / `.local` / `.internal`:
-  * `setup.sh` automatically sets `NETWORK_MODE=private`.
-  * Traefik ACME challenge is disabled.
-  * Router rules in Traefik are configured with dual matching:
+### 2.3 Automatic Network Mode Detection & Direct IP Routing
+`setup.sh` and `configure-domains.sh` automatically evaluate the network environment:
+* If `PRIMARY_DOMAIN` is configured as a direct IP address (RFC 1918 private or public static IP) or ends with `.lan` / `.local` / `.internal`:
+  * `NETWORK_MODE=private` and `ENABLE_HTTPS_REDIRECT=false` are automatically configured.
+  * Direct IP endpoints are assigned (`DEVOPS_WEB_HOST=<IP>`, `DEVOPS_API_HOST=<IP>`), preventing invalid subdomain generation (e.g. `devops.<IP>` is never generated).
+  * Traefik router rules in `docker-compose.yml` support direct IP matching:
     ```yaml
-    traefik.http.routers.devops-web-prod.rule: "Host(`${DEVOPS_WEB_HOST}`) || Host(`${PRIVATE_IP}`) || HostRegexp(`^[0-9.]+$`)"
+    traefik.http.routers.devops-web-prod.rule: "Host(`${DEVOPS_WEB_HOST}`) || Host(`devops-manager.${PRIMARY_DOMAIN}`) || Host(`${PRIMARY_DOMAIN}`) || Host(`${PRIVATE_IP}`)"
+    traefik.http.routers.devops-api-prod.rule: "Host(`${DEVOPS_API_HOST}`) || ((Host(`${PRIVATE_IP}`) || Host(`${PRIMARY_DOMAIN}`)) && PathPrefix(`/api`))"
     ```
-  * Users on the internal network can navigate directly to `http://192.168.1.100` and immediately access the DevOps Manager dashboard.
+  * **Frontend Dynamic URL Resolution**: The web frontend (`devops-web` and `ci-web`) detects raw IP addresses using `isIpAddress(hostname)` and routes API calls directly to `${protocol}//${host}/api` without subdomain slicing, preventing `TypeError: Failed to construct 'URL': Invalid URL` errors.
+  * Users on the network can navigate directly to `http://<IP>` and log in without TLS/domain requirements.
 
 ---
 
