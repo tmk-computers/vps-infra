@@ -57,6 +57,14 @@ Attach exact command lines, timestamps, fixture/probe manifest hashes, script ha
 
 ## Local verification boundary
 
+For an already provisioned fixture VM, `scripts/windows/Invoke-W0VmPreservationCheck.ps1` automates the no-operation capture/capture/compare sequence and writes a summary with all remaining cases explicitly NOT VERIFIED:
+
+```powershell
+.\scripts\windows\Invoke-W0VmPreservationCheck.ps1 -DisposableVm -ExpectedVmName W0-VM -ProbeManifest C:\w0-evidence\probes.json -EvidenceDirectory C:\w0-evidence
+```
+
+It creates a unique evidence subdirectory, refuses the reviewed live host and does not provision fixtures, execute an installer or mutate IIS. A passing no-operation check establishes only that the harness can observe stable VM fixtures; it does not close W-0.
+
 Run `scripts/windows/Test-W0ComparatorFixtures.ps1` for synthetic comparator regression checks without IIS. It exercises unchanged/additive state, binding/certificate/site/service/pool/global drift, wrong host, empty/duplicate/incomplete evidence and overwrite rejection. These checks are not Windows Server IIS acceptance.
 
 API references: [Microsoft.Web.Administration](https://learn.microsoft.com/en-us/iis/manage/scripting/how-to-use-microsoftwebadministration) and [Windows PowerShell web request behavior](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/invoke-webrequest?view=powershell-5.1). Live execution was intentionally not performed on the reviewed production host.
