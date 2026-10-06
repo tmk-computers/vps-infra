@@ -8,6 +8,8 @@ code/*
 network/traefik/acme.json
 network/traefik/users.htpasswd
 docker-registry/data/
+docker-registry/auth/htpasswd
+!docker-registry/auth/.gitkeep
 
 # Volumes: Ignore all dynamic company-specific application and mobile folders
 volumes/apps/*
