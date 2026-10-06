@@ -103,8 +103,8 @@ DEPLOYMENT_MODE=all-in-one          # all-in-one | devops-only | ci-only
 COMPOSE_PROFILES=all               # all | devops | ci
 DOCKER_REGISTRY_TYPE=private       # private | external
 DOCKER_REGISTRY_HOST=localhost:5000 # or ghcr.io/your-org or registry.yourdomain.com
-DOCKER_REGISTRY_USER=admin         # Default for private registry
-DOCKER_REGISTRY_PASSWORD=tmkregistry2026
+DOCKER_REGISTRY_USER=your_registry_user         # Required for private registry
+DOCKER_REGISTRY_PASSWORD=your_secure_password   # Generate a unique strong password; do not use defaults
 SYNC_MODE=api                      # api (REST Sync) | db (Direct DB)
 CI_SECRET=[REDACTED_COMPROMISED_DEFAULT]     # Shared token for cross-machine REST sync
 

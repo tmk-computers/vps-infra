@@ -194,6 +194,7 @@ During startup, `setup.sh` verifies PostgreSQL connectivity using `pg_isready` b
 * Application services (`devops-api-prod`, `ci-api-prod`) never enter crash-loop states on cold VPS reboots.
 
 ### 4. Continuous Integration Registry Authentication Safeguards
-* CI runner containers mount host Docker credentials (`/root/.docker`) with read-write permissions.
-* The build runner automatically executes Docker login against the target registry before image pushes, falling back to session-isolated credentials if needed.
+* CI runner containers operate without mounting host Docker credentials (`/root/.docker`), avoiding host credential leakage.
+* The build runner generates an ephemeral, isolated Docker config directory (`DOCKER_CONFIG`) for each build execution, authenticating via stdin and guaranteeing zero credential leakage across parallel builds.
+* Ephemeral auth directories are purged immediately across all execution termination paths (success, failure, timeout, cancellation).
 * Prior to checking out branches, the runner performs `git reset --hard` and cleanups, eliminating git merge collisions from leftover test artifacts.

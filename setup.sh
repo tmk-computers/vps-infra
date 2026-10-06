@@ -555,10 +555,15 @@ else
 fi
 
 configure_registry_auth() {
-    local reg_user="${DOCKER_REGISTRY_USER:-${REGISTRY_USER:-admin}}"
-    local reg_pass="${DOCKER_REGISTRY_PASSWORD:-${REGISTRY_PASSWORD:-tmkregistry2026}}"
+    local reg_user="${DOCKER_REGISTRY_USER:-${REGISTRY_USER:-}}"
+    local reg_pass="${DOCKER_REGISTRY_PASSWORD:-${REGISTRY_PASSWORD:-}}"
     local auth_dir="$SCRIPT_DIR/docker-registry/auth"
     local htpasswd_file="$auth_dir/htpasswd"
+
+    if [ -z "$reg_user" ] || [ -z "$reg_pass" ]; then
+        echo -e "${RED}❌ Error: DOCKER_REGISTRY_USER and DOCKER_REGISTRY_PASSWORD must be configured in .env for private registry.${NC}" >&2
+        return 1
+    fi
 
     mkdir -p "$auth_dir"
     echo -e "${CYAN}▶ Generating Docker Registry htpasswd from .env credentials (user: ${reg_user})...${NC}"

@@ -40,14 +40,16 @@ function Authenticate-Registry {
 
     $attempts = 1
     if ($RegistryType -eq "private") {
-        if ([string]::IsNullOrWhiteSpace($User)) { $User = "admin" }
-        if ([string]::IsNullOrWhiteSpace($Password)) { $Password = "tmkregistry2026" }
         if ($DeploymentMode -ne "devops-only") {
             $attempts = 30
         }
     }
 
     if ([string]::IsNullOrWhiteSpace($User) -or [string]::IsNullOrWhiteSpace($Password)) {
+        if ($RegistryType -eq "private") {
+            Write-Error "Docker registry credentials (DOCKER_REGISTRY_USER and DOCKER_REGISTRY_PASSWORD) are required for private registry."
+            return $false
+        }
         return $true
     }
 

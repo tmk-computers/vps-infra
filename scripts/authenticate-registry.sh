@@ -4,17 +4,22 @@ authenticate_registry() {
     local user="${DOCKER_REGISTRY_USER:-${REGISTRY_USER:-}}"
     local password="${DOCKER_REGISTRY_PASSWORD:-${REGISTRY_PASSWORD:-}}"
     local target="${DOCKER_REGISTRY_HOST:-${REGISTRY_HOST:-localhost:5000}}"
+    local reg_type="${DOCKER_REGISTRY_TYPE:-private}"
     local attempts=1 attempt output
 
-    if [[ "${DOCKER_REGISTRY_TYPE:-private}" == private ]]; then
-        user="${user:-admin}"
-        password="${password:-tmkregistry2026}"
+    if [[ "$reg_type" == private ]]; then
         if [[ "${DEPLOYMENT_MODE:-all-in-one}" != devops-only ]]; then
             attempts=30
         fi
     fi
 
-    [[ -n "$user" && -n "$password" ]] || return 0
+    if [[ -z "$user" || -z "$password" ]]; then
+        if [[ "$reg_type" == private ]]; then
+            echo "❌ Error: Docker registry credentials (DOCKER_REGISTRY_USER and DOCKER_REGISTRY_PASSWORD) are required for private registry." >&2
+            return 1
+        fi
+        return 0
+    fi
     echo "▶ Authenticating Docker with registry ${target}..."
     for ((attempt = 1; attempt <= attempts; attempt++)); do
         if output=$(printf '%s\n' "$password" | docker login "$target" -u "$user" --password-stdin 2>&1); then
