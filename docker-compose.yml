@@ -27,6 +27,7 @@ services:
       - ConnectionStrings__DefaultConnection=Host=shared_postgres;Port=5432;Database=${POSTGRES_DB:-devops_prod};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-StrongPostgres@123};Pooling=true;MaxPoolSize=10;
 
       # Dynamic JWT & SuperAdmin Settings
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY:-${DEVOPS_JWT_SECRET}}
       - JwtSettings__Issuer=https://${DEVOPS_API_HOST:-devops-api.example.com}
       - JwtSettings__Audience=https://${DEVOPS_API_HOST:-devops-api.example.com}
       - SeedData__SuperAdmin__Email=${SUPERADMIN_EMAIL:-admin@example.com}
@@ -35,6 +36,10 @@ services:
 
       # Cross-Machine CI Deployment & REST Sync Secret
       - DeploySettings__CiSecret=${CI_SECRET:?CI_SECRET must be set and non-empty}
+
+      # Docker Registry Settings
+      - DOCKER_REGISTRY_HOST=${DOCKER_REGISTRY_HOST:-${REGISTRY_HOST:-registry.tmkcomputers.in}}
+      - REGISTRY_HOST=${REGISTRY_HOST:-${DOCKER_REGISTRY_HOST:-registry.tmkcomputers.in}}
 
       # Secure CORS Domain & Origin Restrictions
       - PRIMARY_DOMAIN=${PRIMARY_DOMAIN:-example.com}
