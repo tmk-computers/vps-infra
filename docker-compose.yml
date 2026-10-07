@@ -108,16 +108,14 @@ services:
       - traefik_net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.devops-web-prod-http.rule=Host(`${DEVOPS_WEB_HOST:-devops.example.com}`) || Host(`devops-manager.${PRIMARY_DOMAIN:-example.com}`) || Host(`${PRIMARY_DOMAIN:-example.com}`) || Host(`${PRIVATE_IP:-127.0.0.1}`)"
+      - "traefik.http.routers.devops-web-prod-http.rule=Host(`${DEVOPS_WEB_HOST:-devops.example.com}`) || Host(`${PRIMARY_DOMAIN:-example.com}`) || Host(`${PRIVATE_IP:-127.0.0.1}`)"
       - "traefik.http.routers.devops-web-prod-http.entrypoints=web"
-      - "traefik.http.routers.devops-web-prod.rule=Host(`${DEVOPS_WEB_HOST:-devops.example.com}`) || Host(`devops-manager.${PRIMARY_DOMAIN:-example.com}`) || Host(`${PRIMARY_DOMAIN:-example.com}`) || Host(`${PRIVATE_IP:-127.0.0.1}`)"
+      - "traefik.http.routers.devops-web-prod.rule=Host(`${DEVOPS_WEB_HOST:-devops.example.com}`) || Host(`${PRIMARY_DOMAIN:-example.com}`) || Host(`${PRIVATE_IP:-127.0.0.1}`)"
       - "traefik.http.routers.devops-web-prod.entrypoints=websecure"
       - "traefik.http.routers.devops-web-prod.tls=true"
       - "traefik.http.routers.devops-web-prod.tls.certresolver=myresolver"
       # Explicit certificate names exclude PRIVATE_IP from ACME requests.
       - "traefik.http.routers.devops-web-prod.tls.domains[0].main=${DEVOPS_WEB_HOST:-devops.example.com}"
-      # Request the alias separately so its DNS cannot block the primary certificate.
-      - "traefik.http.routers.devops-web-prod.tls.domains[1].main=devops-manager.${PRIMARY_DOMAIN:-example.com}"
       - "traefik.http.services.devops-web-prod.loadbalancer.server.port=80"
 
   # ------------------------------------------------------------
