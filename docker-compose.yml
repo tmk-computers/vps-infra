@@ -83,6 +83,7 @@ services:
       - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/apps/devops-api/prod/logs:/app/logs
       - ${DOCKER_CONFIG_PATH:-/root/.docker}:/root/.docker:ro
       - ${SSH_CONFIG_PATH:-/root/.ssh}:/root/.ssh:ro
+      - /etc/vps-infra:/etc/vps-infra:ro
 
     networks:
       - traefik_net
@@ -147,6 +148,7 @@ services:
       - ${DOCKER_SOCK_PATH:-/var/run/docker.sock}:/var/run/docker.sock
       - ${WWW_ROOT:-/var/www}:/var/www
       - ${SSH_CONFIG_PATH:-/root/.ssh}:/root/.ssh:ro
+      - /etc/vps-infra:/etc/vps-infra:ro
     networks:
       - traefik_net
     labels:
