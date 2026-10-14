@@ -108,8 +108,6 @@ services:
     image: ${DEVOPS_WEB_IMAGE:-ghcr.io/tmk-computers/tmk-devops-web:latest}
     container_name: devops-web-prod
     restart: always
-    volumes:
-      - ${WWW_ROOT:-/var/www}/vps-infra-server/devops-manager/web/dist:/usr/share/nginx/html:ro
     networks:
       - traefik_net
     labels:
@@ -171,8 +169,6 @@ services:
     image: ${CI_WEB_IMAGE:-ghcr.io/tmk-computers/tmk-ci-web:latest}
     container_name: ci-web-prod
     restart: always
-    volumes:
-      - ${WWW_ROOT:-/var/www}/vps-infra-server/ci-server/web/dist:/usr/share/nginx/html:ro
     networks:
       - traefik_net
     labels:
