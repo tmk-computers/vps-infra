@@ -21,7 +21,11 @@ docker compose logs -f --tail=100 devops-api-prod
 docker compose logs -f --tail=100 ci-api-prod
 
 # Traefik Edge Router
-docker compose logs -f --tail=100 traefik
+docker logs -f --tail=100 traefik_global
+
+# Or use the unified CLI tool:
+./infra logs devops-api-prod
+./infra logs traefik_global
 ```
 
 ### File-Based Application Logs

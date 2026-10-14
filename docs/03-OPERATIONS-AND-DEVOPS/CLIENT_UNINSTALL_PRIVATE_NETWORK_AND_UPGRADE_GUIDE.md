@@ -20,7 +20,7 @@ flowchart TD
     C --> D["3. Stop Shared Databases\n(shared_postgres, shared_sql)"]
     D --> E["4. Stop Global Reverse Proxy\n(traefik_global)"]
     E --> F["5. Remove Docker Network\n(traefik_net)"]
-    F --> G["6. Deregister Maintenance Crons\n(docker-cleanup, registry pruners)"]
+    F --> G["6. Deregister Maintenance Crons\n(docker-maintenance)"]
     G --> H{"Data & Config Retention Prompt"}
     H -->|"--keep-data (Default)"| I["Preserve /var/www/vps-infra/volumes"]
     H -->|"--purge-data"| J["Delete /var/www/vps-infra/volumes"]

@@ -37,9 +37,7 @@ case "$CMD" in
         ;;
     down)
         echo -e "${YELLOW}▶ Stopping VPS-Infra platform containers...${NC}"
-        docker compose -f "$BASE_DIR/ci-server/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
-        docker compose -f "$BASE_DIR/devops-manager/web/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
-        docker compose -f "$BASE_DIR/devops-manager/api/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
+        docker compose -f "$BASE_DIR/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
         docker compose -f "$BASE_DIR/docker-registry/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
         docker compose -f "$BASE_DIR/db/postgres/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
         docker compose -f "$BASE_DIR/network/traefik/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true

@@ -124,10 +124,9 @@ chmod +x setup.sh
 2. **PostgreSQL Cold-Start Readiness**: Waits for PostgreSQL to be healthy and accepting connections before starting platform application services, ensuring seamless SuperAdmin seeding.
 3. **Docker Log Rotation**: Automatically writes `/etc/docker/daemon.json` (`max-size: 50m`, `max-file: 3`) and restarts the Docker service to prevent container log growth from filling VPS storage.
 4. **Registry Authentication**: Pre-authenticates the Docker daemon with `REG_TARGET`, `localhost:5000`, and `127.0.0.1:5000`.
-5. **Automated System Maintenance Crons**: Installs `/etc/cron.d/vps-infra-maintenance` to run:
-   - **Daily at 3:00 AM IST**: Disk & builder cache prune (`scripts/clean-storage.sh`).
-   - **Daily at 3:30 AM IST**: Docker Registry tag prune keeping latest 5 tags per repo (`scripts/prune-registry-tags.sh`).
-   - **Daily at 4:00 AM IST**: Automated database backup retention prune (`scripts/prune-backups.sh`).
+5. **Automated System Maintenance Crons**: Installs `/etc/cron.d/docker-maintenance` to run:
+   - **Daily at 3:15 AM**: Local Docker Registry tag prune and garbage collection (`scripts/prune_registry.py`).
+   - **Daily at 3:30 AM**: Docker BuildKit builder cache prune keeping a 2GB reserved cache.
 
 > **Automated Deployment Options**:
 > - **All-in-One (Single VPS)**:

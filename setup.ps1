@@ -492,6 +492,18 @@ if ($selectedMode -ne "ci-only") {
 # Registry Auth & Startup
 $regType = Get-EnvVal "DOCKER_REGISTRY_TYPE" "private"
 if ($regType -eq "private" -and $selectedMode -ne "devops-only") {
+    $authDir = Join-Path $ScriptDir "docker-registry\auth"
+    $htpasswdFile = Join-Path $authDir "htpasswd"
+    if (-not (Test-Path -Path $authDir)) {
+        New-Item -ItemType Directory -Path $authDir -Force | Out-Null
+    }
+    $regUser = Get-EnvVal "DOCKER_REGISTRY_USER" "admin"
+    $regPass = Get-EnvVal "DOCKER_REGISTRY_PASSWORD" "Admin@1234"
+    if (-not (Test-Path -Path $htpasswdFile) -or (Get-Item $htpasswdFile).Length -eq 0) {
+        Write-Info "▶ Generating Docker Registry htpasswd from .env credentials (user: $regUser)..."
+        & docker run --rm --entrypoint htpasswd httpd:alpine -Bbn $regUser $regPass | Set-Content -Path $htpasswdFile -Encoding ASCII
+        Write-Success "✅ Docker Registry htpasswd generated and secured."
+    }
     $regAuthScript = Join-Path $ScriptDir "scripts\authenticate-registry.ps1"
     Write-Info "`n▶ Starting Private Docker Registry..."
     $registryCompose = Join-Path $ScriptDir "docker-registry\docker-compose.yml"

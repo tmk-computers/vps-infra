@@ -47,5 +47,14 @@ authenticate_registry() {
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    if [[ -z "${DOCKER_REGISTRY_USER:-${REGISTRY_USER:-}}" || -z "${DOCKER_REGISTRY_PASSWORD:-${REGISTRY_PASSWORD:-}}" ]]; then
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+        if [[ -f "$SCRIPT_DIR/.env" ]]; then
+            set -a
+            # shellcheck disable=SC1090,SC1091
+            source "$SCRIPT_DIR/.env"
+            set +a
+        fi
+    fi
     authenticate_registry "$@"
 fi

@@ -103,7 +103,7 @@ If you already received your enterprise license token, activate it directly duri
 * **Domain Validation**: Auto-configures all subdomains (`devops.yourdomain.com`, `ci.yourdomain.com`, `registry.yourdomain.com`, etc.).
 * **PostgreSQL Readiness Gate**: Polls `pg_isready` before starting platform containers to ensure the database engine is fully ready and SuperAdmin user seeding succeeds reliably on cold boot.
 * **Automated Log Rotation**: Sets Docker daemon log options in `/etc/docker/daemon.json` (`max-size: 50m`, `max-file: 3`) to prevent logs from consuming disk storage.
-* **Automated System Crons**: Schedules daily maintenance tasks in `/etc/cron.d/vps-infra-maintenance` (storage cleanup at 3:00 AM IST, registry tag prune at 3:30 AM IST, and backup retention at 4:00 AM IST).
+* **Automated System Crons**: Schedules daily maintenance tasks in `/etc/cron.d/docker-maintenance` (Docker builder cache prune at 3:30 AM keeping a 2GB threshold, and local Docker Registry tag prune at 3:15 AM via `scripts/prune_registry.py`).
 * **Registry Authentication**: Pre-authenticates Docker with your private or external registry.
 
 ---

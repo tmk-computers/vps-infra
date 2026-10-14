@@ -572,10 +572,11 @@ configure_registry_auth() {
         htpasswd -B -b -c "$htpasswd_file" "$reg_user" "$reg_pass" >/dev/null 2>&1
     elif command -v python3 &>/dev/null && python3 -c "import bcrypt" &>/dev/null; then
         REG_USER="$reg_user" REG_PASS="$reg_pass" python3 -c "import os, bcrypt; print(os.environ['REG_USER'] + ':' + bcrypt.hashpw(os.environ['REG_PASS'].encode(), bcrypt.gensalt(5)).decode())" > "$htpasswd_file"
-    elif command -v openssl &>/dev/null; then
-        echo "${reg_user}:$(openssl passwd -apr1 "$reg_pass")" > "$htpasswd_file"
+    elif command -v docker &>/dev/null; then
+        docker run --rm --entrypoint htpasswd httpd:alpine -Bbn "$reg_user" "$reg_pass" > "$htpasswd_file" 2>/dev/null
     else
-        docker run --rm --entrypoint htpasswd httpd:alpine -B -b -c /dev/stdout "$reg_user" "$reg_pass" > "$htpasswd_file" 2>/dev/null || true
+        echo -e "${RED}❌ Error: Unable to generate bcrypt htpasswd (Docker, htpasswd, or python3-bcrypt required).${NC}" >&2
+        return 1
     fi
 
     chmod 600 "$htpasswd_file" 2>/dev/null || true

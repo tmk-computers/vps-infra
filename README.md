@@ -154,7 +154,7 @@ Once you receive your signed `TMK_LICENSE_KEY` token from TMK Computers, launch 
 ```bash
 cd /var/www/vps-infra
 chmod +x setup.sh
-./setup.sh --license "YOUR_SIGNED_TMK_LICENSE_KEY"
+./setup.sh --domain "yourdomain.com" --license "YOUR_SIGNED_TMK_LICENSE_KEY"
 ```
 
 For unattended setup, supply the domain explicitly (or set `PRIMARY_DOMAIN` in
@@ -314,8 +314,8 @@ flowchart TD
 ### 🔒 2. Hardware-Locked Mode (For Dedicated / On-Premise)
 * **What it is**: A license locked to your server's unique 64-character SHA-256 hardware fingerprint (`SHA256("TMK-HW-" + /etc/machine-id)`).
 * **Why use it**: Ideal for high-security on-premise installations, enterprise private clouds, or bare-metal servers requiring strict compliance.
-* **Obtaining Server Hardware Fingerprint**: See [Step 4](#step-4-obtain-server-hardware-fingerprint) above.
-* **Activating Your License**: See [Step 6](#step-6-run-bootstrap--activate-license-1-click) above.
+* **Obtaining Server Hardware Fingerprint**: See [Step 3](#step-3-extract-server-hardware-fingerprint) above.
+* **Activating Your License**: See [Step 6](#step-6-activate-license-1-click) above.
 
 ---
 

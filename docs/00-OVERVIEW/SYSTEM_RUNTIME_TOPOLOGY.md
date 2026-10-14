@@ -164,16 +164,12 @@ All application data, databases, secrets, and build artifacts persist in host di
 
 VPS-Infra operates a self-maintaining operational model configured during initial `./setup.sh` bootstrap:
 
-### 1. Automated System Crons (`/etc/cron.d/vps-infra-maintenance`)
+### 1. Automated System Crons (`/etc/cron.d/docker-maintenance`)
 System cron jobs are automatically provisioned during setup to protect VPS disk space:
-* **03:00 IST Daily — Storage Cleanup (`scripts/clean-storage.sh`)**:
-  - Prunes stopped containers, orphan volumes, dangling networks, and unused Docker images.
-  - Clears Docker BuildKit builder cache to reclaim space from intensive builds.
-* **03:30 IST Daily — Docker Registry Tag Prune (`scripts/prune-registry-tags.sh`)**:
-  - Retains the latest 5 build tags per project repository.
-  - Deletes expired image manifests and triggers internal registry garbage collection.
-* **04:00 IST Daily — Database Backup Retention (`scripts/prune-backups.sh`)**:
-  - Automatically deletes `.sql.gz` database dumps older than the configured retention threshold (default: 30 days).
+* **03:15 Daily — Docker Registry Tag Prune (`scripts/prune_registry.py`)**:
+  - Automatically prunes local Docker Registry tags and triggers registry garbage collection.
+* **03:30 Daily — Docker Builder Cache Prune**:
+  - Automatically executes `docker builder prune -af --reserved-space 2GB` to reclaim disk space from intensive builds while preserving a warm cache.
 
 ### 2. Docker Daemon Log Rotation (`/etc/docker/daemon.json`)
 The setup engine configures global log size limits for all containers:

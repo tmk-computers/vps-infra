@@ -16,7 +16,7 @@ Traefik v3 automatically manages Let's Encrypt TLS/SSL certificates via the HTTP
   2. **Cloudflare Proxy Issue**: If your domain is on Cloudflare, change the DNS record from **Proxied (Orange Cloud)** to **DNS Only (Grey Cloud)**. Cloudflare's proxy blocks Let's Encrypt HTTP challenge validation if SSL is not set to "Full (Strict)".
   3. **Inspect Traefik Logs**:
      ```bash
-     docker compose logs traefik | grep -i "acme"
+     docker logs traefik_global | grep -i "acme"
      ```
 
 ---
@@ -69,13 +69,13 @@ If a certificate was corrupted or rate-limited:
 cd /var/www/vps-infra
 
 # Stop Traefik
-docker compose stop traefik
+docker stop traefik_global
 
 # Clear cached acme.json (backup first)
-cp volumes/traefik_acme/acme.json volumes/traefik_acme/acme.json.bak
-echo "{}" > volumes/traefik_acme/acme.json
-chmod 600 volumes/traefik_acme/acme.json
+cp network/traefik/acme.json network/traefik/acme.json.bak
+echo "{}" > network/traefik/acme.json
+chmod 600 network/traefik/acme.json
 
 # Restart Traefik to re-request fresh certificates
-docker compose up -d traefik
+docker start traefik_global
 ```

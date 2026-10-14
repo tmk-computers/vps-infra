@@ -103,10 +103,16 @@ if [ -f "$SCRIPT_DIR/docker-registry/docker-compose.yml" ]; then
 fi
 
 echo -e "\n${CYAN}▶ 3. Stopping Shared Database Services (PostgreSQL & MS SQL)...${NC}"
-if [ -f "$SCRIPT_DIR/db/docker-compose.yml" ]; then
-    docker compose -f "$SCRIPT_DIR/db/docker-compose.yml" down --remove-orphans 2>/dev/null || true
-    echo -e "${GREEN}   ✅ Shared database containers stopped.${NC}"
-fi
+for db_compose in "$SCRIPT_DIR/db/postgres/docker-compose.yml" \
+                  "$SCRIPT_DIR/db/sql-server/docker-compose.yml" \
+                  "$SCRIPT_DIR/db/mariadb/docker-compose.yml" \
+                  "$SCRIPT_DIR/db/mongodb/docker-compose.yml" \
+                  "$SCRIPT_DIR/db/docker-compose.yml"; do
+    if [ -f "$db_compose" ]; then
+        docker compose -f "$db_compose" down --remove-orphans 2>/dev/null || true
+    fi
+done
+echo -e "${GREEN}   ✅ Shared database containers stopped.${NC}"
 
 echo -e "\n${CYAN}▶ 4. Stopping Global Reverse Proxy (Traefik)...${NC}"
 if [ -f "$SCRIPT_DIR/network/traefik/docker-compose.yml" ]; then
