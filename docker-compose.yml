@@ -133,7 +133,7 @@ services:
     environment:
       - DATABASE_URL=Host=shared_postgres;Port=5432;Database=${POSTGRES_DB:-devops_prod};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-StrongPostgres@123}
       - PORT=5051
-      - JWT_SECRET=${CI_JWT_SECRET:-5b5fea8f9a4b8f2c2e2c5b6f7d4c6b4c7b9d8e6e5e5f5c6b7d8e6e5b5f9c2e4}
+      - JWT_SECRET=${CI_JWT_SECRET:-${JWT_SECRET_KEY:-5b5fea8f9a4b8f2c2e2c5b6f7d4c6b4c7b9d8e6e5e5f5c6b7d8e6e5b5f9c2e4}}
       - CI_API_PUBLIC_URL=https://${CI_API_HOST:-ci-api.example.com}
       - DEVOPS_API_PUBLIC_URL=https://${DEVOPS_API_HOST:-devops-api.example.com}
       - DOCKER_REGISTRY_HOST=${DOCKER_REGISTRY_HOST:-${REGISTRY_HOST:-localhost:5000}}

@@ -245,7 +245,11 @@ fi
 if [ -n "$TMK_ARG_SYNC_MODE" ]; then
     set_env_val "SYNC_MODE" "$TMK_ARG_SYNC_MODE"
 elif [ -z "$SYNC_MODE" ]; then
-    set_env_val "SYNC_MODE" "api"
+    if [ "$selected_mode" = "ci-only" ]; then
+        set_env_val "SYNC_MODE" "api"
+    else
+        set_env_val "SYNC_MODE" "db"
+    fi
 fi
 
 if [ -n "$TMK_ARG_CI_SECRET" ]; then
@@ -276,11 +280,11 @@ cur_jwt_secret=$(grep -E "^JWT_SECRET_KEY=" "$SCRIPT_DIR/.env" | cut -d'=' -f2- 
 if [ -z "$cur_jwt_secret" ] || [[ "$cur_jwt_secret" == generate_* ]]; then
     auto_jwt=$(openssl rand -hex 32 2>/dev/null || date +%s%N | sha256sum | head -c 64)
     set_env_val "JWT_SECRET_KEY" "$auto_jwt"
+    cur_jwt_secret="$auto_jwt"
 fi
 cur_ci_jwt=$(grep -E "^CI_JWT_SECRET=" "$SCRIPT_DIR/.env" | cut -d'=' -f2- | tr -d '"' | tr -d "'" || true)
 if [ -z "$cur_ci_jwt" ] || [[ "$cur_ci_jwt" == generate_* ]]; then
-    auto_ci_jwt=$(openssl rand -hex 32 2>/dev/null || date +%s%N | sha256sum | head -c 64)
-    set_env_val "CI_JWT_SECRET" "$auto_ci_jwt"
+    set_env_val "CI_JWT_SECRET" "$cur_jwt_secret"
 fi
 
 if [ -n "${TMK_ARG_TAG:-}" ]; then

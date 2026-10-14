@@ -265,7 +265,13 @@ if ($SyncMode) {
     Set-EnvVal "SYNC_MODE" $SyncMode
 } else {
     $curSync = Get-EnvVal "SYNC_MODE" ""
-    if (-not $curSync) { Set-EnvVal "SYNC_MODE" "api" }
+    if (-not $curSync) {
+        if ($selectedMode -eq "ci-only") {
+            Set-EnvVal "SYNC_MODE" "api"
+        } else {
+            Set-EnvVal "SYNC_MODE" "db"
+        }
+    }
 }
 
 if ($CiSecret) {
@@ -293,11 +299,11 @@ $curJwt = Get-EnvVal "JWT_SECRET_KEY" ""
 if (-not $curJwt -or $curJwt.StartsWith("generate_")) {
     $autoJwt = [System.Guid]::NewGuid().ToString("N") + [System.Guid]::NewGuid().ToString("N")
     Set-EnvVal "JWT_SECRET_KEY" $autoJwt
+    $curJwt = $autoJwt
 }
 $curCiJwt = Get-EnvVal "CI_JWT_SECRET" ""
 if (-not $curCiJwt -or $curCiJwt.StartsWith("generate_")) {
-    $autoCiJwt = [System.Guid]::NewGuid().ToString("N") + [System.Guid]::NewGuid().ToString("N")
-    Set-EnvVal "CI_JWT_SECRET" $autoCiJwt
+    Set-EnvVal "CI_JWT_SECRET" $curJwt
 }
 
 # Apply Tag overrides
@@ -325,9 +331,9 @@ if ($jwtSecret -match "generate_a_64_character_hex_string_here") {
 }
 
 $ciJwtSecret = Get-EnvVal "CI_JWT_SECRET" ""
-if ($ciJwtSecret -match "generate_a_64_character_hex_string_here") {
-    $newCiJwt = New-CryptoHex 32
-    Set-EnvVal "CI_JWT_SECRET" $newCiJwt
+if ($ciJwtSecret -match "generate_a_64_character_hex_string_here" -or -not $ciJwtSecret) {
+    $syncedJwt = Get-EnvVal "JWT_SECRET_KEY" ""
+    Set-EnvVal "CI_JWT_SECRET" $syncedJwt
 }
 
 # ------------------------------------------------------------------------------
