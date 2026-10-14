@@ -268,7 +268,37 @@ if ($SyncMode) {
     if (-not $curSync) { Set-EnvVal "SYNC_MODE" "api" }
 }
 
-if ($CiSecret) { Set-EnvVal "CI_SECRET" $CiSecret }
+if ($CiSecret) {
+    Set-EnvVal "CI_SECRET" $CiSecret
+} else {
+    $curCi = Get-EnvVal "CI_SECRET" ""
+    if (-not $curCi) {
+        $autoCi = [System.Guid]::NewGuid().ToString("N") + [System.Guid]::NewGuid().ToString("N")
+        Set-EnvVal "CI_SECRET" $autoCi
+        Write-Success "✅ Generated secure random CI_SECRET."
+    }
+}
+
+$curRegUser = Get-EnvVal "DOCKER_REGISTRY_USER" ""
+if (-not $curRegUser) {
+    Set-EnvVal "DOCKER_REGISTRY_USER" "admin"
+}
+$curRegPass = Get-EnvVal "DOCKER_REGISTRY_PASSWORD" ""
+if (-not $curRegPass) {
+    $autoRegPass = [System.Guid]::NewGuid().ToString("N").Substring(0, 16) + "!"
+    Set-EnvVal "DOCKER_REGISTRY_PASSWORD" $autoRegPass
+}
+
+$curJwt = Get-EnvVal "JWT_SECRET_KEY" ""
+if (-not $curJwt -or $curJwt.StartsWith("generate_")) {
+    $autoJwt = [System.Guid]::NewGuid().ToString("N") + [System.Guid]::NewGuid().ToString("N")
+    Set-EnvVal "JWT_SECRET_KEY" $autoJwt
+}
+$curCiJwt = Get-EnvVal "CI_JWT_SECRET" ""
+if (-not $curCiJwt -or $curCiJwt.StartsWith("generate_")) {
+    $autoCiJwt = [System.Guid]::NewGuid().ToString("N") + [System.Guid]::NewGuid().ToString("N")
+    Set-EnvVal "CI_JWT_SECRET" $autoCiJwt
+}
 
 # Apply Tag overrides
 if ($Tag) {

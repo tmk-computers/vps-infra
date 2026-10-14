@@ -252,6 +252,37 @@ if [ -n "$TMK_ARG_CI_SECRET" ]; then
     set_env_val "CI_SECRET" "$TMK_ARG_CI_SECRET"
 fi
 
+# Ensure CI_SECRET is set and non-empty
+cur_ci_secret=$(grep -E "^CI_SECRET=" "$SCRIPT_DIR/.env" | cut -d'=' -f2- | tr -d '"' | tr -d "'" || true)
+if [ -z "$cur_ci_secret" ]; then
+    auto_ci_secret=$(openssl rand -hex 24 2>/dev/null || date +%s%N | sha256sum | head -c 48)
+    set_env_val "CI_SECRET" "$auto_ci_secret"
+    echo -e "${GREEN}✅ Generated secure random CI_SECRET.${NC}"
+fi
+
+# Ensure Docker Registry credentials are set for private registry
+cur_reg_user=$(grep -E "^DOCKER_REGISTRY_USER=" "$SCRIPT_DIR/.env" | cut -d'=' -f2- | tr -d '"' | tr -d "'" || true)
+if [ -z "$cur_reg_user" ]; then
+    set_env_val "DOCKER_REGISTRY_USER" "admin"
+fi
+cur_reg_pass=$(grep -E "^DOCKER_REGISTRY_PASSWORD=" "$SCRIPT_DIR/.env" | cut -d'=' -f2- | tr -d '"' | tr -d "'" || true)
+if [ -z "$cur_reg_pass" ]; then
+    auto_reg_pass=$(openssl rand -hex 12 2>/dev/null || date +%s%N | sha256sum | head -c 16)
+    set_env_val "DOCKER_REGISTRY_PASSWORD" "$auto_reg_pass"
+fi
+
+# Ensure JWT secrets are strong 64-char strings
+cur_jwt_secret=$(grep -E "^JWT_SECRET_KEY=" "$SCRIPT_DIR/.env" | cut -d'=' -f2- | tr -d '"' | tr -d "'" || true)
+if [ -z "$cur_jwt_secret" ] || [[ "$cur_jwt_secret" == generate_* ]]; then
+    auto_jwt=$(openssl rand -hex 32 2>/dev/null || date +%s%N | sha256sum | head -c 64)
+    set_env_val "JWT_SECRET_KEY" "$auto_jwt"
+fi
+cur_ci_jwt=$(grep -E "^CI_JWT_SECRET=" "$SCRIPT_DIR/.env" | cut -d'=' -f2- | tr -d '"' | tr -d "'" || true)
+if [ -z "$cur_ci_jwt" ] || [[ "$cur_ci_jwt" == generate_* ]]; then
+    auto_ci_jwt=$(openssl rand -hex 32 2>/dev/null || date +%s%N | sha256sum | head -c 64)
+    set_env_val "CI_JWT_SECRET" "$auto_ci_jwt"
+fi
+
 if [ -n "${TMK_ARG_TAG:-}" ]; then
     echo -e "${CYAN}▶ Applying container image tag override: ${TMK_ARG_TAG}...${NC}"
     sed -i "s|^DEVOPS_API_IMAGE=.*|DEVOPS_API_IMAGE=ghcr.io/tmk-computers/tmk-devops-api:${TMK_ARG_TAG}|" "$SCRIPT_DIR/.env" || true
