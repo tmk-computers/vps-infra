@@ -388,6 +388,17 @@ if [ "$DEPLOYMENT_MODE" != "ci-only" ]; then
             ln -sf ../../.env "${db_dir}.env"
         fi
     done
+
+    # Ensure /var/www symlinks exist for registered application compose manifests
+    if [ -d "$SCRIPT_DIR/apps" ] && [ -d "/var/www" ]; then
+        ln -sf "$SCRIPT_DIR/apps" "/var/www/apps"
+        for app_dir in "$SCRIPT_DIR/apps"/*/; do
+            if [ -d "$app_dir" ]; then
+                app_name=$(basename "$app_dir")
+                ln -sf "$app_dir" "/var/www/$app_name"
+            fi
+        done
+    fi
 fi
 
 # 6. Prepare Traefik SSL Certificate Storage & Dashboard Auth

@@ -14,6 +14,7 @@ This runbook documents common operational issues, root causes, and verified solu
 | **DevOps / CI Web: 403 Forbidden (nginx/1.30.5)** | Host volume mounts masking pre-built container `/usr/share/nginx/html` | Remove dist volume overrides from `docker-compose.yml` |
 | **Docker Registry: 401 Unauthorized on push** | Incompatible htpasswd hash or missing Docker daemon login | Use Apache bcrypt (`htpasswd -B`) and `docker login localhost:5000` |
 | **App Compose Config Error: Missing env file** | Referenced secret file does not exist on disk | Scaffolding `/etc/vps-infra/secrets/<app>/<env>.env` with `chmod 0600` |
+| **Deploy: DEPLOY_ERR_COMPOSE_PINNING_FAILED** | Base compose file not found at `/var/www/<project>/docker-compose.yml` | Create symlinks `/var/www/<app> -> /var/www/vps-infra/apps/<app>` |
 
 ---
 
@@ -183,3 +184,36 @@ Docker Compose validates all `env_file:` paths during configuration parsing. Sec
        networks:
          - traefik_net
    ```
+
+---
+
+## 7. DevOps Manager Deployment: Base Compose Pinning Failed
+
+### Symptom
+Triggering deployment from the DevOps Manager UI fails immediately with:
+```text
+System.InvalidOperationException: [DEPLOY_ERR_COMPOSE_PINNING_FAILED] Cannot safely pin service '<service>': base compose file not found at /var/www/<project>/docker-compose.yml. Deployment aborted before container service interruption.
+   at DevopsPanel.Infrastructure.Services.DeployService.ExecuteDeploymentScriptAsync(...)
+```
+
+### Root Cause
+When deploying an application, DevOps Manager pins the built image tag into the service's `docker-compose.yml`.
+It constructs the path using:
+`Path.Combine(WWW_ROOT, service.Directory ?? project.Directory, "docker-compose.yml")`
+Where `WWW_ROOT` is `/var/www`. If the service's `Directory` is left blank, it falls back to the project name (e.g. `omr-api`), seeking `/var/www/omr-api/docker-compose.yml`.
+However, deployment manifests in `vps-infra` reside under `/var/www/vps-infra/apps/<project>/docker-compose.yml`.
+
+### Resolution
+Ensure `/var/www` contains symlinks pointing to the application compose directories:
+```bash
+sudo ln -sf /var/www/vps-infra/apps /var/www/apps
+sudo ln -sf /var/www/vps-infra/apps/<app> /var/www/<app>
+```
+`setup.sh` automatically maintains these symlinks for all applications present in `/var/www/vps-infra/apps/`.
+
+Alternatively, in the DevOps Manager UI under **Projects** > **Service Settings**, set the **Target Directory** explicitly to:
+```text
+vps-infra/apps/<app>
+```
+(e.g., `vps-infra/apps/omr-api` or `vps-infra/apps/omr-web`).
+
