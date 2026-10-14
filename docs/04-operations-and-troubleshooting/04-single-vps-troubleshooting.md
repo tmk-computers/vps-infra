@@ -204,16 +204,26 @@ Where `WWW_ROOT` is `/var/www`. If the service's `Directory` is left blank, it f
 However, deployment manifests in `vps-infra` reside under `/var/www/vps-infra/apps/<project>/docker-compose.yml`.
 
 ### Resolution
-Ensure `/var/www` contains symlinks pointing to the application compose directories:
-```bash
-sudo ln -sf /var/www/vps-infra/apps /var/www/apps
-sudo ln -sf /var/www/vps-infra/apps/<app> /var/www/<app>
-```
-`setup.sh` automatically maintains these symlinks for all applications present in `/var/www/vps-infra/apps/`.
+#### Option 1: Native Platform Discovery (Recommended)
+On DevOps Manager platform versions with dynamic compose path resolution, the deployment engine automatically inspects:
+1. Direct path (`/var/www/<project>`)
+2. Appliance apps directory (`/var/www/vps-infra/apps/<project>`)
+3. Code repository directory (`/var/www/vps-infra/code/<project>`)
+4. Alternative compose manifest filenames (`docker-compose.yml`, `docker-compose.yaml`, `compose.yaml`, `compose.yml`)
 
-Alternatively, in the DevOps Manager UI under **Projects** > **Service Settings**, set the **Target Directory** explicitly to:
+No symlinks or path modifications are needed on modern installations.
+
+#### Option 2: Explicit Target Directory in UI
+In DevOps Manager UI under **Projects** > **Service Settings**, specify the **Target Directory** explicitly:
 ```text
 vps-infra/apps/<app>
 ```
 (e.g., `vps-infra/apps/omr-api` or `vps-infra/apps/omr-web`).
+
+#### Option 3: Host Compatibility Symlinks (Legacy Fallback)
+For legacy platform versions, `setup.sh` maintains non-destructive compatibility symlinks under `/var/www/`:
+```bash
+sudo ln -sfn /var/www/vps-infra/apps /var/www/apps
+sudo ln -sfn /var/www/vps-infra/apps/<app> /var/www/<app>
+```
 
