@@ -1,0 +1,34 @@
+# ==============================================================================
+# 🔷 PRODUCTION DOCKERFILE: .NET CORE (8.0 / 9.0 / 10.0) WEB API
+# High-performance multi-stage compilation & hardened ASP.NET Core runtime
+# ==============================================================================
+
+# Stage 1: Build & Publish
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS builder
+WORKDIR /src
+
+# Copy project file and restore dependencies (layer cache optimization)
+COPY *.csproj ./
+RUN dotnet restore
+
+# Copy all source files and publish release bundle
+COPY . ./
+RUN dotnet publish -c Release -o /app/publish --no-restore
+
+# Stage 2: Minimal Production Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
+WORKDIR /app
+
+# Run as non-root user for container security
+USER $APP_UID
+
+COPY --from=builder /app/publish .
+
+ENV ASPNETCORE_URLS=http://+:8080
+ENV DOTNET_EnableDiagnostics=0
+ENV DOTNET_gcServer=0
+ENV DOTNET_GCConserveMemory=5
+
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "App.dll"]
