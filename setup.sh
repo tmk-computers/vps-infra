@@ -373,6 +373,11 @@ if [ "$DEPLOYMENT_MODE" != "ci-only" ]; then
         echo 'SESSION_DB_PATH = "/var/lib/pgadmin/pgadmin_sessions"' > "$SCRIPT_DIR/volumes/db/pgadmin-config/config_local.py"
     fi
 
+    # Secure permissions for pgadmin volume (container runs as non-root UID 5050)
+    if [ -d "$SCRIPT_DIR/volumes/db/pgadmin" ]; then
+        chown -R 5050:5050 "$SCRIPT_DIR/volumes/db/pgadmin" 2>/dev/null || chmod -R 777 "$SCRIPT_DIR/volumes/db/pgadmin" 2>/dev/null || true
+    fi
+
     # Ensure .env symlinks exist in db subdirectories for direct docker compose usage
     for db_dir in "$SCRIPT_DIR/db"/*/; do
         if [ -d "$db_dir" ]; then
