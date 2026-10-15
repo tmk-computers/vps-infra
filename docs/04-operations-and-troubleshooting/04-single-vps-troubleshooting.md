@@ -220,8 +220,8 @@ vps-infra/apps/<app>
 ```
 (e.g., `vps-infra/apps/omr-api` or `vps-infra/apps/omr-web`).
 
-#### Option 3: Host Compatibility Symlinks (Legacy Fallback)
-For legacy platform versions, `setup.sh` maintains non-destructive compatibility symlinks under `/var/www/`:
+#### Option 3: Manual Symlink (Only for Legacy Pre-v2.3 Panels)
+Modern platform versions do not require nor generate host symlinks. If running an older panel that lacks dynamic resolution, symlinks can be created manually:
 ```bash
 sudo ln -sfn /var/www/vps-infra/apps /var/www/apps
 sudo ln -sfn /var/www/vps-infra/apps/<app> /var/www/<app>
