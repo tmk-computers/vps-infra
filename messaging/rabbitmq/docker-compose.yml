@@ -1,0 +1,33 @@
+services:
+  shared_rabbitmq:
+    image: rabbitmq:3.13-management-alpine@sha256:606d8c0d6b3c18d1da9afc53bc7cdb2a8d5486df91b5a9830e9e07626c9ae281
+    container_name: shared_rabbitmq
+    restart: always
+    mem_limit: 2048m
+    cpus: 1.5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    env_file:
+      - /etc/vps-infra/secrets/rabbitmq/infra.env
+    volumes:
+      - /var/www/vps-infra/volumes/messaging/rabbitmq/data:/var/lib/rabbitmq
+      - /var/www/vps-infra/messaging/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    networks:
+      - omr_backend_net
+    expose:
+      - "5672"
+      - "15672"
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running && rabbitmq-diagnostics -q check_local_alarms"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+networks:
+  omr_backend_net:
+    name: omr_backend_net
+    external: true

@@ -32,6 +32,7 @@ volumes/db/mongodb/*
 volumes/infra/registry/*
 volumes/infra/backups/*
 volumes/infra/license-server/*
+volumes/messaging/*
 volumes/license.key
 volumes/*.key
 *.key
