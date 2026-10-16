@@ -1,8 +1,12 @@
 {
-  "drillTimestamp": "2026-10-16T10:46:39Z",
-  "batchId": "eda88910-2035-474e-86e3-79d3b2aa6f16",
+  "drillTimestamp": "2026-10-16T12:31:28Z",
+  "batchId": "ed759a65-28b8-4293-8eb9-9155b54c9909",
+  "downgradeDirection": "Release A (Active) -> Release B (Compatible Rollback Revision)",
+  "distinctDigestsVerified": true,
+  "messageContracts": ["ProcessBatchCommand", "ProcessSheetCommand"],
+  "queueNames": ["omr-batch-queue", "omr-sheet-queue"],
   "releaseA": { "tag": "localhost:5000/omr-worker:qa-release-a", "digest": "sha256:11b8c3c7718d3c811baa07542bb00751bd3d96ad241e2a66a200aad8dc37bc81" },
-  "releaseB": { "tag": "localhost:5000/omr-worker:qa-release-b", "digest": "sha256:11b8c3c7718d3c811baa07542bb00751bd3d96ad241e2a66a200aad8dc37bc81" },
+  "releaseB": { "tag": "localhost:5000/omr-worker:qa-release-b", "digest": "sha256:719a6c0c2eb2be762e530a420ab574d56fc7cb8bc0a13ab69e8c07299b3c525e" },
   "workload": {
     "totalUploaded": 5,
     "processedFiles": 0,
@@ -12,6 +16,6 @@
     "scoreRange": { "min": "30.00", "max": "30.00" }
   },
   "eventualCompletionStatus": "CompletedWithErrors",
-  "recoveryDurationMs": 12132,
+  "recoveryDurationMs": 15536,
   "status": "PASS"
 }

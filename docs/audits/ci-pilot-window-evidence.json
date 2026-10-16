@@ -1,16 +1,24 @@
 {
-  "timestamp": "2026-10-16T11:52:55Z",
+  "timestamp": "2026-10-16T12:35:11Z",
   "gate": "Gate 7 - Host CPU/RAM Preservation via CI Suspension",
-  "status": "PASSED",
+  "status": "PASS",
   "endpoint": "http://localhost:5051/api/ci/pilot-window/status",
+  "auth_verified": {
+    "unauthenticated_status": 401,
+    "unauthorized_role_status": 403,
+    "authorized_role_status": 200
+  },
+  "restart_persistence_verified": true,
   "verified_features": [
-    "Observable endpoint /api/ci/pilot-window/status",
-    "Manual override freeze endpoint /api/ci/pilot-window/freeze",
-    "Manual override unfreeze endpoint /api/ci/pilot-window/unfreeze",
+    "Observable endpoint /api/ci/pilot-window/status (public read-only)",
+    "Authenticated /api/ci/pilot-window/freeze requiring Admin/SuperAdmin/DevOps",
+    "Authenticated /api/ci/pilot-window/unfreeze requiring Admin/SuperAdmin/DevOps",
+    "Restart-persistent state stored on disk",
     "Scheduled window enforcement (Oct 19 - Oct 25, 2026, 08:30-15:30 IST)",
     "Build execution suspension rejection: CI_SUSPENDED_DURING_PILOT_EXAM_WINDOW"
   ],
-  "initial_status": {"active":false,"freezeMode":"NONE","reason":"Outside pilot exam window; CI builds permitted","currentTimeIst":"2026-10-16T17:22:54.518Z","currentTimeUtc":"2026-10-16T11:52:54.518Z","window":{"startDate":"2026-10-19","endDate":"2026-10-25","dailyStartIst":"08:30","dailyEndIst":"15:30"}},
-  "frozen_status": {"active":true,"freezeMode":"MANUAL","reason":"Pilot Ingestion Window - Host CPU Reserved for OMR","expiresAt":null,"currentTimeUtc":"2026-10-16T11:52:54.856Z"},
-  "final_status": {"active":false,"freezeMode":"NONE","reason":"Outside pilot exam window; CI builds permitted","currentTimeIst":"2026-10-16T17:22:55.181Z","currentTimeUtc":"2026-10-16T11:52:55.181Z","window":{"startDate":"2026-10-19","endDate":"2026-10-25","dailyStartIst":"08:30","dailyEndIst":"15:30"}}
+  "initial_status": {"active":false,"freezeMode":"NONE","reason":"Outside pilot exam window; CI builds permitted","currentTimeIst":"2026-10-16T18:05:05.164Z","currentTimeUtc":"2026-10-16T12:35:05.164Z","window":{"startDate":"2026-10-19","endDate":"2026-10-25","dailyStartIst":"08:30","dailyEndIst":"15:30"}},
+  "frozen_status": {"active":true,"freezeMode":"MANUAL","reason":"Pilot Ingestion Window - Host CPU Reserved for OMR","expiresAt":null,"currentTimeUtc":"2026-10-16T12:35:06.215Z"},
+  "restart_status": {"active":true,"freezeMode":"MANUAL","reason":"Pilot Ingestion Window - Host CPU Reserved for OMR","expiresAt":null,"currentTimeUtc":"2026-10-16T12:35:11.256Z"},
+  "final_status": {"active":false,"freezeMode":"NONE","reason":"Outside pilot exam window; CI builds permitted","currentTimeIst":"2026-10-16T18:05:11.647Z","currentTimeUtc":"2026-10-16T12:35:11.647Z","window":{"startDate":"2026-10-19","endDate":"2026-10-25","dailyStartIst":"08:30","dailyEndIst":"15:30"}}
 }

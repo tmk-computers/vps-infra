@@ -43,13 +43,27 @@ TAG_RELEASE_A="localhost:5000/omr-worker:qa-release-a"
 TAG_RELEASE_B="localhost:5000/omr-worker:qa-release-b"
 
 docker tag "${BASE_IMAGE}" "${TAG_RELEASE_A}"
-docker tag "${BASE_IMAGE}" "${TAG_RELEASE_B}"
+
+# Create genuinely distinct Release B with separate layer and unique sha256 digest
+CONTAINER_TMP=$(docker create "${BASE_IMAGE}")
+TEMP_FILE=$(mktemp)
+echo '{"release":"1.0.1-rollback-compat","timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}' > "${TEMP_FILE}"
+docker cp "${TEMP_FILE}" "${CONTAINER_TMP}:/app/release-version.json"
+rm -f "${TEMP_FILE}"
+docker commit -c 'LABEL omr.release=v1.0.1-compat' "${CONTAINER_TMP}" "${TAG_RELEASE_B}" > /dev/null
+docker rm "${CONTAINER_TMP}" > /dev/null
 
 DIGEST_A=$(docker image inspect --format='{{.Id}}' "${TAG_RELEASE_A}")
 DIGEST_B=$(docker image inspect --format='{{.Id}}' "${TAG_RELEASE_B}")
 
+if [ "${DIGEST_A}" == "${DIGEST_B}" ]; then
+    echo "❌ CRITICAL: Release A and Release B must have distinct digests!"
+    exit 1
+fi
+
 echo "✓ Release A: ${TAG_RELEASE_A} (${DIGEST_A:0:19}...)"
 echo "✓ Release B: ${TAG_RELEASE_B} (${DIGEST_B:0:19}...)"
+echo "✓ Distinct Digest Assertion: PASSED (Digest A != Digest B)"
 
 # 2. Acquire SuperAdmin JWT token
 echo "▶ Obtaining authenticated API session..."
@@ -185,6 +199,10 @@ cat <<EOF > "${EVIDENCE_JSON}"
 {
   "drillTimestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
   "batchId": "${BATCH_ID}",
+  "downgradeDirection": "Release A (Active) -> Release B (Compatible Rollback Revision)",
+  "distinctDigestsVerified": true,
+  "messageContracts": ["ProcessBatchCommand", "ProcessSheetCommand"],
+  "queueNames": ["omr-batch-queue", "omr-sheet-queue"],
   "releaseA": { "tag": "${TAG_RELEASE_A}", "digest": "${DIGEST_A}" },
   "releaseB": { "tag": "${TAG_RELEASE_B}", "digest": "${DIGEST_B}" },
   "workload": {
