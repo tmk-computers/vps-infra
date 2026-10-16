@@ -10,10 +10,10 @@ CONTAINER_NAME="shared_rabbitmq"
 ENV_TARGET="${1:-qa}" # 'qa' or 'prod'
 
 if [ "${ENV_TARGET}" = "prod" ] || [ "${ENV_TARGET}" = "production" ]; then
-    VHOST="/omr-prod"
+    VHOST="omr-prod"
     ENV_SUFFIX="prod"
 else
-    VHOST="/omr-qa"
+    VHOST="omr-qa"
     ENV_SUFFIX="qa"
 fi
 

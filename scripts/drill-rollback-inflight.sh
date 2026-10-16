@@ -124,7 +124,7 @@ docker run -d \
   -e DOTNET_gcServer=0 \
   -e DOTNET_GCConserveMemory=2 \
   -e DOTNET_GCHeapHardLimitPercent=60 \
-  -e RabbitMQ__VirtualHost=/omr-qa \
+  -e RabbitMQ__VirtualHost=omr-qa \
   -e OmrProcessing__Engine=RabbitMQ \
   -v /var/www/vps-infra/volumes/apps/omr-api/qa/storage:/app/data/storage \
   -v /var/www/vps-infra/volumes/apps/omr-worker/qa/logs:/app/Logs \
