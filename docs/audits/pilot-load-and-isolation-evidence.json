@@ -1,0 +1,19 @@
+{
+  "Tenant Isolation": "PASS",
+  "Upload Admission & Quotas": "PASS",
+  "Bounded Load Test": "PASS",
+  "Metrics": {
+    "accepted_requests": 4,
+    "rejected_requests": 0,
+    "total_sheets_admitted": 115,
+    "total_sheets_processed": 0,
+    "p50_latency_ms": 114.8,
+    "p95_latency_ms": 583.3,
+    "p99_latency_ms": 583.3,
+    "api_peak_mem_mib": 257.8,
+    "worker_peak_mem_mib": 551.6,
+    "temp_disk_delta_mb": 217.0,
+    "throughput_sheets_per_min": 0.0,
+    "tenant_fairness_verified": true
+  }
+}

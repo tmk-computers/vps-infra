@@ -1,0 +1,85 @@
+{
+  "timestamp": "2026-10-16T10:48:04.027694+00:00",
+  "domains": [
+    {
+      "domain": "qa-omr-api.kakshaplus.com",
+      "dnsResolved": true,
+      "resolvedIps": [
+        "172.67.184.230",
+        "104.21.19.25"
+      ],
+      "tlsHandshake": true,
+      "trustedCert": true,
+      "issuer": "Google Trust Services",
+      "subject": "kakshaplus.com",
+      "san": [
+        "kakshaplus.com",
+        "*.kakshaplus.com"
+      ],
+      "validFrom": "2026-09-18T12:28:44+00:00",
+      "validTo": "2026-12-17T13:28:34+00:00",
+      "daysRemaining": 62,
+      "error": null
+    },
+    {
+      "domain": "qa-omr.kakshaplus.com",
+      "dnsResolved": true,
+      "resolvedIps": [
+        "172.67.184.230",
+        "104.21.19.25"
+      ],
+      "tlsHandshake": true,
+      "trustedCert": true,
+      "issuer": "Google Trust Services",
+      "subject": "kakshaplus.com",
+      "san": [
+        "kakshaplus.com",
+        "*.kakshaplus.com"
+      ],
+      "validFrom": "2026-09-18T12:28:44+00:00",
+      "validTo": "2026-12-17T13:28:34+00:00",
+      "daysRemaining": 62,
+      "error": null
+    },
+    {
+      "domain": "omr-api.kakshaplus.com",
+      "dnsResolved": true,
+      "resolvedIps": [
+        "172.67.184.230",
+        "104.21.19.25"
+      ],
+      "tlsHandshake": true,
+      "trustedCert": true,
+      "issuer": "Google Trust Services",
+      "subject": "kakshaplus.com",
+      "san": [
+        "kakshaplus.com",
+        "*.kakshaplus.com"
+      ],
+      "validFrom": "2026-09-18T12:28:44+00:00",
+      "validTo": "2026-12-17T13:28:34+00:00",
+      "daysRemaining": 62,
+      "error": null
+    },
+    {
+      "domain": "omr.kakshaplus.com",
+      "dnsResolved": true,
+      "resolvedIps": [
+        "172.67.184.230",
+        "104.21.19.25"
+      ],
+      "tlsHandshake": true,
+      "trustedCert": true,
+      "issuer": "Google Trust Services",
+      "subject": "kakshaplus.com",
+      "san": [
+        "kakshaplus.com",
+        "*.kakshaplus.com"
+      ],
+      "validFrom": "2026-09-18T12:28:44+00:00",
+      "validTo": "2026-12-17T13:28:34+00:00",
+      "daysRemaining": 62,
+      "error": null
+    }
+  ]
+}

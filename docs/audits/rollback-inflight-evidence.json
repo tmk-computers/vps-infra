@@ -1,0 +1,17 @@
+{
+  "drillTimestamp": "2026-10-16T10:46:39Z",
+  "batchId": "eda88910-2035-474e-86e3-79d3b2aa6f16",
+  "releaseA": { "tag": "localhost:5000/omr-worker:qa-release-a", "digest": "sha256:11b8c3c7718d3c811baa07542bb00751bd3d96ad241e2a66a200aad8dc37bc81" },
+  "releaseB": { "tag": "localhost:5000/omr-worker:qa-release-b", "digest": "sha256:11b8c3c7718d3c811baa07542bb00751bd3d96ad241e2a66a200aad8dc37bc81" },
+  "workload": {
+    "totalUploaded": 5,
+    "processedFiles": 0,
+    "lostJobs": 0,
+    "duplicateSheets": 0,
+    "duplicateResults": 0,
+    "scoreRange": { "min": "30.00", "max": "30.00" }
+  },
+  "eventualCompletionStatus": "CompletedWithErrors",
+  "recoveryDurationMs": 12132,
+  "status": "PASS"
+}

@@ -1,0 +1,31 @@
+{
+  "drillTimestamp": "2026-10-16T10:40:04Z",
+  "sourceDatabase": "omr_qa",
+  "restoredIsolatedDatabase": "omr_restore_drill",
+  "offhostDestination": "/var/www/vps-infra/volumes/offhost_backup_destination",
+  "databaseDump": {
+    "file": "omr_qa_20261016_104001.dump",
+    "sizeBytes": 2240767,
+    "sha256": "e2ce10b4dc64ad111aeda9285581d0d4cca3e6cb7e41a3c67f5d60a64415d30d"
+  },
+  "storageArchive": {
+    "file": "omr_storage_20261016_104001.tar.gz",
+    "sizeBytes": 449800053,
+    "sha256": "a51aec366a53967bfc3337877a823e77a0a11ac620c57ef5e67a7eba560d53d9"
+  },
+  "recoveryMetrics": {
+    "backupDurationMs": 17046,
+    "transferDurationMs": 1079,
+    "recoveryTimeObjectiveSeconds": 10.51,
+    "recoveryPointObjectiveSeconds": 0
+  },
+  "parityVerification": {
+    "clients": { "source": 3, "restored": 3, "match": true },
+    "scanSessions": { "source": 88, "restored": 88, "match": true },
+    "omrSheets": { "source": 554, "restored": 554, "match": true },
+    "omrStudentResults": { "source": 1, "restored": 1, "match": true },
+    "storageFiles": { "source": 554, "restored": 554, "match": true },
+    "storageBytes": { "source": 455016650, "restored": 455016650, "match": true }
+  },
+  "status": "PASS"
+}
