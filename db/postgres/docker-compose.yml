@@ -16,7 +16,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-devops_prod}
     command: ["postgres", "-c", "max_connections=200", "-c", "shared_buffers=256MB", "-c", "work_mem=4MB"]
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT_BIND:-127.0.0.1:5432}:5432"
     volumes:
       - ${POSTGRES_DATA_STORAGE:-${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/postgres/data}:/var/lib/postgresql/data
       - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/postgres/backups:/backups
@@ -47,7 +47,7 @@ services:
       - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/pgadmin:/var/lib/pgadmin
       - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/pgadmin-config/config_local.py:/pgadmin4/config_local.py
     ports:
-      - "5050:80"
+      - "${PGADMIN_PORT_BIND:-127.0.0.1:5050}:80"
     networks:
       - traefik_net
     labels:
