@@ -4,7 +4,7 @@ import sys
 import shutil
 import subprocess
 
-REPO_BASE = '/var/www/vps-infra/volumes/infra/registry/docker/registry/v2/repositories'
+REPO_BASE = '/var/www/vps-infra/docker/volumes/infra/registry/docker/registry/v2/repositories'
 KEEP_STATIC = {'dev', 'qa', 'uat', 'prod', 'latest', 'main', 'master', 'staging'}
 KEEP_RECENT_COUNT = 3
 

@@ -97,17 +97,17 @@ fi
 echo -e "${GREEN}   ✅ Application platform containers stopped.${NC}"
 
 echo -e "\n${CYAN}▶ 2. Stopping Private Docker Registry...${NC}"
-if [ -f "$SCRIPT_DIR/docker-registry/docker-compose.yml" ]; then
-    docker compose -f "$SCRIPT_DIR/docker-registry/docker-compose.yml" down --remove-orphans 2>/dev/null || true
+if [ -f "$SCRIPT_DIR/docker/registry/docker-compose.yml" ]; then
+    docker compose -f "$SCRIPT_DIR/docker/registry/docker-compose.yml" down --remove-orphans 2>/dev/null || true
     echo -e "${GREEN}   ✅ Docker registry stopped.${NC}"
 fi
 
 echo -e "\n${CYAN}▶ 3. Stopping Shared Database Services (PostgreSQL & MS SQL)...${NC}"
-for db_compose in "$SCRIPT_DIR/db/postgres/docker-compose.yml" \
-                  "$SCRIPT_DIR/db/sql-server/docker-compose.yml" \
-                  "$SCRIPT_DIR/db/mariadb/docker-compose.yml" \
-                  "$SCRIPT_DIR/db/mongodb/docker-compose.yml" \
-                  "$SCRIPT_DIR/db/docker-compose.yml"; do
+for db_compose in "$SCRIPT_DIR/platform/database/postgres/docker-compose.yml" \
+                  "$SCRIPT_DIR/platform/database/sql-server/docker-compose.yml" \
+                  "$SCRIPT_DIR/platform/database/mariadb/docker-compose.yml" \
+                  "$SCRIPT_DIR/platform/database/mongodb/docker-compose.yml" \
+                  "$SCRIPT_DIR/platform/database/docker-compose.yml"; do
     if [ -f "$db_compose" ]; then
         docker compose -f "$db_compose" down --remove-orphans 2>/dev/null || true
     fi
@@ -115,8 +115,8 @@ done
 echo -e "${GREEN}   ✅ Shared database containers stopped.${NC}"
 
 echo -e "\n${CYAN}▶ 4. Stopping Global Reverse Proxy (Traefik)...${NC}"
-if [ -f "$SCRIPT_DIR/network/traefik/docker-compose.yml" ]; then
-    docker compose -f "$SCRIPT_DIR/network/traefik/docker-compose.yml" down --remove-orphans 2>/dev/null || true
+if [ -f "$SCRIPT_DIR/platform/network/traefik/docker-compose.yml" ]; then
+    docker compose -f "$SCRIPT_DIR/platform/network/traefik/docker-compose.yml" down --remove-orphans 2>/dev/null || true
     echo -e "${GREEN}   ✅ Traefik reverse proxy stopped.${NC}"
 fi
 
@@ -140,7 +140,7 @@ fi
 
 # 7. Persistent Data Handling
 echo -e "\n${CYAN}▶ 7. Managing Persistent Storage Volumes...${NC}"
-VOLUMES_DIR="$SCRIPT_DIR/volumes"
+VOLUMES_DIR="$SCRIPT_DIR/docker/volumes"
 if [ "$PURGE_DATA" = true ]; then
     if [ -d "$VOLUMES_DIR" ]; then
         echo -e "${YELLOW}   ⚠️ Purging persistent volumes ($VOLUMES_DIR)...${NC}"

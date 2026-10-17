@@ -336,71 +336,71 @@ fi
 source "$SCRIPT_DIR/scripts/setup-directories.sh"
 echo -e "${CYAN}▶ Scaffolding persistent volume directories for [${DEPLOYMENT_MODE}]...${NC}"
 create_setup_directories \
-    "$SCRIPT_DIR/volumes/apps" \
-    "$SCRIPT_DIR/volumes/artifacts/builds" \
-    "$SCRIPT_DIR/volumes/apk" \
-    "$SCRIPT_DIR/network/traefik"
+    "$SCRIPT_DIR/docker/volumes/apps" \
+    "$SCRIPT_DIR/docker/volumes/artifacts/builds" \
+    "$SCRIPT_DIR/docker/volumes/apk" \
+    "$SCRIPT_DIR/platform/network/traefik"
 
 if [ "$DEPLOYMENT_MODE" != "ci-only" ]; then
     create_setup_directories \
-        "$SCRIPT_DIR/volumes/db/postgres/data" \
-        "$SCRIPT_DIR/volumes/db/postgres/backups" \
-        "$SCRIPT_DIR/volumes/db/pgadmin" \
-        "$SCRIPT_DIR/volumes/infra/backups"
+        "$SCRIPT_DIR/docker/volumes/db/postgres/data" \
+        "$SCRIPT_DIR/docker/volumes/db/postgres/backups" \
+        "$SCRIPT_DIR/docker/volumes/db/pgadmin" \
+        "$SCRIPT_DIR/docker/volumes/infra/backups"
 fi
 
 if [ "${DOCKER_REGISTRY_TYPE:-private}" = "private" ] && [ "$DEPLOYMENT_MODE" != "devops-only" ]; then
-    create_setup_directories "$SCRIPT_DIR/volumes/infra/registry"
+    create_setup_directories "$SCRIPT_DIR/docker/volumes/infra/registry"
 fi
 
 # Crucial Docker Safeguard: Pre-create license.key as a regular file before Docker bind-mounts it
-if [ -d "$SCRIPT_DIR/volumes/license.key" ]; then
-    rm -rf "$SCRIPT_DIR/volumes/license.key"
+if [ -d "$SCRIPT_DIR/docker/volumes/license.key" ]; then
+    rm -rf "$SCRIPT_DIR/docker/volumes/license.key"
 fi
-if [ ! -f "$SCRIPT_DIR/volumes/license.key" ]; then
+if [ ! -f "$SCRIPT_DIR/docker/volumes/license.key" ]; then
     if [ -n "${TMK_LICENSE_KEY:-}" ]; then
-        echo "$TMK_LICENSE_KEY" > "$SCRIPT_DIR/volumes/license.key"
+        echo "$TMK_LICENSE_KEY" > "$SCRIPT_DIR/docker/volumes/license.key"
     else
-        touch "$SCRIPT_DIR/volumes/license.key"
+        touch "$SCRIPT_DIR/docker/volumes/license.key"
     fi
-    chmod 644 "$SCRIPT_DIR/volumes/license.key"
+    chmod 644 "$SCRIPT_DIR/docker/volumes/license.key"
 fi
 echo -e "${GREEN}✅ Volume license.key secured as regular file mount.${NC}"
 
 # Crucial Docker Safeguard: Pre-create pgadmin config_local.py if missing
 if [ "$DEPLOYMENT_MODE" != "ci-only" ]; then
-    mkdir -p "$SCRIPT_DIR/volumes/db/pgadmin-config"
-    if [ -d "$SCRIPT_DIR/volumes/db/pgadmin-config/config_local.py" ]; then
-        rm -rf "$SCRIPT_DIR/volumes/db/pgadmin-config/config_local.py"
+    mkdir -p "$SCRIPT_DIR/docker/volumes/db/pgadmin-config"
+    if [ -d "$SCRIPT_DIR/docker/volumes/db/pgadmin-config/config_local.py" ]; then
+        rm -rf "$SCRIPT_DIR/docker/volumes/db/pgadmin-config/config_local.py"
     fi
-    if [ ! -f "$SCRIPT_DIR/volumes/db/pgadmin-config/config_local.py" ]; then
-        echo 'SESSION_DB_PATH = "/var/lib/pgadmin/pgadmin_sessions"' > "$SCRIPT_DIR/volumes/db/pgadmin-config/config_local.py"
+    if [ ! -f "$SCRIPT_DIR/docker/volumes/db/pgadmin-config/config_local.py" ]; then
+        echo 'SESSION_DB_PATH = "/var/lib/pgadmin/pgadmin_sessions"' > "$SCRIPT_DIR/docker/volumes/db/pgadmin-config/config_local.py"
     fi
 
     # Secure permissions for pgadmin volume (container runs as non-root UID 5050)
-    if [ -d "$SCRIPT_DIR/volumes/db/pgadmin" ]; then
-        chown -R 5050:5050 "$SCRIPT_DIR/volumes/db/pgadmin" 2>/dev/null || chmod -R 777 "$SCRIPT_DIR/volumes/db/pgadmin" 2>/dev/null || true
+    if [ -d "$SCRIPT_DIR/docker/volumes/db/pgadmin" ]; then
+        chown -R 5050:5050 "$SCRIPT_DIR/docker/volumes/db/pgadmin" 2>/dev/null || chmod -R 777 "$SCRIPT_DIR/docker/volumes/db/pgadmin" 2>/dev/null || true
     fi
 
     # Ensure .env symlinks exist in db subdirectories for direct docker compose usage
-    for db_dir in "$SCRIPT_DIR/db"/*/; do
+    for db_dir in "$SCRIPT_DIR/platform/database"/*/; do
         if [ -d "$db_dir" ]; then
-            ln -sf ../../.env "${db_dir}.env"
+            ln -sf ../../../.env "${db_dir}.env"
         fi
     done
 
 fi
 
 # 6. Prepare Traefik SSL Certificate Storage & Dashboard Auth
-if [ ! -f "$SCRIPT_DIR/network/traefik/acme.json" ]; then
-    touch "$SCRIPT_DIR/network/traefik/acme.json"
+if [ ! -f "$SCRIPT_DIR/platform/network/traefik/acme.json" ]; then
+    touch "$SCRIPT_DIR/platform/network/traefik/acme.json"
 fi
-chmod 600 "$SCRIPT_DIR/network/traefik/acme.json"
+chmod 600 "$SCRIPT_DIR/platform/network/traefik/acme.json"
 
-if [ ! -f "$SCRIPT_DIR/network/traefik/users.htpasswd" ]; then
-    echo "admin:\$2y\$05\$LcKxE/OkQYg7D2UPBkedkOO./SILLHS6GW04OS3B/.urSdR7bmPnW" > "$SCRIPT_DIR/network/traefik/users.htpasswd"
+if [ ! -f "$SCRIPT_DIR/platform/network/traefik/users.htpasswd" ]; then
+    echo "admin:\$2y\$05\$LcKxE/OkQYg7D2UPBkedkOO./SILLHS6GW04OS3B/.urSdR7bmPnW" > "$SCRIPT_DIR/platform/network/traefik/users.htpasswd"
 fi
-chmod 600 "$SCRIPT_DIR/network/traefik/users.htpasswd"
+chmod 600 "$SCRIPT_DIR/platform/network/traefik/users.htpasswd"
 echo -e "${GREEN}✅ Traefik acme.json & users.htpasswd secured (chmod 600).${NC}"
 
 # 7. Start Infrastructure Services Conditionally Based on Topology
@@ -586,11 +586,11 @@ if [ "${NETWORK_MODE:-public}" = "private" ] || [ "${ENABLE_HTTPS_REDIRECT:-true
 fi
 
 echo -e "\n${CYAN}▶ Starting Reverse Proxy (Traefik)...${NC}"
-docker compose -f "$SCRIPT_DIR/network/traefik/docker-compose.yml" --env-file "$SCRIPT_DIR/.env" up -d
+docker compose -f "$SCRIPT_DIR/platform/network/traefik/docker-compose.yml" --env-file "$SCRIPT_DIR/.env" up -d
 
 if [ "$DEPLOYMENT_MODE" != "ci-only" ]; then
     echo -e "\n${CYAN}▶ Starting Shared PostgreSQL & pgAdmin...${NC}"
-    docker compose -f "$SCRIPT_DIR/db/postgres/docker-compose.yml" --env-file "$SCRIPT_DIR/.env" up -d
+    docker compose -f "$SCRIPT_DIR/platform/database/postgres/docker-compose.yml" --env-file "$SCRIPT_DIR/.env" up -d
 else
     echo -e "\n${YELLOW}▶ Skipping local PostgreSQL (Topology: ci-only; using REST API sync to DevOps Manager).${NC}"
 fi
@@ -598,7 +598,7 @@ fi
 configure_registry_auth() {
     local reg_user="${DOCKER_REGISTRY_USER:-${REGISTRY_USER:-}}"
     local reg_pass="${DOCKER_REGISTRY_PASSWORD:-${REGISTRY_PASSWORD:-}}"
-    local auth_dir="$SCRIPT_DIR/docker-registry/auth"
+    local auth_dir="$SCRIPT_DIR/docker/registry/auth"
     local htpasswd_file="$auth_dir/htpasswd"
 
     if [ -z "$reg_user" ] || [ -z "$reg_pass" ]; then
@@ -627,7 +627,7 @@ configure_registry_auth() {
 if [ "${DOCKER_REGISTRY_TYPE:-private}" = "private" ] && [ "$DEPLOYMENT_MODE" != "devops-only" ]; then
     configure_registry_auth
     echo -e "\n${CYAN}▶ Starting Private Docker Registry...${NC}"
-    docker compose -f "$SCRIPT_DIR/docker-registry/docker-compose.yml" --env-file "$SCRIPT_DIR/.env" up -d
+    docker compose -f "$SCRIPT_DIR/docker/registry/docker-compose.yml" --env-file "$SCRIPT_DIR/.env" up -d
 elif [ "${DOCKER_REGISTRY_TYPE:-}" = "external" ]; then
     echo -e "\n${YELLOW}▶ Skipping local Docker Registry container (Using External Registry: ${DOCKER_REGISTRY_HOST:-$REGISTRY_HOST}).${NC}"
 fi

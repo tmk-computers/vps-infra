@@ -110,7 +110,7 @@ echo -e "${GREEN}✅ Test 4 Passed: Telemetry payload ingested successfully (Rep
 # TEST 5: TRAEFIK COMPOSE CONFIGURATION SYNTAX
 # -----------------------------------------------------------------------------
 echo -e "\n${CYAN}▶ TEST 5: Validating Traefik compose syntax with private network variables...${NC}"
-if ! docker compose -f "$SCRIPT_DIR/network/traefik/docker-compose.yml" config >/dev/null; then
+if ! docker compose -f "$SCRIPT_DIR/platform/network/traefik/docker-compose.yml" config >/dev/null; then
     echo -e "${RED}❌ Test 5 Failed: Traefik docker-compose.yml has syntax errors.${NC}" >&2
     exit 1
 fi

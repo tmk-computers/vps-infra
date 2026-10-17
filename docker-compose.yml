@@ -77,10 +77,10 @@ services:
       - ${DOCKER_SOCK_PATH:-/var/run/docker.sock}:/var/run/docker.sock
       - ${DOCKER_CONTAINERS_PATH:-/var/lib/docker/containers}:/var/lib/docker/containers
       - ${WWW_ROOT:-/var/www}:/var/www
-      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/license.key:/app/license.key
-      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/apps/devops-api/prod/backups:/app/backups
-      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/apps/devops-api/prod/uploads:/app/uploads
-      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/apps/devops-api/prod/logs:/app/logs
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/docker/volumes/license.key:/app/license.key
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/docker/volumes/apps/devops-api/prod/backups:/app/backups
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/docker/volumes/apps/devops-api/prod/uploads:/app/uploads
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/docker/volumes/apps/devops-api/prod/logs:/app/logs
       - ${DOCKER_CONFIG_PATH:-/root/.docker}:/root/.docker:ro
       - ${SSH_CONFIG_PATH:-/root/.ssh}:/root/.ssh:ro
       - /etc/vps-infra:/etc/vps-infra:ro

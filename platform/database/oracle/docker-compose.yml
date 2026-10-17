@@ -10,8 +10,8 @@ services:
     ports:
       - "1521:1521"
     volumes:
-      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/oracle/data:/opt/oracle/oradata
-      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/volumes/db/oracle/backups:/opt/oracle/dpdump
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/docker/volumes/db/oracle/data:/opt/oracle/oradata
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/docker/volumes/db/oracle/backups:/opt/oracle/dpdump
     networks:
       - traefik_net
 

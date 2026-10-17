@@ -58,8 +58,8 @@ report_telemetry() {
 
     # Extract license key
     local license_key=""
-    if [ -f "$SCRIPT_DIR/volumes/license.key" ]; then
-        license_key="$(cat "$SCRIPT_DIR/volumes/license.key" | tr -d '\r\n')"
+    if [ -f "$SCRIPT_DIR/docker/volumes/license.key" ]; then
+        license_key="$(cat "$SCRIPT_DIR/docker/volumes/license.key" | tr -d '\r\n')"
     elif [ -f "$SCRIPT_DIR/license.key" ]; then
         license_key="$(cat "$SCRIPT_DIR/license.key" | tr -d '\r\n')"
     elif [ -f "$SCRIPT_DIR/.env" ]; then

@@ -38,9 +38,9 @@ case "$CMD" in
     down)
         echo -e "${YELLOW}▶ Stopping VPS-Infra platform containers...${NC}"
         docker compose -f "$BASE_DIR/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
-        docker compose -f "$BASE_DIR/docker-registry/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
-        docker compose -f "$BASE_DIR/db/postgres/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
-        docker compose -f "$BASE_DIR/network/traefik/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
+        docker compose -f "$BASE_DIR/docker/registry/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
+        docker compose -f "$BASE_DIR/platform/database/postgres/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
+        docker compose -f "$BASE_DIR/platform/network/traefik/docker-compose.yml" --env-file "$BASE_DIR/.env" down || true
         echo -e "${GREEN}✅ All platform services stopped.${NC}"
         ;;
     restart)
@@ -64,9 +64,9 @@ case "$CMD" in
     backup)
         echo -e "${CYAN}▶ Triggering automated backup for devops_prod...${NC}"
         TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-        mkdir -p "$BASE_DIR/volumes/db/postgres/backups"
-        docker exec shared_postgres pg_dump -U postgres devops_prod > "$BASE_DIR/volumes/db/postgres/backups/devops_prod_${TIMESTAMP}.sql"
-        echo -e "${GREEN}✅ Backup saved to: $BASE_DIR/volumes/db/postgres/backups/devops_prod_${TIMESTAMP}.sql${NC}"
+        mkdir -p "$BASE_DIR/docker/volumes/db/postgres/backups"
+        docker exec shared_postgres pg_dump -U postgres devops_prod > "$BASE_DIR/docker/volumes/db/postgres/backups/devops_prod_${TIMESTAMP}.sql"
+        echo -e "${GREEN}✅ Backup saved to: $BASE_DIR/docker/volumes/db/postgres/backups/devops_prod_${TIMESTAMP}.sql${NC}"
         ;;
     help|-h|--help|"")
         show_help

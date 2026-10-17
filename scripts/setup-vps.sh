@@ -87,22 +87,22 @@ echo -e "${GREEN}✅ Firewall configured (Ports 22, 80, 443 open).${NC}"
 
 # 6. Setup Directory Structure & Volumes
 echo -e "${BLUE}📁 Initializing platform directories and persistent volumes...${NC}"
-mkdir -p "${INFRA_DIR}/volumes/artifacts/builds"
-mkdir -p "${INFRA_DIR}/volumes/apps"
-mkdir -p "${INFRA_DIR}/volumes/db-backups"
-mkdir -p "${INFRA_DIR}/volumes/postgres_data"
-mkdir -p "${INFRA_DIR}/volumes/sqlserver_data"
-mkdir -p "${INFRA_DIR}/ci-server/gradle-cache"
-mkdir -p "${INFRA_DIR}/ci-server/pub-cache"
-mkdir -p "${INFRA_DIR}/ci-server/maven-cache"
-mkdir -p "${INFRA_DIR}/ci-server/ccache"
-mkdir -p "${INFRA_DIR}/ci-server/android-sdk"
-mkdir -p "${INFRA_DIR}/network/traefik"
+mkdir -p "${INFRA_DIR}/docker/volumes/artifacts/builds"
+mkdir -p "${INFRA_DIR}/docker/volumes/apps"
+mkdir -p "${INFRA_DIR}/docker/volumes/db-backups"
+mkdir -p "${INFRA_DIR}/docker/volumes/postgres_data"
+mkdir -p "${INFRA_DIR}/docker/volumes/sqlserver_data"
+mkdir -p "${INFRA_DIR}/docker/volumes/ci-cache/gradle-cache"
+mkdir -p "${INFRA_DIR}/docker/volumes/ci-cache/pub-cache"
+mkdir -p "${INFRA_DIR}/docker/volumes/ci-cache/maven-cache"
+mkdir -p "${INFRA_DIR}/docker/volumes/ci-cache/ccache"
+mkdir -p "${INFRA_DIR}/docker/volumes/ci-cache/android-sdk"
+mkdir -p "${INFRA_DIR}/platform/network/traefik"
 
 # Create Traefik acme.json with strict permissions
-if [ ! -f "${INFRA_DIR}/network/traefik/acme.json" ]; then
-    touch "${INFRA_DIR}/network/traefik/acme.json"
-    chmod 600 "${INFRA_DIR}/network/traefik/acme.json"
+if [ ! -f "${INFRA_DIR}/platform/network/traefik/acme.json" ]; then
+    touch "${INFRA_DIR}/platform/network/traefik/acme.json"
+    chmod 600 "${INFRA_DIR}/platform/network/traefik/acme.json"
 fi
 
 # 7. Create Shared Docker Network
@@ -174,9 +174,9 @@ echo "==========================================================================
 echo -e "Next steps:"
 echo -e " 1. Review and update domain names in: ${BOLD}${INFRA_DIR}/.env${NC}"
 echo -e " 2. Start core services:"
-echo -e "    ${CYAN}cd ${INFRA_DIR}/network/traefik && docker compose up -d${NC}"
-echo -e "    ${CYAN}cd ${INFRA_DIR}/docker-registry && docker compose up -d${NC}"
-echo -e "    ${CYAN}cd ${INFRA_DIR}/db/postgres && docker compose up -d${NC}"
+echo -e "    ${CYAN}cd ${INFRA_DIR}/platform/network/traefik && docker compose up -d${NC}"
+echo -e "    ${CYAN}cd ${INFRA_DIR}/docker/registry && docker compose up -d${NC}"
+echo -e "    ${CYAN}cd ${INFRA_DIR}/platform/database/postgres && docker compose up -d${NC}"
 echo -e "    ${CYAN}cd ${INFRA_DIR}/devops-manager && docker compose up -d${NC}"
 echo -e "    ${CYAN}cd ${INFRA_DIR}/ci-server && docker compose up -d${NC}"
 echo ""

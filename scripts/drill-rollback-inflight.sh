@@ -16,7 +16,7 @@ EVIDENCE_JSON="${EVIDENCE_DIR}/rollback-inflight-evidence.json"
 
 API_BASE="https://127.0.0.1"
 API_HOST="qa-omr-api.kakshaplus.com"
-FIXTURE_PATH="/var/www/vps-infra/code/omr-api/tests/data/OMR/100Q/Scan_0025.jpg"
+FIXTURE_PATH="/var/www/vps-infra/src/omr-api/tests/data/OMR/100Q/Scan_0025.jpg"
 
 TENANT_A="11111111-2222-3333-4444-555555555555"
 BRANCH_A="22222222-3333-4444-5555-666666666666"
@@ -126,8 +126,8 @@ docker run -d \
   -e DOTNET_GCHeapHardLimitPercent=60 \
   -e RabbitMQ__VirtualHost=omr-qa \
   -e OmrProcessing__Engine=RabbitMQ \
-  -v /var/www/vps-infra/volumes/apps/omr-api/qa/storage:/app/data/storage \
-  -v /var/www/vps-infra/volumes/apps/omr-worker/qa/logs:/app/Logs \
+  -v /var/www/vps-infra/docker/volumes/apps/omr-api/qa/storage:/app/data/storage \
+  -v /var/www/vps-infra/docker/volumes/apps/omr-worker/qa/logs:/app/Logs \
   "${TAG_RELEASE_B}" >/dev/null
 
 echo "✓ Worker restarted on Release B. Monitoring completion and recovery..."

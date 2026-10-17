@@ -19,12 +19,12 @@ EVIDENCE_JSON="${EVIDENCE_DIR}/backup-restore-drill-evidence.json"
 
 SOURCE_DB="omr_qa"
 RESTORE_DB="omr_restore_drill"
-SOURCE_STORAGE="${BASE_DIR}/volumes/apps/omr-api/qa/storage"
-RESTORE_STORAGE="${BASE_DIR}/volumes/restore_drill_storage"
+SOURCE_STORAGE="${BASE_DIR}/docker/volumes/apps/omr-api/qa/storage"
+RESTORE_STORAGE="${BASE_DIR}/docker/volumes/restore_drill_storage"
 
 # External destination (defaults to isolated off-host path; customizable via env)
-OFFHOST_DEST="${BACKUP_OFFHOST_DEST:-${BASE_DIR}/volumes/offhost_backup_destination}"
-LOCAL_BACKUP_STAGING="${BASE_DIR}/volumes/backups/drill_staging"
+OFFHOST_DEST="${BACKUP_OFFHOST_DEST:-${BASE_DIR}/docker/volumes/offhost_backup_destination}"
+LOCAL_BACKUP_STAGING="${BASE_DIR}/docker/volumes/backups/drill_staging"
 
 mkdir -p "${OFFHOST_DEST}" "${LOCAL_BACKUP_STAGING}" "${EVIDENCE_DIR}"
 

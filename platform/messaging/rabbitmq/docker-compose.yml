@@ -13,8 +13,8 @@ services:
     env_file:
       - /etc/vps-infra/secrets/rabbitmq/infra.env
     volumes:
-      - /var/www/vps-infra/volumes/messaging/rabbitmq/data:/var/lib/rabbitmq
-      - /var/www/vps-infra/messaging/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - /var/www/vps-infra/docker/volumes/messaging/rabbitmq/data:/var/lib/rabbitmq
+      - /var/www/vps-infra/platform/messaging/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     networks:
       - omr_backend_net
     expose:

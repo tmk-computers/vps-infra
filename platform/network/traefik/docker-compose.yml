@@ -36,7 +36,7 @@ services:
       - ${DOCKER_SOCK_PATH:-/var/run/docker.sock}:/var/run/docker.sock:ro
       - ${TRAEFIK_ACME_STORAGE:-./acme.json}:/letsencrypt/acme.json
       - ./users.htpasswd:/etc/traefik/users.htpasswd:ro
-      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/network/traefik/dynamic:/etc/traefik/dynamic:ro
+      - ${INFRA_BASE_DIR:-/var/www/vps-infra}/platform/network/traefik/dynamic:/etc/traefik/dynamic:ro
 
     extra_hosts:
       - "host.docker.internal:host-gateway"

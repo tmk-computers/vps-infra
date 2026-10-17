@@ -308,36 +308,36 @@ async def run_test_suite():
         # ======================================================================
         print("\n--- Group 2: Broad Mount Rejection & Forbidden Paths (403 Forbidden) ---")
 
-        # 2.1 Broad /var/www/vps-infra/volumes (contains db, backups, license)
+        # 2.1 Broad /var/www/vps-infra/docker/volumes (contains db, backups, license)
         status, _, jdata = await send_raw_http_request(
             filter_sock, "POST", "/v1.45/containers/create",
-            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/volumes:/volumes:ro"]}})
+            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/docker/volumes:/volumes:ro"]}})
         )
-        record_test("Broad /var/www/vps-infra/volumes mount denied with 403 Forbidden",
+        record_test("Broad /var/www/vps-infra/docker/volumes mount denied with 403 Forbidden",
                     status == 403, f"Status: {status}, msg: {jdata.get('message')}")
 
-        # 2.2 /var/www/vps-infra/volumes/db (raw database clusters)
+        # 2.2 /var/www/vps-infra/docker/volumes/db (raw database clusters)
         status, _, jdata = await send_raw_http_request(
             filter_sock, "POST", "/v1.45/containers/create",
-            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/volumes/db/postgres_data:/data:rw"]}})
+            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/docker/volumes/db/postgres_data:/data:rw"]}})
         )
-        record_test("/var/www/vps-infra/volumes/db mount denied with 403 Forbidden",
+        record_test("/var/www/vps-infra/docker/volumes/db mount denied with 403 Forbidden",
                     status == 403, f"Status: {status}, msg: {jdata.get('message')}")
 
-        # 2.3 /var/www/vps-infra/volumes/infra (database backups)
+        # 2.3 /var/www/vps-infra/docker/volumes/infra (database backups)
         status, _, jdata = await send_raw_http_request(
             filter_sock, "POST", "/v1.45/containers/create",
-            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/volumes/infra/backups:/backups:ro"]}})
+            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/docker/volumes/infra/backups:/backups:ro"]}})
         )
-        record_test("/var/www/vps-infra/volumes/infra/backups mount denied with 403 Forbidden",
+        record_test("/var/www/vps-infra/docker/volumes/infra/backups mount denied with 403 Forbidden",
                     status == 403, f"Status: {status}, msg: {jdata.get('message')}")
 
-        # 2.4 /var/www/vps-infra/volumes/license.key
+        # 2.4 /var/www/vps-infra/docker/volumes/license.key
         status, _, jdata = await send_raw_http_request(
             filter_sock, "POST", "/v1.45/containers/create",
-            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/volumes/license.key:/app/license.key:ro"]}})
+            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/docker/volumes/license.key:/app/license.key:ro"]}})
         )
-        record_test("/var/www/vps-infra/volumes/license.key mount denied with 403 Forbidden",
+        record_test("/var/www/vps-infra/docker/volumes/license.key mount denied with 403 Forbidden",
                     status == 403, f"Status: {status}, msg: {jdata.get('message')}")
 
         # 2.5 Broad /tmp mount
@@ -541,7 +541,7 @@ async def run_test_suite():
         # 5.3 POST /volumes/create with device pointing to db volumes
         status, _, jdata = await send_raw_http_request(
             filter_sock, "POST", "/v1.45/volumes/create",
-            body=json.dumps({"Name": "db_vol", "Driver": "local", "DriverOpts": {"type": "none", "device": "/var/www/vps-infra/volumes/db", "o": "bind"}})
+            body=json.dumps({"Name": "db_vol", "Driver": "local", "DriverOpts": {"type": "none", "device": "/var/www/vps-infra/docker/volumes/db", "o": "bind"}})
         )
         record_test("POST /volumes/create with device=/volumes/db denied with 403 Forbidden",
                     status == 403, f"Status: {status}, msg: {jdata.get('message')}")
@@ -575,31 +575,31 @@ async def run_test_suite():
                     status == 201 and len(mock_server.received_requests) == 1,
                     f"Status: {status}, mock requests: {len(mock_server.received_requests)}")
 
-        # 6.4 Legitimate artifacts volume mount (/var/www/vps-infra/volumes/artifacts)
+        # 6.4 Legitimate artifacts volume mount (/var/www/vps-infra/docker/volumes/artifacts)
         mock_server.received_requests.clear()
         status, _, jdata = await send_raw_http_request(
             filter_sock, "POST", "/v1.45/containers/create",
-            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/volumes/artifacts/build-123:/artifacts:ro"]}})
+            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/docker/volumes/artifacts/build-123:/artifacts:ro"]}})
         )
         record_test("Legitimate artifacts volume mount forwarded and returns 201 Created",
                     status == 201 and len(mock_server.received_requests) == 1,
                     f"Status: {status}, mock requests: {len(mock_server.received_requests)}")
 
-        # 6.5 Legitimate APK volume mount (/var/www/vps-infra/volumes/apk)
+        # 6.5 Legitimate APK volume mount (/var/www/vps-infra/docker/volumes/apk)
         mock_server.received_requests.clear()
         status, _, jdata = await send_raw_http_request(
             filter_sock, "POST", "/v1.45/containers/create",
-            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/volumes/apk/release:/apk:rw"]}})
+            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/docker/volumes/apk/release:/apk:rw"]}})
         )
         record_test("Legitimate APK volume mount forwarded and returns 201 Created",
                     status == 201 and len(mock_server.received_requests) == 1,
                     f"Status: {status}, mock requests: {len(mock_server.received_requests)}")
 
-        # 6.6 Legitimate apps persistent volume mount (/var/www/vps-infra/volumes/apps/omr-api)
+        # 6.6 Legitimate apps persistent volume mount (/var/www/vps-infra/docker/volumes/apps/omr-api)
         mock_server.received_requests.clear()
         status, _, jdata = await send_raw_http_request(
             filter_sock, "POST", "/v1.45/containers/create",
-            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/volumes/apps/omr-api:/data:rw"]}})
+            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/docker/volumes/apps/omr-api:/data:rw"]}})
         )
         record_test("Legitimate app volume mount forwarded and returns 201 Created",
                     status == 201 and len(mock_server.received_requests) == 1,

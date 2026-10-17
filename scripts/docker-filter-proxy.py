@@ -31,9 +31,9 @@ ALLOWED_MOUNT_PREFIXES = (
     "/var/www/vps-infra/code",
     "/var/www/vps-infra/apps",
     "/var/www/vps-infra/ci-server",
-    "/var/www/vps-infra/volumes/artifacts",
-    "/var/www/vps-infra/volumes/apk",
-    "/var/www/vps-infra/volumes/apps",
+    "/var/www/vps-infra/docker/volumes/artifacts",
+    "/var/www/vps-infra/docker/volumes/apk",
+    "/var/www/vps-infra/docker/volumes/apps",
     "/tmp/vps-infra-pins",
 )
 
@@ -55,9 +55,9 @@ DISALLOWED_HOST_PATHS = (
 )
 
 DISALLOWED_SUBPATHS = (
-    "/var/www/vps-infra/volumes/db",
-    "/var/www/vps-infra/volumes/infra",
-    "/var/www/vps-infra/volumes/license.key",
+    "/var/www/vps-infra/docker/volumes/db",
+    "/var/www/vps-infra/docker/volumes/infra",
+    "/var/www/vps-infra/docker/volumes/license.key",
 )
 
 DANGEROUS_CAPS = {

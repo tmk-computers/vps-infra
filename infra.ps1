@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # 🚀 VPS-INFRA UNIFIED CLI TOOL ('infra.ps1')
 # ==============================================================================
 # Compatible with Windows PowerShell 5.1+ and PowerShell Core 7+
@@ -55,9 +55,9 @@ switch ($Command.ToLower()) {
         Write-Host "${C_YELLOW}▶ Stopping VPS-Infra platform containers...${C_RESET}"
         $composeFiles = @(
             (Join-Path $ScriptDir "docker-compose.yml"),
-            (Join-Path $ScriptDir "docker-registry\docker-compose.yml"),
-            (Join-Path $ScriptDir "db\postgres\docker-compose.yml"),
-            (Join-Path $ScriptDir "network\traefik\docker-compose.yml")
+            (Join-Path $ScriptDir "docker\registry\docker-compose.yml"),
+            (Join-Path $ScriptDir "platform\database\postgres\docker-compose.yml"),
+            (Join-Path $ScriptDir "platform\network\traefik\docker-compose.yml")
         )
         foreach ($cf in $composeFiles) {
             if (Test-Path -Path $cf) {
@@ -115,7 +115,7 @@ switch ($Command.ToLower()) {
     "backup" {
         Write-Host "${C_CYAN}▶ Triggering automated backup for devops_prod...${C_RESET}"
         $timestamp = (Get-Date).ToString("yyyyMMdd_HHmmss")
-        $backupDir = Join-Path $ScriptDir "volumes\db\postgres\backups"
+        $backupDir = Join-Path $ScriptDir "docker\volumes\db\postgres\backups"
         if (-not (Test-Path -Path $backupDir)) {
             New-Item -ItemType Directory -Path $backupDir -Force | Out-Null
         }
