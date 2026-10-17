@@ -133,7 +133,7 @@ Evaluates developer productivity and build reproducibility:
 
 ## 4. Current Baseline Scores Across Products
 
-Based on live scanning of all 21 deployable units in `/var/www/vps-infra/code`:
+Based on live scanning of all 21 deployable units in `/var/www/vps-infra/src`:
 
 | Product | Overall AMS | Grade | Deployable Units Breakdown | CCC Compliance |
 | :--- | :---: | :---: | :--- | :---: |

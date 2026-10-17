@@ -188,8 +188,8 @@ On Windows Server hosts running Docker, container engines may experience filesys
 
 To ensure complete resilience on Windows Server:
 1. **PostgreSQL Data Directory (`/var/lib/postgresql/data`)**: Managed via a high-performance Docker named volume (`postgres_data`). This avoids NTFS POSIX UID/GID mapping issues.
-2. **Database Dumps & Backups (`/backups`)**: Written directly to the host filesystem at `C:\var\www\vps-infra\volumes\db\postgres\backups` for easy offsite archival.
-3. **Application Volumes (`/app/uploads`, `/app/logs`)**: Mounted using `INFRA_BASE_DIR` paths (`C:/var/www/vps-infra/volumes/apps/...`), allowing standard backups and Windows Explorer accessibility.
+2. **Database Dumps & Backups (`/backups`)**: Written directly to the host filesystem at `C:\var\www\vps-infra\docker\volumes\db\postgres\backups` for easy offsite archival.
+3. **Application Volumes (`/app/uploads`, `/app/logs`)**: Mounted using `INFRA_BASE_DIR` paths (`C:/var/www/vps-infra/docker/volumes/apps/...`), allowing standard backups and Windows Explorer accessibility.
 
 ---
 
@@ -202,7 +202,7 @@ If your platform containers are already running and you need to activate or rene
 Set-Location -Path "C:\var\www\vps-infra"
 .\activate-license.ps1 "YOUR_SIGNED_TMK_LICENSE_KEY"
 ```
-*This automatically writes to `volumes\license.key`, updates `TMK_LICENSE_KEY` in `.env`, and gracefully reloads `devops-api-prod` and `ci-api-prod`.*
+*This automatically writes to `docker\volumes\license.key`, updates `TMK_LICENSE_KEY` in `.env`, and gracefully reloads `devops-api-prod` and `ci-api-prod`.*
 
 ### B. Hardware-Locked License Extraction (Track 2)
 For high-security on-premise physical servers requiring a hardware-locked subscription:

@@ -7,7 +7,7 @@ VPS-Infra includes automated, scheduled daily database dumps with compression an
 ## ⏰ 1. Automated Backup Schedules
 
 * By default, the platform executes an automated backup of all active databases every night at **02:00 UTC**.
-* Backup archives are stored under `/var/www/vps-infra/volumes/backups/`.
+* Backup archives are stored under `/var/www/vps-infra/docker/volumes/backups/`.
 * Backups are compressed with gzip (`.sql.gz`) and timestamped:
   `backup_devops_prod_20260903_020000.sql.gz`
 
@@ -23,10 +23,10 @@ VPS-Infra includes automated, scheduled daily database dumps with compression an
 ### Via CLI Command
 ```bash
 # PostgreSQL Backup
-docker exec -t shared_postgres pg_dump -U postgres -d devops_prod | gzip > /var/www/vps-infra/volumes/backups/manual_postgres_$(date +%Y%m%d_%H%M%S).sql.gz
+docker exec -t shared_postgres pg_dump -U postgres -d devops_prod | gzip > /var/www/vps-infra/docker/volumes/backups/manual_postgres_$(date +%Y%m%d_%H%M%S).sql.gz
 
 # MariaDB Backup
-docker exec -t shared_mariadb mysqldump -u root -pYourPassword --all-databases | gzip > /var/www/vps-infra/volumes/backups/manual_mariadb_$(date +%Y%m%d_%H%M%S).sql.gz
+docker exec -t shared_mariadb mysqldump -u root -pYourPassword --all-databases | gzip > /var/www/vps-infra/docker/volumes/backups/manual_mariadb_$(date +%Y%m%d_%H%M%S).sql.gz
 ```
 
 ---
@@ -49,7 +49,7 @@ Once configured, daily dumps are automatically mirrored to your secure Google Dr
 If using AWS S3 or Cloudflare R2, set up a cron sync using `rclone` or `aws-cli`:
 ```bash
 # Example nightly cron job
-0 3 * * * rclone sync /var/www/vps-infra/volumes/backups/ remote:my-offsite-backups/
+0 3 * * * rclone sync /var/www/vps-infra/docker/volumes/backups/ remote:my-offsite-backups/
 ```
 
 ---
@@ -60,7 +60,7 @@ To restore a PostgreSQL backup archive:
 
 ```bash
 # 1. Unzip the backup file
-gunzip -c /var/www/vps-infra/volumes/backups/backup_devops_prod_xxxx.sql.gz > /tmp/restore.sql
+gunzip -c /var/www/vps-infra/docker/volumes/backups/backup_devops_prod_xxxx.sql.gz > /tmp/restore.sql
 
 # 2. Feed into PostgreSQL
 docker exec -i shared_postgres psql -U postgres -d devops_prod < /tmp/restore.sql

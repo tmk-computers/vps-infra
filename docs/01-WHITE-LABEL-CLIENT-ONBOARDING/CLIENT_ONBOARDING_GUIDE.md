@@ -124,8 +124,8 @@ To safeguard sensitive credentials and prevent secret exposure in git repositori
   - Locked down with strict permissions: `chmod 0700` on directories and `chmod 0600` on files, owned by `root:root`.
   - Loaded into container runtime via `env_file:` in `docker-compose.yml`.
   - **Never commit `.env` or secret files to source repositories.**
-* **Persistent Uploads**: User uploads are mounted at `/var/www/vps-infra/volumes/apps/<service_name>/prod/uploads`
-* **Application Logs**: Standardized rotated logs are saved in `/var/www/vps-infra/volumes/apps/<service_name>/prod/logs`
+* **Persistent Uploads**: User uploads are mounted at `/var/www/vps-infra/docker/volumes/apps/<service_name>/prod/uploads`
+* **Application Logs**: Standardized rotated logs are saved in `/var/www/vps-infra/docker/volumes/apps/<service_name>/prod/logs`
 * **Build-Time `.dockerignore`**: Every repo must include a `.dockerignore` blocking `.env*`, `*.pem`, `*.key`, and test dumps from baking into images.
 
 

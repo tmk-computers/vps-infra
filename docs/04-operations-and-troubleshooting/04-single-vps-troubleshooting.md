@@ -10,7 +10,7 @@ This runbook documents common operational issues, root causes, and verified solu
 | :--- | :--- | :--- |
 | **CI Dashboard: 401 Unauthorized ("Session expired. Please log in again")** | JWT secret mismatch between `devops-api` and `ci-api` | Ensure `CI_JWT_SECRET` matches `JWT_SECRET_KEY` in `.env` |
 | **CI Build: 400 Bad Request ("path argument must be of type string")** | `SYNC_MODE="api"` caused camelCase serialization mismatch | Set `SYNC_MODE="db"` in `.env` for direct PostgreSQL sync |
-| **pgAdmin: Connection Timed Out / ERR_TIMED_OUT** | Volume ownership not granted to pgAdmin non-root UID 5050 | `sudo chown -R 5050:5050 /var/www/vps-infra/volumes/db/pgadmin` |
+| **pgAdmin: Connection Timed Out / ERR_TIMED_OUT** | Volume ownership not granted to pgAdmin non-root UID 5050 | `sudo chown -R 5050:5050 /var/www/vps-infra/docker/volumes/db/pgadmin` |
 | **DevOps / CI Web: 403 Forbidden (nginx/1.30.5)** | Host volume mounts masking pre-built container `/usr/share/nginx/html` | Remove dist volume overrides from `docker-compose.yml` |
 | **Docker Registry: 401 Unauthorized on push** | Incompatible htpasswd hash or missing Docker daemon login | Use Apache bcrypt (`htpasswd -B`) and `docker login localhost:5000` |
 | **App Compose Config Error: Missing env file** | Referenced secret file does not exist on disk | Scaffolding `/etc/vps-infra/secrets/<app>/<env>.env` with `chmod 0600` |
@@ -91,13 +91,13 @@ For Single VPS (All-in-One) setups, `SYNC_MODE` must be set to `db`. If set to `
 Visiting `https://pgadmin.yourdomain.com` results in a browser connection timeout (`ERR_TIMED_OUT`) or pgAdmin container restarts continuously.
 
 ### Root Cause
-pgAdmin runs inside its official container as non-root user `pga` with **UID 5050 / GID 5050**. When the persistent host directory `/var/www/vps-infra/volumes/db/pgadmin` is owned by `root:root` with default `0755` permissions, pgAdmin cannot create `pgadmin4.db` (session state and saved connections) and halts.
+pgAdmin runs inside its official container as non-root user `pga` with **UID 5050 / GID 5050**. When the persistent host directory `/var/www/vps-infra/docker/volumes/db/pgadmin` is owned by `root:root` with default `0755` permissions, pgAdmin cannot create `pgadmin4.db` (session state and saved connections) and halts.
 
 ### Resolution
 Grant ownership to UID 5050:
 ```bash
-sudo chown -R 5050:5050 /var/www/vps-infra/volumes/db/pgadmin
-sudo chmod 700 /var/www/vps-infra/volumes/db/pgadmin
+sudo chown -R 5050:5050 /var/www/vps-infra/docker/volumes/db/pgadmin
+sudo chmod 700 /var/www/vps-infra/docker/volumes/db/pgadmin
 docker restart pgadmin
 ```
 
@@ -208,7 +208,7 @@ However, deployment manifests in `vps-infra` reside under `/var/www/vps-infra/ap
 On DevOps Manager platform versions with dynamic compose path resolution, the deployment engine automatically inspects:
 1. Direct path (`/var/www/<project>`)
 2. Appliance apps directory (`/var/www/vps-infra/apps/<project>`)
-3. Code repository directory (`/var/www/vps-infra/code/<project>`)
+3. Code repository directory (`/var/www/vps-infra/src/<project>`)
 4. Alternative compose manifest filenames (`docker-compose.yml`, `docker-compose.yaml`, `compose.yaml`, `compose.yml`)
 
 No symlinks or path modifications are needed on modern installations.

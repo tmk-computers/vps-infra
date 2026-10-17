@@ -46,7 +46,7 @@ The build engine automatically maps your project environment to Gradle flavors:
    - APK code signing & alignment
 4. Once completed, the build status turns green (`SUCCESS`).
 5. A high-speed **Download APK** button appears directly in the UI:
-   - Artifacts are saved to `/var/www/vps-infra/volumes/artifacts/builds/<build-id>/`
+   - Artifacts are saved to `/var/www/vps-infra/docker/volumes/artifacts/builds/<build-id>/`
    - Download links support HTTP Range requests for instant mobile device installs.
 
 ---

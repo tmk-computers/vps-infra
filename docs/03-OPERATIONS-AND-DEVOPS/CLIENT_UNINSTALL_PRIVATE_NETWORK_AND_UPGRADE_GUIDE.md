@@ -22,8 +22,8 @@ flowchart TD
     E --> F["5. Remove Docker Network\n(traefik_net)"]
     F --> G["6. Deregister Maintenance Crons\n(docker-maintenance)"]
     G --> H{"Data & Config Retention Prompt"}
-    H -->|"--keep-data (Default)"| I["Preserve /var/www/vps-infra/volumes"]
-    H -->|"--purge-data"| J["Delete /var/www/vps-infra/volumes"]
+    H -->|"--keep-data (Default)"| I["Preserve /var/www/vps-infra/docker/volumes"]
+    H -->|"--purge-data"| J["Delete /var/www/vps-infra/docker/volumes"]
     H -->|"--keep-env (Default)"| K["Preserve .env for Instant Reinstall"]
     H -->|"--purge-env"| L["Delete .env"]
     I & J & K & L --> M["Ready for Clean Reinstall via bash setup.sh"]
@@ -46,8 +46,8 @@ bash uninstall.sh --purge-data --purge-env --force
 #### Supported CLI Flags:
 | Flag | Description | Default |
 | :--- | :--- | :--- |
-| `--keep-data` | Preserves `/var/www/vps-infra/volumes` (PostgreSQL, MS SQL, registry artifacts, uploads). | **Active by default** |
-| `--purge-data` | Permanently deletes `/var/www/vps-infra/volumes`. Requires confirmation in interactive mode. | Inactive |
+| `--keep-data` | Preserves `/var/www/vps-infra/docker/volumes` (PostgreSQL, MS SQL, registry artifacts, uploads). | **Active by default** |
+| `--purge-data` | Permanently deletes `/var/www/vps-infra/docker/volumes`. Requires confirmation in interactive mode. | Inactive |
 | `--keep-env` | Preserves `.env` containing your domain names, database passwords, and license keys. | **Active by default** |
 | `--purge-env` | Deletes `.env`. | Inactive |
 | `-f`, `--force` | Bypasses interactive confirmation prompts. Ideal for CI/CD and automated test suites. | Inactive |
@@ -234,5 +234,5 @@ Support engineers can view and diagnose all upgrade issues directly in the Centr
 
 ### 4.4 Infrastructure Shell Integration Tests
 * **Test Suite**: `scripts/test-uninstall-and-upgrade.sh`
-  * Runs dry-run uninstall tests to ensure `--keep-data` preserves `/var/www/vps-infra/volumes`.
+  * Runs dry-run uninstall tests to ensure `--keep-data` preserves `/var/www/vps-infra/docker/volumes`.
   * Simulates an upgrade failure to ensure telemetry is successfully dispatched to the central server.

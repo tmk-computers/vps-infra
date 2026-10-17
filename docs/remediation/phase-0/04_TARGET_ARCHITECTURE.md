@@ -138,7 +138,7 @@ The Linux Adapter implements runtime deployment and infrastructure controls on L
    - Rate limiting and connection quotas on exposed entrypoints.
 
 4. **Linux Storage & Bind Mounts**:
-   - Structured volume directories: `/var/www/vps-infra/volumes/{service}/`.
+   - Structured volume directories: `/var/www/vps-infra/docker/volumes/{service}/`.
    - Immutable artifact cache preserving minimum 3 previous release images for instantaneous rollback.
    - Scheduled non-destructive disk cleanup preserving active rollback sets.
 

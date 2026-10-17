@@ -12,7 +12,7 @@ This guide shows you how to onboard and deploy containerized backend microservic
                v (Git Webhook)
       [ VPS-Infra CI Server ]
                |
-               +---> 1. Clones repository into /var/www/vps-infra/code/<app>
+               +---> 1. Clones repository into /var/www/vps-infra/src/<app>
                +---> 2. Executes automated tests & quality gates
                +---> 3. Builds Docker container image
                +---> 4. Runs `docker compose up -d`
@@ -91,8 +91,8 @@ services:
       - SystemStatus__ShowMaintenanceForWeb=true
 
     volumes:
-      - /var/www/vps-infra/volumes/apps/my-api/prod/uploads:/app/uploads
-      - /var/www/vps-infra/volumes/apps/my-api/prod/logs:/app/logs
+      - /var/www/vps-infra/docker/volumes/apps/my-api/prod/uploads:/app/uploads
+      - /var/www/vps-infra/docker/volumes/apps/my-api/prod/logs:/app/logs
     networks:
       - traefik_net
     labels:

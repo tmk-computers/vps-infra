@@ -16,7 +16,7 @@ The Reviewer audited [`DatabaseBackupBackgroundService.cs`](file:///d:/company/p
 | Lifecycle Dimension | Current Code Implementation Reality | Status | Assessment |
 | :--- | :--- | :---: | :--- |
 | **Backup Creation** | Executes `pg_dump` via `ProcessStartInfo` into local `.sql` or `.sql.gz` dump files. | **PRESENT** | Functional for local PostgreSQL instances. |
-| **Local Storage Location**| `/var/www/vps-infra/volumes/db/postgres/backups` | **PRESENT** | Stored on local host disk. |
+| **Local Storage Location**| `/var/www/vps-infra/docker/volumes/db/postgres/backups` | **PRESENT** | Stored on local host disk. |
 | **Local Encryption** | Plaintext gzip; zero encryption-at-rest implemented for local backup files. | **ABSENT** | Gaps in credential and PII protection on disk. |
 | **Google Drive Upload** | `GoogleDriveService.UploadFileAsync` handles OAuth2 and Service Account uploads. | **PRESENT** | Code exists and communicates with Google Drive API v3. |
 | **Return Code Checking** | In `DatabaseBackupBackgroundService.cs:472`, `await googleDriveService.UploadFileAsync(...)` return string is **ignored**. Success is logged to DB **prior** to the upload call! | **DEFECTIVE** | F11 / MR-14: Upload failures are not detected by caller. |

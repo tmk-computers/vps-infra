@@ -103,7 +103,7 @@ If you already received your enterprise license token, activate it directly duri
 * **Domain Validation**: Auto-configures all subdomains (`devops.yourdomain.com`, `ci.yourdomain.com`, `registry.yourdomain.com`, `pgadmin.yourdomain.com`, etc.).
 * **Single VPS Topology Configuration**: Sets `DEPLOYMENT_MODE=all-in-one` and `SYNC_MODE=db`. In `db` mode, the CI runner directly interfaces with PostgreSQL, enabling instant build queuing and avoiding cross-machine REST serialization mismatches.
 * **Synchronized JWT Secrets**: Generates cryptographic 64-character secrets for `JWT_SECRET_KEY` and synchronizes `CI_JWT_SECRET` so that DevOps Manager tokens seamlessly authenticate on the CI dashboard without "Session Expired" / 401 signature mismatches.
-* **pgAdmin Storage Permissions**: Grants non-root UID `5050:5050` ownership on `/var/www/vps-infra/volumes/db/pgadmin` so pgAdmin boots without permission timeout crashes.
+* **pgAdmin Storage Permissions**: Grants non-root UID `5050:5050` ownership on `/var/www/vps-infra/docker/volumes/db/pgadmin` so pgAdmin boots without permission timeout crashes.
 * **PostgreSQL Readiness Gate**: Polls `pg_isready` before starting platform containers to ensure the database engine is fully ready and SuperAdmin user seeding succeeds reliably on cold boot.
 * **Automated Log Rotation**: Sets Docker daemon log options in `/etc/docker/daemon.json` (`max-size: 50m`, `max-file: 3`) to prevent logs from consuming disk storage.
 * **Automated System Crons**: Schedules daily maintenance tasks in `/etc/cron.d/docker-maintenance` (Docker builder cache prune at 3:30 AM keeping a 2GB threshold, and local Docker Registry tag prune at 3:15 AM via `scripts/prune_registry.py`).

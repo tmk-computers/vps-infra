@@ -123,7 +123,7 @@ flowchart LR
 
 ## 🗄️ Storage & Persistent Volume Layout
 
-All application data, databases, secrets, and build artifacts persist in host directories under `/var/www/vps-infra/volumes`:
+All application data, databases, secrets, and build artifacts persist in host directories under `/var/www/vps-infra/docker/volumes`:
 
 ```
 /var/www/vps-infra/
@@ -131,19 +131,29 @@ All application data, databases, secrets, and build artifacts persist in host di
 ├── docker-compose.yml         # Platform service orchestrator
 ├── setup.sh                   # 1-Click platform initialization script
 ├── activate-license.sh        # 1-Click enterprise license activator
-├── volumes/
-│   ├── apps/                  # Isolated directories for deployed customer apps
-│   ├── apk/                   # Mobile APK builds and public distribution downloads
-│   ├── artifacts/builds/      # Web and API compiled build artifacts
-│   ├── db/
-│   │   ├── postgres/data/     # PostgreSQL physical data storage
-│   │   ├── postgres/backups/  # Automated nightly database dumps (.sql.gz)
-│   │   └── pgadmin/           # pgAdmin session configuration
-│   └── license.key            # Enterprise license key storage file
-└── network/
-    └── traefik/
-        ├── acme.json          # Let's Encrypt SSL/TLS certificates storage
-        └── users.htpasswd     # Traefik dashboard authentication
+├── apps/                      # Deployed customer service Compose manifests
+├── src/                       # Customer product source code workspaces (cloned by CI)
+├── templates/                 # Reusable scaffolding templates (Dockerfile & Compose)
+├── scripts/                   # Setup, health checks, and operations commands
+├── platform/
+│   ├── database/              # PostgreSQL, MSSQL, MongoDB, Redis compose & tools
+│   ├── messaging/             # RabbitMQ broker definitions
+│   └── network/
+│       └── traefik/
+│           ├── acme.json      # Let's Encrypt SSL/TLS certificates storage
+│           └── users.htpasswd # Traefik dashboard authentication
+└── docker/
+    ├── registry/              # Private Docker registry v2 image layers
+    └── volumes/               # Persistent host storage
+        ├── apps/              # Isolated upload and log directories for customer apps
+        ├── apk/               # Mobile APK builds and public distribution downloads
+        ├── artifacts/builds/  # Web and API compiled build artifacts
+        ├── ci-cache/          # Shared tool caches (gradle, pub, android-sdk)
+        ├── db/
+        │   ├── postgres/data/ # PostgreSQL physical data storage
+        │   ├── postgres/backups/ # Automated nightly database dumps (.sql.gz)
+        │   └── pgadmin/       # pgAdmin session configuration
+        └── license.key        # Enterprise license key storage file
 ```
 
 ---

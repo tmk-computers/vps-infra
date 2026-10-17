@@ -3,6 +3,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose_v2-blue.svg?logo=docker)](https://www.docker.com/)
 [![Traefik](https://img.shields.io/badge/Traefik-v3_Edge_Gateway-2496ED.svg?logo=traefik)](https://traefik.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16_LTS-336791.svg?logo=postgresql)](https://www.postgresql.org/)
+[![Version](https://img.shields.io/badge/Version-v2.3.0-blue.svg)](VERSION)
 [![Status](https://img.shields.io/badge/Status-Production_Ready-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-TMK_Enterprise-indigo.svg)](https://tmkcomputers.in)
 
@@ -23,7 +24,7 @@
 👉 **Full Documentation Hub Index**: [`docs/README.md`](docs/README.md)
 
 
-## 🏛️ Architecture Overview
+## 🏛️ Architecture & Directory Overview
 
 ```mermaid
 flowchart TD
@@ -58,6 +59,29 @@ flowchart TD
     Traefik --> CIAPI
     Traefik --> Registry
     DevOpsAPI --> Databases
+```
+
+### 📁 Canonical Platform Layout
+
+The runtime filesystem strictly separates deployment specifications, cloned source code repositories, reusable application templates, platform engines, and persistent volume data:
+
+```text
+vps-infra/
+├── apps/                 # Application runtime definitions and deployment compose files
+│   └── <project>/        # Per-service compose manifests (e.g. apps/omr-api/docker-compose.yml)
+├── src/                  # Customer product source code repositories (cloned & tested by CI)
+│   └── <project>/        # Git working trees for builds and quality gates
+├── templates/            # Reusable app & config scaffolding templates (Dockerfiles, Compose)
+├── scripts/              # Setup, maintenance, health-check, and operational commands
+├── docs/                 # Platform architecture, runbooks, and developer documentation
+├── platform/             # Core platform infrastructure engines
+│   ├── database/         # PostgreSQL, MSSQL, MongoDB, Redis compose and management tools
+│   ├── messaging/        # RabbitMQ message broker
+│   └── network/          # Traefik v3 edge proxy, ACME SSL certificates, and dynamic configs
+└── docker/               # Host container storage and image registry
+    ├── registry/         # Private Docker container registry v2 storage
+    └── volumes/          # Persistent host data (databases, uploads, backups, license keys)
+        └── ci-cache/     # Shared CI build caches (gradle, pub, android-sdk)
 ```
 
 ---
@@ -367,12 +391,12 @@ docker compose logs -f devops-api-prod
 ### Managing Database Engines
 ```bash
 # Check status of all database engines (Linux)
-./db/manage-databases.sh status
+./platform/database/manage-databases.sh status
 
 # Start or stop specific engines
-./db/manage-databases.sh start postgres
-./db/manage-databases.sh start mariadb
-./db/manage-databases.sh start mongodb
+./platform/database/manage-databases.sh start postgres
+./platform/database/manage-databases.sh start mariadb
+./platform/database/manage-databases.sh start mongodb
 ```
 
 ### Upgrading Container Images

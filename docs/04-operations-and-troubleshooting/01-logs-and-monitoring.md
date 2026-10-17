@@ -30,7 +30,7 @@ docker logs -f --tail=100 traefik_global
 
 ### File-Based Application Logs
 Application logs are stored persistently under:
-`/var/www/vps-infra/volumes/apps/<service-name>/<environment>/logs/`
+`/var/www/vps-infra/docker/volumes/apps/<service-name>/<environment>/logs/`
 
 ---
 

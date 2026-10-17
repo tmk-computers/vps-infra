@@ -310,8 +310,8 @@ services:
       - SystemStatus__ShowMaintenanceForWeb=true
 
     volumes:
-      - /var/www/vps-infra/volumes/apps/my-api/prod/uploads:/app/uploads
-      - /var/www/vps-infra/volumes/apps/my-api/prod/logs:/app/logs
+      - /var/www/vps-infra/docker/volumes/apps/my-api/prod/uploads:/app/uploads
+      - /var/www/vps-infra/docker/volumes/apps/my-api/prod/logs:/app/logs
     networks:
       - traefik_net
 ```
@@ -413,7 +413,7 @@ docker compose up -d --remove-orphans
 
 ### 🛡️ What is Preserved During Updates:
 * ✅ All active databases (PostgreSQL, MariaDB, MSSQL, Mongo, Oracle) maintain their data.
-* ✅ All customer uploads, APKs, and build artifacts in `/var/www/vps-infra/volumes/` are untouched.
+* ✅ All customer uploads, APKs, and build artifacts in `/var/www/vps-infra/docker/volumes/` are untouched.
 * ✅ All custom `.env` domain settings, SSL certificates, and license tokens remain intact.
 
 ---

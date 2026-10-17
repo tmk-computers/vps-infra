@@ -60,3 +60,28 @@ Welcome to the **VPS-Infra** customer documentation center. Follow the sequentia
 - [`00-OVERVIEW/SYSTEM_RUNTIME_TOPOLOGY.md`](./00-OVERVIEW/SYSTEM_RUNTIME_TOPOLOGY.md): Comprehensive system runtime topology, network architecture, and security boundaries.
 - [`01-WHITE-LABEL-CLIENT-ONBOARDING/CLIENT_DEVOPS_GUIDE.md`](./01-WHITE-LABEL-CLIENT-ONBOARDING/CLIENT_DEVOPS_GUIDE.md): Client onboarding and operational guide for DevOps & CI management.
 
+---
+
+## 📁 Canonical Directory Structure (Platform v2.3.0+)
+
+The platform layout follows strict physical separation between orchestration definitions, build source code, templates, and persistent volumes:
+
+```text
+vps-infra/
+├── apps/                 # Application runtime definitions and deployment compose files
+│   └── <project>/        # Per-service compose manifests (e.g. apps/omr-api/docker-compose.yml)
+├── src/                  # Customer product source code repositories (cloned & tested by CI)
+│   └── <project>/        # Git working trees for builds and quality gates
+├── templates/            # Reusable app & config scaffolding templates (Dockerfiles, Compose)
+├── scripts/              # Setup, maintenance, health-check, and operational commands
+├── docs/                 # Platform architecture, runbooks, and developer documentation
+├── platform/             # Core platform infrastructure engines
+│   ├── database/         # PostgreSQL, MSSQL, MongoDB, Redis compose and management tools
+│   ├── messaging/        # RabbitMQ message broker
+│   └── network/          # Traefik v3 edge proxy, ACME SSL certificates, and dynamic configs
+└── docker/               # Host container storage and image registry
+    ├── registry/         # Private Docker container registry v2 storage
+    └── volumes/          # Persistent host data (databases, uploads, backups, license keys)
+        └── ci-cache/     # Shared CI build caches (gradle, pub, android-sdk)
+```
+

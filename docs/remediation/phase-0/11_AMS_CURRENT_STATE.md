@@ -29,7 +29,7 @@ This forensic review determines:
 ### 2.1 How AMS is Calculated & Source Data Used
 - **Engine Source**: [`ci-server/api/modernization-engine.js`](file:///d:/company/products/vps-infra/vps-infra-server/ci-server/api/modernization-engine.js)
 - **Source Data**:
-  - Scans directories under `/var/www/vps-infra/code/` or projects defined in database.
+  - Scans directories under `/var/www/vps-infra/src/` or projects defined in database.
   - Inspects file existence (e.g. `pubspec.yaml`, `build.gradle.kts`, `Dockerfile`, `package.json`).
   - Executes regex pattern matches via `dirHasPattern(dirPath, regex, extensions, maxDepth = 6)`.
 - **The 5 Evaluation Dimensions (100 Points Total)**:
