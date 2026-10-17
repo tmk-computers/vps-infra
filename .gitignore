@@ -20,6 +20,9 @@ docker/registry/auth/htpasswd
 
 # Volumes: Ignore all dynamic company-specific application and mobile folders
 volumes/
+/volumes
+/code
+/ci-server
 docker/volumes/
 !docker/volumes/db/pgadmin-config/
 !docker/volumes/db/pgadmin-config/**

@@ -333,6 +333,9 @@ else
 fi
 
 # 5. Scaffold Persistent Volume Directories
+if [ -f "$SCRIPT_DIR/scripts/migrate-folder-structure.sh" ]; then
+    bash "$SCRIPT_DIR/scripts/migrate-folder-structure.sh" || true
+fi
 source "$SCRIPT_DIR/scripts/setup-directories.sh"
 echo -e "${CYAN}▶ Scaffolding persistent volume directories for [${DEPLOYMENT_MODE}]...${NC}"
 create_setup_directories \

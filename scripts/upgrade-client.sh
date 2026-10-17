@@ -154,7 +154,15 @@ fi
 # 3. Ensure executable permissions on setup scripts
 chmod +x "$SCRIPT_DIR/setup.sh" "$SCRIPT_DIR/uninstall.sh" "$SCRIPT_DIR/scripts/"*.sh 2>/dev/null || true
 
-# 4. Execute setup.sh in non-interactive upgrade mode
+# 4. Migrate legacy folder structure if present
+if [ -f "$SCRIPT_DIR/scripts/migrate-folder-structure.sh" ]; then
+    CURRENT_STEP="Migrating legacy folder structure"
+    echo "▶ $CURRENT_STEP..."
+    update_status "IN_PROGRESS" "Normalizing directory structure to v2.3+ canonical layout..." "$CURRENT_STEP"
+    bash "$SCRIPT_DIR/scripts/migrate-folder-structure.sh" || true
+fi
+
+# 5. Execute setup.sh in non-interactive upgrade mode
 CURRENT_STEP="Executing setup.sh platform update"
 echo "▶ $CURRENT_STEP..."
 update_status "IN_PROGRESS" "Pulling updated Docker images and restarting platform services..." "$CURRENT_STEP"
