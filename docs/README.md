@@ -33,7 +33,6 @@ Welcome to the **VPS-Infra** customer documentation center. Follow the sequentia
 1. [`01-getting-started/01-linux-vps-installation.md`](01-getting-started/01-linux-vps-installation.md): Ubuntu 22.04/24.04 LTS installation, DNS configuration, `.env` guide, and bootstrap installer.
 2. [`01-getting-started/02-windows-server-installation.md`](01-getting-started/02-windows-server-installation.md): Windows Server 2019/2022/2025 installation, PowerShell bootstrap, IIS/W3SVC port resolution, and `infra.cmd` CLI tooling.
 3. [`01-getting-started/03-license-activation.md`](01-getting-started/03-license-activation.md): Requesting and activating Cloud-Flex (Cloud VPS) or Hardware-Locked (On-Premise) license keys.
-4. [`01-getting-started/04-local-omr-development-guide.md`](01-getting-started/04-local-omr-development-guide.md): Comprehensive developer onboarding and local environment setup guide for the OMR SaaS platform.
 
 ### 📦 Step 2: Deploying Applications
 1. [`02-deploying-applications/01-web-apis.md`](02-deploying-applications/01-web-apis.md): Onboarding and deploying Node.js, ASP.NET Core (.NET 8/9/10), and Python FastAPI microservices.
