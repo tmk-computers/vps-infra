@@ -15,6 +15,46 @@ STATUS_FILE="$SCRIPT_DIR/upgrade.status"
 LOG_FILE="$SCRIPT_DIR/upgrade.log"
 TELEMETRY_ENDPOINT="${LICENSE_TELEMETRY_URL:-https://license.tmkcomputers.in/api/v1/telemetry/upgrade-failure}"
 
+# Check-only CLI mode
+if [[ "${1:-}" == "--check" ]] || [[ "${1:-}" == "-c" ]]; then
+    VERSION_URL="${LICENSE_SERVER_URL:-https://license.tmkcomputers.in}/api/v1/license/version-check"
+    CURR_VER="$(cat "$SCRIPT_DIR/VERSION" 2>/dev/null || echo "v2.1")"
+    echo "🔍 Querying Central Licensing Authority for latest release..."
+    RESP=$(curl -s --max-time 10 "${VERSION_URL}?currentVersion=${CURR_VER}" 2>/dev/null || true)
+    if [ -n "$RESP" ] && command -v jq &>/dev/null; then
+        LATEST_VER=$(echo "$RESP" | jq -r '.latestStableVersion // "unknown"')
+        HAS_UPDATE=$(echo "$RESP" | jq -r '.hasUpdate // false')
+        RELEASE_NOTES=$(echo "$RESP" | jq -r '.releaseNotes // "None"')
+        DEVOPS_VER=$(echo "$RESP" | jq -r '.components.devopsManager.latestVersion // "unknown"')
+        CI_VER=$(echo "$RESP" | jq -r '.components.ciServer.latestVersion // "unknown"')
+        
+        echo ""
+        echo "======================================================================"
+        echo "   🚀 PLATFORM RELEASE & UPDATE STATUS"
+        echo "======================================================================"
+        echo "Current Client Version : $CURR_VER"
+        echo "Latest Stable Version  : $LATEST_VER"
+        echo "Update Available       : $HAS_UPDATE"
+        echo ""
+        echo "Component Releases:"
+        echo "  • DevOps Manager     : $DEVOPS_VER"
+        echo "  • CI Build Engine    : $CI_VER"
+        echo ""
+        echo "Release Notes:"
+        echo "  $RELEASE_NOTES"
+        echo "======================================================================"
+        if [ "$HAS_UPDATE" = "true" ]; then
+            echo "💡 To install this update, run: bash $SCRIPT_DIR/scripts/upgrade-client.sh"
+        else
+            echo "✅ Platform is running the latest stable release."
+        fi
+        exit 0
+    else
+        echo "⚠️ Could not retrieve version info from license server."
+        exit 1
+    fi
+fi
+
 # Prevent concurrent upgrade executions
 if [ -f "$LOCK_FILE" ]; then
     PID=$(cat "$LOCK_FILE" 2>/dev/null || true)
