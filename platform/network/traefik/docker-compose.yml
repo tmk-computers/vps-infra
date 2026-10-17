@@ -39,7 +39,7 @@ services:
       - ${INFRA_BASE_DIR:-/var/www/vps-infra}/platform/network/traefik/dynamic:/etc/traefik/dynamic:ro
 
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "host.docker.internal:172.17.0.1"
 
     networks:
       - traefik_net
