@@ -46,13 +46,8 @@ fi
 
 if [ "$NEEDS_MIGRATION" = false ]; then
     echo -e "${GREEN}✅ Folder structure is already up-to-date with v2.3+ canonical layout.${NC}"
-    # Ensure compatibility symlinks exist just in case
-    if [ ! -e "$SCRIPT_DIR/volumes" ]; then
-        ln -sfn docker/volumes "$SCRIPT_DIR/volumes" 2>/dev/null || true
-    fi
-    if [ ! -e "$SCRIPT_DIR/code" ]; then
-        ln -sfn src "$SCRIPT_DIR/code" 2>/dev/null || true
-    fi
+    # Ensure no legacy symlinks remain at root
+    rm -f "$SCRIPT_DIR/volumes" "$SCRIPT_DIR/code" "$SCRIPT_DIR/ci-server" 2>/dev/null || true
     exit 0
 fi
 
@@ -70,8 +65,7 @@ if [ -d "$SCRIPT_DIR/volumes" ] && [ ! -L "$SCRIPT_DIR/volumes" ]; then
     echo "   • Syncing contents from volumes/ to docker/volumes/..."
     cp -a "$SCRIPT_DIR/volumes/." "$SCRIPT_DIR/docker/volumes/"
     rm -rf "$SCRIPT_DIR/volumes"
-    ln -sfn docker/volumes "$SCRIPT_DIR/volumes"
-    echo -e "${GREEN}   ✅ volumes/ migrated to docker/volumes/ and symlink established.${NC}"
+    echo -e "${GREEN}   ✅ volumes/ migrated to docker/volumes/.${NC}"
 fi
 
 # 3. Migrate ci-server/ -> docker/volumes/ci-cache/
@@ -81,8 +75,7 @@ if [ -d "$SCRIPT_DIR/ci-server" ] && [ ! -L "$SCRIPT_DIR/ci-server" ]; then
     echo "   • Moving ci-server/ cache contents..."
     cp -a "$SCRIPT_DIR/ci-server/." "$SCRIPT_DIR/docker/volumes/ci-cache/"
     rm -rf "$SCRIPT_DIR/ci-server"
-    ln -sfn docker/volumes/ci-cache "$SCRIPT_DIR/ci-server"
-    echo -e "${GREEN}   ✅ ci-server/ migrated to docker/volumes/ci-cache/ and symlink established.${NC}"
+    echo -e "${GREEN}   ✅ ci-server/ migrated to docker/volumes/ci-cache/.${NC}"
 fi
 
 # 4. Relocate ci-pilot-freeze.json if located under legacy path
@@ -100,8 +93,7 @@ if [ -d "$SCRIPT_DIR/code" ] && [ ! -L "$SCRIPT_DIR/code" ]; then
         cp -a "$SCRIPT_DIR/code/." "$SCRIPT_DIR/src/"
         rm -rf "$SCRIPT_DIR/code"
     fi
-    ln -sfn src "$SCRIPT_DIR/code"
-    echo -e "${GREEN}   ✅ code/ migrated to src/ and compatibility symlink established.${NC}"
+    echo -e "${GREEN}   ✅ code/ migrated to src/.${NC}"
 fi
 
 # 6. Update compose files in apps/ and src/
