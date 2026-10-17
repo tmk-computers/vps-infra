@@ -137,6 +137,11 @@ if docker compose ps -a --services 2>/dev/null | grep -q "shared_postgres"; then
     echo -e "${GREEN}   ✅ Database paths updated.${NC}"
 fi
 
+# 8. Restart platform containers
+echo -e "\n${CYAN}▶ Step 7: Restarting platform services...${NC}"
+docker compose up -d 2>/dev/null || true
+echo -e "${GREEN}   ✅ Platform services restarted.${NC}"
+
 echo -e "\n${GREEN}${BOLD}======================================================================"
 echo "   ✅ FOLDER STRUCTURE MIGRATION COMPLETED SUCCESSFULLY"
 echo "======================================================================${NC}"
