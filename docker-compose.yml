@@ -142,6 +142,12 @@ services:
       - DOCKER_REGISTRY_TYPE=${DOCKER_REGISTRY_TYPE:-private}
       - SYNC_MODE=${SYNC_MODE:-db}
       - CI_SECRET=${CI_SECRET:?CI_SECRET must be set and non-empty}
+      - PILOT_EXAM_SCHEDULE_ENABLED=${PILOT_EXAM_SCHEDULE_ENABLED:-false}
+      - PILOT_EXAM_FREEZE=${PILOT_EXAM_FREEZE:-}
+      - PILOT_EXAM_START_DATE=${PILOT_EXAM_START_DATE:-2026-10-19}
+      - PILOT_EXAM_END_DATE=${PILOT_EXAM_END_DATE:-2026-10-25}
+      - PILOT_EXAM_DAILY_START_IST=${PILOT_EXAM_DAILY_START_IST:-08:30}
+      - PILOT_EXAM_DAILY_END_IST=${PILOT_EXAM_DAILY_END_IST:-15:30}
     volumes:
       - ${DOCKER_SOCK_PATH:-/var/run/docker.sock}:/var/run/docker.sock
       - ${WWW_ROOT:-/var/www}:/var/www

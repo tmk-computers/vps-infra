@@ -15,6 +15,7 @@ This runbook documents common operational issues, root causes, and verified solu
 | **Docker Registry: 401 Unauthorized on push** | Incompatible htpasswd hash or missing Docker daemon login | Use Apache bcrypt (`htpasswd -B`) and `docker login localhost:5000` |
 | **App Compose Config Error: Missing env file** | Referenced secret file does not exist on disk | Scaffolding `/etc/vps-infra/secrets/<app>/<env>.env` with `chmod 0600` |
 | **Deploy: DEPLOY_ERR_COMPOSE_PINNING_FAILED** | Base compose file not found at `/var/www/<project>/docker-compose.yml` | Create symlinks `/var/www/<app> -> /var/www/vps-infra/apps/<app>` |
+| **CI Build: CI_SUSPENDED_DURING_PILOT_EXAM_WINDOW** | Automated pilot exam schedule active (08:30-15:30 IST) | Set `PILOT_EXAM_SCHEDULE_ENABLED=false` in `.env` and reload `ci-api-prod` |
 
 ---
 
@@ -226,4 +227,57 @@ Modern platform versions do not require nor generate host symlinks. If running a
 sudo ln -sfn /var/www/vps-infra/apps /var/www/apps
 sudo ln -sfn /var/www/vps-infra/apps/<app> /var/www/<app>
 ```
+
+---
+
+## 8. CI Build Suspension: Pilot Exam Operational Window (Gate 7)
+
+### Symptom
+Triggering a service build manually in CI Web UI or via `POST /api/ci/build` rejects immediately with `HTTP 400 Bad Request` and displays:
+```text
+Build Failed to Queue
+CI_SUSPENDED_DURING_PILOT_EXAM_WINDOW: Builds are strictly suspended during the active pilot exam operational window (Automated Pilot Exam Window Active (2026-10-19 08:30-15:30 IST)). VPS CPU and RAM are reserved exclusively for live OMR ingestion and grading.
+```
+
+### Root Cause
+This is intentional safety behavior enforced by **Gate 7 (Host CPU/RAM Preservation via CI Suspension)** in `build-runner.js`.
+
+On single-VPS deployments, concurrent Docker BuildKit compilations spike host CPU to 100%, which risks starving live OMR exam ingestion and real-time grading workloads (`omr-api`, `omr-worker`, RabbitMQ, and Redis). Builds are automatically rejected at queue time between **08:30 and 15:30 IST** across scheduled exam dates (Oct 19–25, 2026).
+
+### Resolution
+
+#### Method 1: Wait Until Exam Hours Conclude (Recommended)
+Builds automatically unlock each day at **15:30 IST** and remain permitted through **08:30 IST** the following morning.
+
+#### Method 2: Disable Schedule Suspension via Environment Variable (Immediate)
+If an urgent build or production hotfix must be deployed during exam hours:
+
+1. Edit `/var/www/vps-infra/.env`:
+   ```ini
+   # Disable automated pilot window schedule check
+   PILOT_EXAM_SCHEDULE_ENABLED=false
+   ```
+2. Reload `ci-api-prod`:
+   ```bash
+   docker compose -f /var/www/vps-infra/docker-compose.yml --env-file /var/www/vps-infra/.env up -d ci-api-prod
+   ```
+3. Verify status:
+   ```bash
+   curl -s http://localhost:5051/api/ci/pilot-window/status
+   ```
+   *(Must return `"active": false, "freezeMode": "NONE"`)*.
+
+#### Method 3: Dynamically Unfreeze via Authenticated API
+Authorized roles (`SuperAdmin`, `Admin`, `DevOps`) can disable the schedule dynamically via REST without restarting containers:
+```bash
+TOKEN="<SUPERADMIN_JWT_TOKEN>"
+
+curl -s -X POST http://localhost:5051/api/ci/pilot-window/unfreeze \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"disableSchedule": true}'
+```
+
+*For complete details, API payloads, and RBAC specifications, refer to [CI Pilot Exam Operational Window & Resource Controls Guide](../03-OPERATIONS-AND-DEVOPS/CI_PILOT_EXAM_WINDOW_CONTROLS_GUIDE.md).*
+
 

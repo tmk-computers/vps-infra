@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-16T12:35:11Z",
+  "timestamp": "2026-10-19T05:53:53Z",
   "gate": "Gate 7 - Host CPU/RAM Preservation via CI Suspension",
   "status": "PASS",
   "endpoint": "http://localhost:5051/api/ci/pilot-window/status",
@@ -17,8 +17,8 @@
     "Scheduled window enforcement (Oct 19 - Oct 25, 2026, 08:30-15:30 IST)",
     "Build execution suspension rejection: CI_SUSPENDED_DURING_PILOT_EXAM_WINDOW"
   ],
-  "initial_status": {"active":false,"freezeMode":"NONE","reason":"Outside pilot exam window; CI builds permitted","currentTimeIst":"2026-10-16T18:05:05.164Z","currentTimeUtc":"2026-10-16T12:35:05.164Z","window":{"startDate":"2026-10-19","endDate":"2026-10-25","dailyStartIst":"08:30","dailyEndIst":"15:30"}},
-  "frozen_status": {"active":true,"freezeMode":"MANUAL","reason":"Pilot Ingestion Window - Host CPU Reserved for OMR","expiresAt":null,"currentTimeUtc":"2026-10-16T12:35:06.215Z"},
-  "restart_status": {"active":true,"freezeMode":"MANUAL","reason":"Pilot Ingestion Window - Host CPU Reserved for OMR","expiresAt":null,"currentTimeUtc":"2026-10-16T12:35:11.256Z"},
-  "final_status": {"active":false,"freezeMode":"NONE","reason":"Outside pilot exam window; CI builds permitted","currentTimeIst":"2026-10-16T18:05:11.647Z","currentTimeUtc":"2026-10-16T12:35:11.647Z","window":{"startDate":"2026-10-19","endDate":"2026-10-25","dailyStartIst":"08:30","dailyEndIst":"15:30"}}
+  "initial_status": {"active":false,"freezeMode":"NONE","reason":"Automated pilot exam schedule disabled via PILOT_EXAM_SCHEDULE_ENABLED=false; CI builds permitted","currentTimeIst":"2026-10-19T11:23:45.909Z","currentTimeUtc":"2026-10-19T05:53:45.909Z","window":{"startDate":"2026-10-19","endDate":"2026-10-25","dailyStartIst":"08:30","dailyEndIst":"15:30","enabled":false}},
+  "frozen_status": {"active":true,"freezeMode":"MANUAL","reason":"Pilot Ingestion Window - Host CPU Reserved for OMR","expiresAt":null,"currentTimeUtc":"2026-10-19T05:53:47.274Z"},
+  "restart_status": {"active":true,"freezeMode":"MANUAL","reason":"Pilot Ingestion Window - Host CPU Reserved for OMR","expiresAt":null,"currentTimeUtc":"2026-10-19T05:53:52.560Z"},
+  "final_status": {"active":false,"freezeMode":"NONE","reason":"Automated pilot exam schedule disabled via PILOT_EXAM_SCHEDULE_ENABLED=false; CI builds permitted","currentTimeIst":"2026-10-19T11:23:53.247Z","currentTimeUtc":"2026-10-19T05:53:53.247Z","window":{"startDate":"2026-10-19","endDate":"2026-10-25","dailyStartIst":"08:30","dailyEndIst":"15:30","enabled":false}}
 }

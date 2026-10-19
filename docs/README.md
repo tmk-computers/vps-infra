@@ -53,6 +53,7 @@ Welcome to the **VPS-Infra** customer documentation center. Follow the sequentia
 5. [`03-OPERATIONS-AND-DEVOPS/DUAL_TOPOLOGY_DEPLOYMENT_GUIDE.md`](./03-OPERATIONS-AND-DEVOPS/DUAL_TOPOLOGY_DEPLOYMENT_GUIDE.md): Dual-topology architecture (All-in-One vs Distributed), Docker registry configuration, and REST API CI synchronization.
 6. [`03-OPERATIONS-AND-DEVOPS/CENTRALIZED_MAINTENANCE_MODE_GUIDE.md`](./03-OPERATIONS-AND-DEVOPS/CENTRALIZED_MAINTENANCE_MODE_GUIDE.md): Centralized system maintenance mode architecture, runbook, and Kaksha+ end-to-end execution flow.
 7. [`03-OPERATIONS-AND-DEVOPS/APPLICATION_MODERNIZATION_SCORE_GUIDE.md`](./03-OPERATIONS-AND-DEVOPS/APPLICATION_MODERNIZATION_SCORE_GUIDE.md): Application Modernization Score (AMS) calculation engine, 5-dimension rubric, REST APIs, and CI dashboard.
+8. [`03-OPERATIONS-AND-DEVOPS/CI_PILOT_EXAM_WINDOW_CONTROLS_GUIDE.md`](./03-OPERATIONS-AND-DEVOPS/CI_PILOT_EXAM_WINDOW_CONTROLS_GUIDE.md): CI build suspension and host resource controls during live pilot exam ingestion windows (Gate 7).
 
 ---
 
