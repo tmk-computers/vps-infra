@@ -20,14 +20,52 @@ if [[ "${1:-}" == "--check" ]] || [[ "${1:-}" == "-c" ]]; then
     VERSION_URL="${LICENSE_SERVER_URL:-https://license.tmkcomputers.in}/api/v1/license/version-check"
     CURR_VER="$(cat "$SCRIPT_DIR/VERSION" 2>/dev/null || echo "v2.1")"
     echo "🔍 Querying Central Licensing Authority for latest release..."
-    RESP=$(curl -s --max-time 10 "${VERSION_URL}?currentVersion=${CURR_VER}" 2>/dev/null || true)
-    if [ -n "$RESP" ] && command -v jq &>/dev/null; then
+
+    CURL_ERR=$(mktemp)
+    RESP=$(curl -sS --max-time 10 "${VERSION_URL}?currentVersion=${CURR_VER}" 2>"$CURL_ERR" || true)
+    CURL_EXIT=$?
+    ERR_MSG=$(cat "$CURL_ERR" 2>/dev/null || true)
+    rm -f "$CURL_ERR"
+
+    if [ -z "$RESP" ]; then
+        echo "⚠️ Could not retrieve version info from license server (${VERSION_URL})."
+        if [ -n "$ERR_MSG" ]; then
+            echo "   Reason: $ERR_MSG"
+        else
+            echo "   Please verify DNS resolution and outbound HTTPS connectivity to license.tmkcomputers.in."
+        fi
+        exit 1
+    fi
+
+    PARSED=false
+    if command -v jq &>/dev/null; then
         LATEST_VER=$(echo "$RESP" | jq -r '.latestStableVersion // "unknown"')
         HAS_UPDATE=$(echo "$RESP" | jq -r '.hasUpdate // false')
         RELEASE_NOTES=$(echo "$RESP" | jq -r '.releaseNotes // "None"')
         DEVOPS_VER=$(echo "$RESP" | jq -r '.components.devopsManager.latestVersion // "unknown"')
         CI_VER=$(echo "$RESP" | jq -r '.components.ciServer.latestVersion // "unknown"')
-        
+        PARSED=true
+    elif command -v python3 &>/dev/null; then
+        PARSE_OUT=$(echo "$RESP" | python3 -c '
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print("LATEST_VER=" + json.dumps(str(d.get("latestStableVersion", "unknown"))))
+    print("HAS_UPDATE=" + json.dumps(str(d.get("hasUpdate", False)).lower()))
+    print("RELEASE_NOTES=" + json.dumps(str(d.get("releaseNotes", "None"))))
+    comps = d.get("components", {}) or {}
+    print("DEVOPS_VER=" + json.dumps(str(comps.get("devopsManager", {}).get("latestVersion", "unknown"))))
+    print("CI_VER=" + json.dumps(str(comps.get("ciServer", {}).get("latestVersion", "unknown"))))
+except Exception:
+    sys.exit(1)
+' 2>/dev/null)
+        if [ $? -eq 0 ] && [ -n "$PARSE_OUT" ]; then
+            eval "$PARSE_OUT"
+            PARSED=true
+        fi
+    fi
+
+    if [ "$PARSED" = true ]; then
         echo ""
         echo "======================================================================"
         echo "   🚀 PLATFORM RELEASE & UPDATE STATUS"
@@ -50,7 +88,9 @@ if [[ "${1:-}" == "--check" ]] || [[ "${1:-}" == "-c" ]]; then
         fi
         exit 0
     else
-        echo "⚠️ Could not retrieve version info from license server."
+        echo "⚠️ Received response from license server, but neither 'jq' nor 'python3' is available to parse the payload."
+        echo "   Raw Response: $RESP"
+        echo "   Install jq to parse automatically: apt update && apt install -y jq"
         exit 1
     fi
 fi
