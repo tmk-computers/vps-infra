@@ -1,9 +1,11 @@
 # VPS Infrastructure — Start Here
 
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+
 > **Document ID:** `V2-INFRA-START-001`  
 > **Repository:** `vps-infra`  
 > **Platform Version:** `v2.3.1`  
-> **Status:** Current Authoritative Orientation Guide  
+> **Status:** Source-aligned reference candidate; independent approval pending
 > **Target Audience:** DevOps Engineers, System Administrators & Operators  
 > **Related Documents:** [INDEX.md](./INDEX.md), [06-operations/OPERATOR_RUNBOOK.md](./06-operations/OPERATOR_RUNBOOK.md)
 
@@ -11,7 +13,7 @@
 
 ## 1. What is `vps-infra`?
 
-The **`vps-infra`** repository contains everything required to turn a clean, unconfigured Linux virtual server into a fully managed, secure hosting platform.
+The **`vps-infra`** repository contains host setup, Compose and operator scripts for the hosting platform. Actual security and release qualification depend on the specific environment and independent engineering gates.
 
 It provides:
 - **`setup.sh` / `setup.ps1`:** Host bootstrapping scripts that install Docker, configure firewall rules, create system directories, and launch the platform.

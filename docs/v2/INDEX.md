@@ -1,5 +1,7 @@
 # VPS Infrastructure Documentation V2 — Navigation Hub
 
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+
 > **Project:** Unified VPS-Infra Platform  
 > **Repository:** `vps-infra`  
 > **Platform Version:** `v2.3.1`  
@@ -64,3 +66,5 @@ graph TD
 
 ### `10` Reference
 - **[10-reference/CLI_REFERENCE.md](./10-reference/CLI_REFERENCE.md)**: Complete CLI command, flag, and environment variable reference.
+
+Current implementation candidate: [complete28-finding remediation and remaining acceptance boundaries](../../../vps-infra-server/docs/v2/08-quality/CODEX_COMPLETE_REMEDIATION/README.md). Independent reference approval is pending.

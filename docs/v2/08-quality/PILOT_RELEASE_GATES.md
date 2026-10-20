@@ -1,5 +1,7 @@
 # Infrastructure Pilot Release Gate & Drill Evidence
 
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+
 > **Document ID:** `V2-INFRA-QUAL-003`  
 > **Repository:** `vps-infra`  
 > **Audit Date:** 2026-10-20  
@@ -10,7 +12,7 @@
 
 ## 1. Executive Pilot Verdict: CONDITIONAL HOLD / PRODUCTION NO-GO
 
-On **2026-10-16 / 2026-10-19**, an independent release gate audit was executed on `vps-infra` (`docs/audits/2026-10-19-conditional-pilot-release-gate-report.md`) for an OMR staging workload on a 32 GB VPS:
+The report dated **2026-10-16** (filename dated2026-10-19) records a release gate audit on `vps-infra` (`docs/audits/2026-10-19-conditional-pilot-release-gate-report.md`) for an OMR staging workload on a 32 GB VPS:
 
 ### Governance Statement & Formal Release Gate Verdict:
 - **Prior Conclusion Rescission:** Any prior conclusion asserting that the platform is "technically qualified and approved for production go-live" was **FORMALLY WITHDRAWN**.

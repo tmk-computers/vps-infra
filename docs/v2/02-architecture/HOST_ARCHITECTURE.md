@@ -1,9 +1,11 @@
 # Host Architecture & Container Network Topology
 
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+
 > **Document ID:** `V2-INFRA-ARCH-001`  
 > **Repository:** `vps-infra`  
 > **Platform Version:** `v2.3.1`  
-> **Status:** Current Authoritative Host Architecture  
+> **Status:** Source-aligned reference candidate; independent approval pending
 > **Audit Date:** 2026-10-20  
 > **Related Documents:** [SERVER_INTEGRATION.md](./SERVER_INTEGRATION.md), [HOST_SECURITY.md](../05-security/HOST_SECURITY.md)
 
@@ -11,7 +13,7 @@
 
 ## 1. Host Architecture Overview
 
-The host architecture is optimized for single-node Linux VPS environments, structuring services into strict isolation boundaries using Docker bridge networks and host volume mounts:
+The host architecture is optimized for single-node Linux VPS environments, using shared Docker networks and host volume mounts; isolation must be verified per environment:
 
 ```mermaid
 graph TD
@@ -50,7 +52,7 @@ graph TD
     Traefik -->|Label Route| App2
 
     API --> PG
-    CIAPI --> PG
+    CIAPI -->|"Direct DB mode"| PG
     CIAPI --> Registry
 ```
 
@@ -67,8 +69,8 @@ The host platform organizes network connectivity around the external Docker brid
    - Core platform services (`devops-api-prod`, `devops-web-prod`, `ci-api-prod`, `ci-web-prod`) communicate internally over `traefik_net` without publishing container ports to external network interfaces.
 2. **Loopback Port Isolation (127.0.0.1):**
    - The primary relational database (`shared_postgres`) binds host port 5432 strictly to `127.0.0.1` (`${POSTGRES_PORT_BIND:-127.0.0.1:5432}:5432`).
-   - `pgAdmin` binds port 5050 strictly to `127.0.0.1` (`${PGADMIN_PORT_BIND:-127.0.0.1:5050}:80`).
-   - Zero database or administration ports are exposed to public interfaces, preventing unauthorized external access.
+   - `pgAdmin` binds default host port 5050 strictly to `127.0.0.1` (`${PGADMIN_PORT_BIND:-127.0.0.1:5050}:80`).
+   - These are loopback defaults only; POSTGRES_PORT_BIND and PGADMIN_PORT_BIND overrides can expose them. Inspect effective configuration before release.
 3. **Agent Runtime Isolation:**
    - The Agent Runtime is deployed as a standalone managed service or process; it is **not** included in the root `vps-infra/docker-compose.yml`.
 
@@ -76,7 +78,7 @@ The host platform organizes network connectivity around the external Docker brid
 
 ## 3. Persistent Storage & Volume Layout
 
-All stateful data is mounted to dedicated host directories under `/var/www/vps-infra/` (or `${INFRA_BASE_DIR:-/var/www/vps-infra}`):
+Default stateful mount examples (not a complete inventory) are under host directories under `/var/www/vps-infra/` (or `${INFRA_BASE_DIR:-/var/www/vps-infra}`):
 - `/var/www/vps-infra/docker/volumes/db/postgres/data/`: PostgreSQL database cluster files (`PGDATA`).
 - `/var/www/vps-infra/docker/volumes/db/postgres/backups/`: Plain SQL database backup dumps (`devops_prod_*.sql`).
 - `/var/www/vps-infra/platform/network/traefik/acme.json`: ACME account keys and automated Let's Encrypt TLS certificates.

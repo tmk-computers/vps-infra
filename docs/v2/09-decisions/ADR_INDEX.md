@@ -1,8 +1,10 @@
 # Infrastructure Architecture Decision Records Index
 
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+
 > **Document ID:** `V2-INFRA-DEC-001`  
 > **Repository:** `vps-infra`  
-> **Status:** Current Authoritative Decision Index  
+> **Status:** Source-aligned reference candidate; independent approval pending
 > **Audit Date:** 2026-10-20  
 > **Related Documents:** [HOST_ARCHITECTURE.md](../02-architecture/HOST_ARCHITECTURE.md)
 
@@ -19,5 +21,5 @@
 ## 2. Infrastructure Design Decisions
 
 ### Decision 1: Single-Node Compose vs Swarm for Initial Pilot
-- **Decision:** Use standard Docker Compose v2 for the initial single-VPS pilot release.
-- **Rationale:** Minimal runtime complexity, zero cluster consensus overhead, and trivial operator onboarding. Multi-node Docker Swarm / k3s deferred to Milestone 4.
+- **Observed implementation:** Source uses standard Docker Compose v2 for a single host. This index does not establish a separately approved release decision.
+- **Rationale:** Minimal runtime complexity, zero cluster consensus overhead, and one-host operation. Multi-node Docker Swarm / k3s remains PROPOSED; no approved milestone or release dependency is established here.

@@ -1,9 +1,11 @@
 # Application Stack Templates Specification
 
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+
 > **Document ID:** `V2-INFRA-MOD-002`  
 > **Repository:** `vps-infra`  
 > **Platform Version:** `v2.3.1`  
-> **Status:** Current Authoritative Module Specification  
+> **Status:** Source-aligned reference candidate; independent approval pending
 > **Audit Date:** 2026-10-20  
 > **Related Documents:** [HOST_ARCHITECTURE.md](../02-architecture/HOST_ARCHITECTURE.md), [OPERATOR_RUNBOOK.md](../06-operations/OPERATOR_RUNBOOK.md)
 

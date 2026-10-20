@@ -1,9 +1,11 @@
 # Host CLI Flag & Command Reference
 
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+
 > **Document ID:** `V2-INFRA-REF-001`  
 > **Repository:** `vps-infra`  
 > **Platform Version:** `v2.3.1`  
-> **Status:** Current Authoritative CLI Reference  
+> **Status:** Source-aligned reference candidate; independent approval pending
 > **Audit Date:** 2026-10-20  
 > **Related Documents:** [CLI_AND_ORCHESTRATION.md](../04-modules/CLI_AND_ORCHESTRATION.md), [OPERATOR_RUNBOOK.md](../06-operations/OPERATOR_RUNBOOK.md)
 
@@ -20,7 +22,7 @@
 
 ### `up` / `up --vps`
 - **Usage:** `./infra up` or `./infra up --vps`
-- **Description:** Deploys and starts all core platform services by executing `setup.sh` (or `setup.ps1` on Windows).
+- **Description:** Bash up invokes setup.sh and ignores trailing arguments; PowerShell up forwards arguments to setup.ps1. Provisioning mutates the host and may hit GH01.
 
 ### `down`
 - **Usage:** `./infra down`
@@ -63,6 +65,6 @@
 - **Flags:**
   - `--check`: Queries for newer release tags without modifying local files or running containers.
 
-### Database Restoration
-- **Usage:** `docker exec -i shared_postgres psql -U postgres devops_prod < <backup.sql>`
-- **Description:** Restores a plain SQL backup dump into the target database. To test in isolation before restoring over active data, create a temporary database via `docker exec shared_postgres createdb -U postgres devops_restore_test`.
+### Database restoration
+
+There is no root restore command. Backup is plain SQL. Restore only to an independently verified disposable target with ON_ERROR_STOP, verified filename/checksum and schema compatibility; never default to active devops_prod. See [recovery](../06-operations/DISASTER_RECOVERY.md).

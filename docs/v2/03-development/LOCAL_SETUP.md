@@ -1,9 +1,11 @@
 # Infrastructure Local Development & Shell Testing
 
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+
 > **Document ID:** `V2-INFRA-DEV-001`  
 > **Repository:** `vps-infra`  
 > **Platform Version:** `v2.3.1`  
-> **Status:** Current Authoritative Setup Guide  
+> **Status:** Source-aligned reference candidate; independent approval pending
 > **Audit Date:** 2026-10-20  
 > **Related Documents:** [INDEX.md](../INDEX.md), [CLI_AND_ORCHESTRATION.md](../04-modules/CLI_AND_ORCHESTRATION.md)
 
@@ -45,21 +47,12 @@ $tokens = $null; $errors = $null; [System.Management.Automation.Language.Parser]
 
 ## 3. Testing Docker Compose Locally (Disposable Test Only)
 
-You can validate the compose stack locally using Docker Desktop or Docker CE:
+From the infra repository root, use source inspection or a syntax-only Compose check with explicit dummy values. Do not copy over an existing .env or launch the live host stack as a parser test.
 
 ```bash
-# 1. Create a local test .env file
-cp .env.example .env
-
-# 2. Validate docker-compose.yml syntax
-docker compose config
-
-# 3. Launch disposable test containers
-docker compose up -d
-
-# 4. Check service status using the infra CLI
-./infra status
+CI_SECRET=example-validation-only JWT_SECRET_KEY=example-validation-only-at-least-32-characters docker compose --profile all config --services
 ```
 
-> [!WARNING]
-> **Startup Limitation (GH01):** On a fresh, un-migrated database, the `devops-api-prod` container will encounter an uncaught exception during startup (`SQLSTATE 23502: not-null constraint violation on AiAgents.Slug`). Production deployments remain on conditional hold until Phase GH-1 schema remediation is merged.
+This lists configuration services only; it does not establish connectivity, pgvector, valid credentials or disposable mounts. The root does not launch supporting PostgreSQL or runtime.
+
+**GH01 source limitation:** `Database:AutoMigrateOnStartup` gates only Program.cs's migration branch. Program still invokes DataSeeder.SeedData. Seeder independently checks pending migrations and calls MigrateAsync, catches/logs that migration exception, and attempts raw DDL independently. Therefore false does not guarantee zero schema mutation. `Database__SkipAutoMigration` is not consumed. The historical Gate H fresh/upgrade rehearsals failed23502 in the reconciliation chain; that is not proof every arbitrary empty DB always fails at the same statement or that Seeder's caught exception directly escapes. Startup/schema safety remains blocked pending a separately approved repair. No healthy API startup or live migration is required to validate this documentation.

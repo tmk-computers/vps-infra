@@ -1,29 +1,21 @@
 # Host Security, Firewall & TLS Architecture
 
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+
 > **Document ID:** `V2-INFRA-SEC-001`  
 > **Repository:** `vps-infra`  
 > **Platform Version:** `v2.3.1`  
-> **Status:** Current Authoritative Security Specification  
+> **Status:** Source-aligned reference candidate; independent approval pending
 > **Audit Date:** 2026-10-20  
 > **Related Documents:** [HOST_ARCHITECTURE.md](../02-architecture/HOST_ARCHITECTURE.md), [OPERATOR_RUNBOOK.md](../06-operations/OPERATOR_RUNBOOK.md)
 
----
-
-## 1. Host Hardening Principles
-
-The `vps-infra` platform enforces defense-in-depth across the host OS:
-
-1. **Firewall Strict Default Deny:** Only SSH (port 22) and Web Ingress (ports 80 and 443 via Traefik) are publicly accessible.
-2. **Docker Network & Loopback Isolation:** Core services communicate over `traefik_net`; administrative and database ports (`shared_postgres` 5432, `pgAdmin` 5050) are bound strictly to `127.0.0.1` and unreachable from the public internet.
-3. **Automated ACME TLS:** Certificates are provisioned via Traefik ACME resolver `myresolver` (Let's Encrypt); HTTP traffic is redirected to HTTPS entrypoint `websecure`.
-4. **License Fingerprint Binding:** The platform license is cryptographically bound to the server's hardware UUID and MAC address (`scripts/extract-fingerprint.sh`).
 
 ---
 
-## 2. Host Firewall Management & Security Evidence
+## Source-defined host security boundary
 
-The platform host security rules are applied during setup (`setup.sh`):
-- UFW / iptables rules restrict ingress to ports 22, 80, and 443.
-- Database and internal container ports are bound strictly to `127.0.0.1`, ensuring loopback-only access from the host.
-- Host firewall management logic is maintained in `vps-infra-server/ci-server/api/host-firewall-manager.js` for CI/CD dynamic isolation.
-- *Evidence Scope:* Staging audit evidence in `docs/audits/dns-tls-evidence.json` verifies DNS resolution and TLS certificate handshake on the test domain. (It does not constitute automated penetration testing or brute-force proof).
+Traefik global entrypoints and external traefik_net are defined in platform/network/traefik/docker-compose.yml. Database/pgAdmin loopback bindings are overridable; review effective configuration. Root app services do not publish8080/5051 directly. Runtime deployment is separate, not a proven private host binding.
+
+Source server ci-server/api/host-firewall-manager.js is the host UFW owner. DNS reachability is not firewall evidence; Docker-published ingress does not equal host INPUT policy. Cosign enforcement is application code in supply-chain.js with audit default and explicit enforce/bypass conditions, not Docker engine admission. See sibling server [CI security](../../../../vps-infra-server/docs/v2/04-modules/CI_SERVER_ENGINE.md).
+
+OMR strict-origin certificate and off-host recovery blockers remain open. No Linux or Windows production qualification is issued. Hardening/least privilege are target policies pending environment-specific evidence, not guarantees established by this document.

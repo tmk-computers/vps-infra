@@ -1,5 +1,9 @@
 # Documentation V2 Gate Remediation Package Pointer
 
+> **Historical self-assessment, superseded for DV2-01–28:** Retained body/CSV claims are not current implementation proof or independent closure. Use current core references and the complete Codex remediation handoff; all prior independent audits and test outcomes remain unchanged.
+
+> **Authority:** Prior R1/R2/R3 self-assessments do not close the eight P0 findings. Current correction contracts remain subject to independent verification; no full Documentation V2 approval or application/hosting qualification follows. Historical package CSVs are retained as claims, not source proof.
+
 > **Document ID:** `V2-INFRA-QUAL-004`  
 > **Repository:** `vps-infra`  
 > **Evaluation Date:** 2026-10-20  
@@ -48,4 +52,3 @@ Following independent Codex Documentation V2 Gate R3 audit, the source-locked ev
 8. [08_FINAL_P0_SELF_REVIEW.md](../../../../vps-infra-server/docs/v2/08-quality/DOCUMENTATION_GATE_R3_REMEDIATION/08_FINAL_P0_SELF_REVIEW.md): Final compliance checklist against R3 findings and reviewer handoff statement (`READY_FOR_INDEPENDENT_REVIEW`).
 
 *(Historical Note: The Gate R1 and R2 evidence packages are preserved under `DOCUMENTATION_GATE_REMEDIATION/` and `DOCUMENTATION_GATE_R2_REMEDIATION/` for complete audit lineage).*
-
