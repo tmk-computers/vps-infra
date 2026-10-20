@@ -53,12 +53,17 @@ fi
 configure_docker_log_rotation_and_maintenance() {
     echo -e "\n${CYAN}▶ Checking Docker log rotation and automated maintenance crons...${NC}"
     
+    local SUDO=""
+    if [ "$EUID" -ne 0 ] && command -v sudo &> /dev/null; then
+        SUDO="sudo"
+    fi
+
     # 1. Configure Docker daemon log rotation if missing
     if [ ! -f /etc/docker/daemon.json ]; then
         if [ "$EUID" -eq 0 ] || command -v sudo &> /dev/null; then
             echo -e "   • Setting up /etc/docker/daemon.json (max-size: 50m, max-file: 3)..."
-            sudo mkdir -p /etc/docker
-            sudo tee /etc/docker/daemon.json > /dev/null << 'EOF'
+            $SUDO mkdir -p /etc/docker
+            $SUDO tee /etc/docker/daemon.json > /dev/null << 'EOF'
 {
   "log-driver": "json-file",
   "log-opts": {
@@ -67,7 +72,7 @@ configure_docker_log_rotation_and_maintenance() {
   }
 }
 EOF
-            sudo systemctl reload docker 2>/dev/null || true
+            $SUDO systemctl reload docker 2>/dev/null || true
             echo -e "${GREEN}   ✅ Docker daemon log rotation configured.${NC}"
         fi
     else
@@ -78,13 +83,13 @@ EOF
     if [ -d /etc/cron.d ] && { [ "$EUID" -eq 0 ] || command -v sudo &> /dev/null; }; then
         if [ ! -f /etc/cron.d/docker-maintenance ]; then
             echo -e "   • Setting up /etc/cron.d/docker-maintenance..."
-            sudo tee /etc/cron.d/docker-maintenance > /dev/null << 'EOF'
+            $SUDO tee /etc/cron.d/docker-maintenance > /dev/null << 'EOF'
 # Daily Docker builder prune keeping 2GB cache
 30 3 * * * root docker builder prune -af --reserved-space 2GB > /dev/null 2>&1
 # Daily Local Registry tag prune
 15 3 * * * root /usr/bin/python3 /var/www/vps-infra/scripts/prune_registry.py > /dev/null 2>&1
 EOF
-            sudo chmod 644 /etc/cron.d/docker-maintenance
+            $SUDO chmod 644 /etc/cron.d/docker-maintenance
             echo -e "${GREEN}   ✅ Daily maintenance cron configured.${NC}"
         else
             echo -e "${GREEN}   ✅ /etc/cron.d/docker-maintenance already configured.${NC}"
@@ -446,7 +451,9 @@ show_port_owner() {
     local containers
 
     echo -e "${YELLOW}Port ${port} ownership details:${NC}"
-    sudo ss -H -ltnp "sport = :$port" 2>/dev/null || true
+    local SUDO=""
+    [ "$EUID" -ne 0 ] && command -v sudo &>/dev/null && SUDO="sudo"
+    $SUDO ss -H -ltnp "sport = :$port" 2>/dev/null || true
 
     containers="$(
         docker ps \
@@ -464,7 +471,9 @@ detect_system_web_server() {
     local port="$1"
     local process_info
 
-    process_info="$(sudo ss -H -ltnp "sport = :$port" 2>/dev/null || true)"
+    local SUDO=""
+    [ "$EUID" -ne 0 ] && command -v sudo &>/dev/null && SUDO="sudo"
+    process_info="$($SUDO ss -H -ltnp "sport = :$port" 2>/dev/null || true)"
 
     case "$process_info" in
         *nginx*)   echo "nginx" ;;
@@ -556,9 +565,11 @@ prepare_traefik_ports() {
         esac
     fi
 
+    local SUDO=""
+    [ "$EUID" -ne 0 ] && command -v sudo &>/dev/null && SUDO="sudo"
     for service in "${services_to_stop[@]}"; do
         echo -e "${YELLOW}▶ Stopping $service...${NC}"
-        if ! sudo systemctl stop "$service"; then
+        if ! $SUDO systemctl stop "$service"; then
             echo -e "${RED}❌ Failed to stop $service.${NC}"
             exit 1
         fi
