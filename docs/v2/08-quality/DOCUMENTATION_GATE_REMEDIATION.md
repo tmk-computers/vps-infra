@@ -31,5 +31,21 @@ The complete authoritative Gate R2 remediation package is accessible via relativ
 9. [09_REMAINING_OWNER_DECISIONS.md](../../../../vps-infra-server/docs/v2/08-quality/DOCUMENTATION_GATE_R2_REMEDIATION/09_REMAINING_OWNER_DECISIONS.md): Catalog of 7 open architectural forks requiring technical lead and stakeholder sign-offs.
 10. [10_FINAL_SELF_REVIEW.md](../../../../vps-infra-server/docs/v2/08-quality/DOCUMENTATION_GATE_R2_REMEDIATION/10_FINAL_SELF_REVIEW.md): Final self-review against Gate R2 failure criteria, explicitly scoped to `READY_FOR_INDEPENDENT_REVIEW`.
 
-*(Historical Note: The initial iteration's evidence package is preserved under `DOCUMENTATION_GATE_REMEDIATION/` for audit lineage).*
+
+---
+
+## 3. Authoritative Gate R3 P0 Remediation Package Index
+
+Following independent Codex Documentation V2 Gate R3 audit, the source-locked evidence package correcting the 8 P0 findings is canonically maintained in `vps-infra-server`:
+
+1. [01_EXECUTIVE_SUMMARY.md](../../../../vps-infra-server/docs/v2/08-quality/DOCUMENTATION_GATE_R3_REMEDIATION/01_EXECUTIVE_SUMMARY.md): Executive summary of the 8 P0 findings remediation.
+2. [02_DV2_P0_CORRECTION_REGISTER.csv](../../../../vps-infra-server/docs/v2/08-quality/DOCUMENTATION_GATE_R3_REMEDIATION/02_DV2_P0_CORRECTION_REGISTER.csv): Machine-readable register of all 8 P0 findings.
+3. [03_BATCH_A_CONTRACT_EVIDENCE.md](../../../../vps-infra-server/docs/v2/08-quality/DOCUMENTATION_GATE_R3_REMEDIATION/03_BATCH_A_CONTRACT_EVIDENCE.md): Runtime HMAC test vector, conditional strict security, PascalCase SSE wire format, and API DTO contracts (DV2-05, DV2-06).
+4. [04_BATCH_B_DATABASE_WORKFLOW_EVIDENCE.md](../../../../vps-infra-server/docs/v2/08-quality/DOCUMENTATION_GATE_R3_REMEDIATION/04_BATCH_B_DATABASE_WORKFLOW_EVIDENCE.md): Entity fields, conditional REINDEX catalog check, direct approval pause vs agent fall-through, and workflow durability (DV2-08, DV2-11).
+5. [05_BATCH_C_TOPOLOGY_READINESS_EVIDENCE.md](../../../../vps-infra-server/docs/v2/08-quality/DOCUMENTATION_GATE_R3_REMEDIATION/05_BATCH_C_TOPOLOGY_READINESS_EVIDENCE.md): Scoped staging pilot HOLD, immutable Gate H test counts, root compose services, and Traefik global topology (DV2-01, DV2-03).
+6. [06_BATCH_D_ONBOARDING_RECOVERY_EVIDENCE.md](../../../../vps-infra-server/docs/v2/08-quality/DOCUMENTATION_GATE_R3_REMEDIATION/06_BATCH_D_ONBOARDING_RECOVERY_EVIDENCE.md): Loopback setup, split shell blocks, AST parser verification, immutable digest rollback, staging restore, and force-recreate secret rotation (DV2-12, DV2-20).
+7. [07_DIAGRAM_AND_VALIDATION_REPORT.md](../../../../vps-infra-server/docs/v2/08-quality/DOCUMENTATION_GATE_R3_REMEDIATION/07_DIAGRAM_AND_VALIDATION_REPORT.md): Headless browser rendering verification of all 3 repaired Mermaid diagrams (100% PASS) and shell AST parser logs.
+8. [08_FINAL_P0_SELF_REVIEW.md](../../../../vps-infra-server/docs/v2/08-quality/DOCUMENTATION_GATE_R3_REMEDIATION/08_FINAL_P0_SELF_REVIEW.md): Final compliance checklist against R3 findings and reviewer handoff statement (`READY_FOR_INDEPENDENT_REVIEW`).
+
+*(Historical Note: The Gate R1 and R2 evidence packages are preserved under `DOCUMENTATION_GATE_REMEDIATION/` and `DOCUMENTATION_GATE_R2_REMEDIATION/` for complete audit lineage).*
 

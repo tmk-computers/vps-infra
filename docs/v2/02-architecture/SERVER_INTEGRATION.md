@@ -24,9 +24,9 @@ sequenceDiagram
     ServerRepo->>ServerRepo: Tag Release (e.g. v2.3.1)
     ServerRepo->>Registry: Build & Push Images (:latest or :tag)
     HostInfra->>Registry: docker compose pull (Pulls :latest unless pinned via env)
-    HostInfra->>Docker: docker compose up -d (Recreates containers; incurs service downtime)
+    HostInfra->>Docker: docker compose up -d (Recreates containers - incurs service downtime)
     Docker->>Docker: Launch devops-api-prod, devops-web-prod, ci-api-prod, ci-web-prod
-    Docker->>HostInfra: Containers Running & Healthy
+    Docker->>HostInfra: Containers Running (Requires verified readiness gate)
 ```
 
 > [!WARNING]

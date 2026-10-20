@@ -29,13 +29,16 @@ shellcheck setup.sh
 shellcheck infra
 shellcheck scripts/*.sh
 
-# 2. Test PowerShell Syntax (via PowerShell Language Parser)
-# In POSIX / Bash (single-quoted to prevent variable interpolation):
+# 2. Test PowerShell Syntax from POSIX / Bash (single-quoted to prevent variable interpolation)
 pwsh -Command '$tokens = $null; $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile("infra.ps1", [ref]$tokens, [ref]$errors); if ($errors) { throw ($errors | Out-String) } else { Write-Host "infra.ps1: Valid" }'
+pwsh -Command '$tokens = $null; $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile("setup.ps1", [ref]$tokens, [ref]$errors); if ($errors) { throw ($errors | Out-String) } else { Write-Host "setup.ps1: Valid" }'
+```
 
+For native PowerShell execution:
+```powershell
 # In PowerShell:
 $tokens = $null; $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile("infra.ps1", [ref]$tokens, [ref]$errors); if ($errors) { throw ($errors | Out-String) } else { Write-Host "infra.ps1: Valid" }
-# Note: setup.ps1 contains unquoted '&' operators in console output strings that produce known parser syntax warnings under strict AST inspection.
+$tokens = $null; $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile("setup.ps1", [ref]$tokens, [ref]$errors); if ($errors) { throw ($errors | Out-String) } else { Write-Host "setup.ps1: Valid" }
 ```
 
 ---
