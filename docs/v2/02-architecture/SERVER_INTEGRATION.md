@@ -53,16 +53,18 @@ Platform client upgrades are managed via the dedicated standalone script `script
 Historically, a static `VERSION` file was tracked in Git, creating merge conflicts and false-freshness assumptions across host pulls. Under commit `7bac7f7`:
 1. **Git-Ignored Runtime File:** `VERSION` is removed from Git tracking and added to `.gitignore`, preserving the local installed client version across Git operations.
 2. **Setup Initialization:** `setup.sh` records the initial installed release tag or commit hash into `VERSION` upon provisioning.
-3. **Upgrade Validation:** `scripts/upgrade-client.sh` verifies remote Git tags, fetches new artifacts, and updates `VERSION` **only upon successful upgrade completion**.
+3. **Full upgrade path:** scripts/upgrade-client.sh fetches origin main, resets tracked files to origin/main and runs setup.sh. After setup returns success it writes VERSION from local git describe --tags --abbrev=0, falling back to the short commit. This is not cryptographic tag verification or independent health qualification; check mode is separate.
 4. **Release Automation:** `scripts/release.sh` reads release version numbers directly from Git tags rather than relying on a static committed file.
 
 ```bash
-# Check mode may fetch Git refs; inspect the script and use an isolated checkout before invocation
+# Check-only mode calls the license version-check API; no Git fetch/reset/setup path is entered
 # Future operator check only: bash scripts/upgrade-client.sh --check
 
 # Execute client upgrade with python3 / curl / jq diagnostics fallback
 # Mutating future operator action: bash scripts/upgrade-client.sh
 ```
-*(Verified in commit `41fcb99` fix(upgrade): add python3 fallback and explicit diagnostics when jq or curl fails, and commit `7bac7f7` feat(version): untrack VERSION and manage local runtime version dynamically).*
+Check-only source contract: --check and -c read the installed VERSION (fallback v2.1 if unreadable), call ${LICENSE_SERVER_URL:-https://license.tmkcomputers.in}/api/v1/license/version-check with currentVersion, capture curl errors in a temporary curl-error file created by mktemp, read and remove that temporary file, then parse/report or exit with an error. This branch exits before the full-upgrade lock/log/configuration-backup/Git fetch/reset/setup behavior. It is an HTTP release query, not a remote Git tag query and not an absolutely filesystem-free action. No check or live upgrade was executed for this documentation correction.
+
+Historical source witnesses:41fcb99 introduced parsing diagnostics/fallback;7bac7f7 introduced ignored runtime VERSION management. Current behavior is verified against scripts/upgrade-client.sh on the reviewed infra baseline.
 
 Upgrade execution includes reset --hard origin/main; local changes can be lost. VERSION success is not proof of image health, rollback or schema qualification. Observed remote-main-only cfb01ab source drift must be separately qualified; see SOURCE_BASELINE.

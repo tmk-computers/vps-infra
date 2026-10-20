@@ -60,10 +60,10 @@
 ## 3. Standalone Operational Utilities
 
 ### Upgrade Client (`scripts/upgrade-client.sh`)
-- **Usage:** `bash scripts/upgrade-client.sh [--check]`
-- **Description:** Queries repository tags and release distributions for client updates.
+- **Usage:** `bash scripts/upgrade-client.sh [--check|-c]`
+- **Description:** The --check/-c path queries the license version-check API; the full upgrade path fetches origin main, resets tracked files and invokes setup.sh. These are distinct modes; a check result does not qualify a deployment.
 - **Flags:**
-  - `--check`: Queries for newer release tags without modifying local files or running containers.
+  - `--check` / `-c`: Reads installed VERSION (fallback v2.1), calls ${LICENSE_SERVER_URL:-https://license.tmkcomputers.in}/api/v1/license/version-check, captures/reads/removes a temporary curl-error file, then exits before full-upgrade Git fetch/reset/setup. It does not query remote Git tags; it is not completely filesystem-free. Full upgrade can overwrite tracked changes and recreate services; VERSION success is not independent health, rollback or schema proof.
 
 ### Database restoration
 
