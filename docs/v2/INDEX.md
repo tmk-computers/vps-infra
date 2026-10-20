@@ -68,3 +68,5 @@ graph TD
 - **[10-reference/CLI_REFERENCE.md](./10-reference/CLI_REFERENCE.md)**: Complete CLI command, flag, and environment variable reference.
 
 Current implementation candidate: [complete28-finding remediation and remaining acceptance boundaries](../../../vps-infra-server/docs/v2/08-quality/CODEX_COMPLETE_REMEDIATION/README.md). Independent reference approval is pending.
+
+[Final two blockers: source census and owner/CI decisions](../../../vps-infra-server/docs/v2/08-quality/FINAL_BLOCKER_CLOSURE/README.md). Evidence and approvals remain pending; no reference approval is implied.
