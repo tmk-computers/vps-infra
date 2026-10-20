@@ -211,17 +211,18 @@ if [ -f "$SCRIPT_DIR/.env" ]; then
     cp "$SCRIPT_DIR/.env" "$SCRIPT_DIR/.env.bak.$(date +%Y%m%d%H%M%S)"
 fi
 
-# 2. Fetch and pull latest Git repository updates
+# 2. Fetch and pull latest Git repository updates and release tags
 CURRENT_STEP="Git Fetch & Pull"
 echo "▶ $CURRENT_STEP..."
-update_status "IN_PROGRESS" "Fetching latest changes from Git repository..." "$CURRENT_STEP"
+update_status "IN_PROGRESS" "Fetching latest changes and release tags from Git repository..." "$CURRENT_STEP"
 
-if ! git fetch origin main; then
+if ! git fetch --tags -f origin main; then
     echo "❌ git fetch failed." >&2
     update_status "FAILED" "Failed to fetch repository updates from Git remote." "$CURRENT_STEP"
-    report_telemetry "$CURRENT_STEP" "git fetch origin main failed"
+    report_telemetry "$CURRENT_STEP" "git fetch --tags -f origin main failed"
     exit 1
 fi
+git fetch --tags -f origin 2>/dev/null || true
 
 # Preserve untracked files and reset tracked files to clean remote state
 if ! git reset --hard origin/main; then
