@@ -3,7 +3,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose_v2-blue.svg?logo=docker)](https://www.docker.com/)
 [![Traefik](https://img.shields.io/badge/Traefik-v3_Edge_Gateway-2496ED.svg?logo=traefik)](https://traefik.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16_LTS-336791.svg?logo=postgresql)](https://www.postgresql.org/)
-[![Version](https://img.shields.io/badge/Version-v2.3.0-blue.svg)](VERSION)
+[![Version](https://img.shields.io/badge/Version-v2.3.1-blue.svg)](VERSION)
 [![Status](https://img.shields.io/badge/Status-Production_Ready-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-TMK_Enterprise-indigo.svg)](https://tmkcomputers.in)
 
