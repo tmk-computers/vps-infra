@@ -23,17 +23,20 @@ sequenceDiagram
 
     ServerRepo->>ServerRepo: Tag Release (e.g. v2.3.1)
     ServerRepo->>Registry: Build & Push Images (:latest or :tag)
-    HostInfra->>Registry: docker compose pull
-    HostInfra->>Docker: docker compose up -d
+    HostInfra->>Registry: docker compose pull (Pulls :latest unless pinned via env)
+    HostInfra->>Docker: docker compose up -d (Recreates containers; incurs service downtime)
     Docker->>Docker: Launch devops-api-prod, devops-web-prod, ci-api-prod, ci-web-prod
     Docker->>HostInfra: Containers Running & Healthy
 ```
+
+> [!WARNING]
+> **No Implicit Zero-Downtime:** `docker compose up -d` stops and recreates running containers, incurring service interruption during container startup and healthcheck validation. Zero-downtime rolling updates or blue-green staging requires separate proxy routing and is currently **PROPOSED (Target State)**, not implemented in base compose.
 
 ---
 
 ## 2. Docker Compose Image Pulling & Environment Overrides
 
-In `vps-infra/docker-compose.yml`, service images default to latest pre-built platform images with environment variable overrides:
+In `vps-infra/docker-compose.yml`, service images default to latest pre-built platform images with environment variable overrides. Git release tags do **not** automatically bind to container image tags unless explicitly supplied through environment variables:
 
 ```yaml
 services:
@@ -71,14 +74,23 @@ networks:
 
 ---
 
-## 3. Host Upgrades & Version Management
+## 3. Host Upgrades & Dynamic Version Management
 
-Platform client upgrades are managed via the dedicated standalone script `scripts/upgrade-client.sh`:
+Platform client upgrades are managed via the dedicated standalone script `scripts/upgrade-client.sh`.
+
+### Dynamic Runtime `VERSION` Contract (Commit `7bac7f7`)
+
+Historically, a static `VERSION` file was tracked in Git, creating merge conflicts and false-freshness assumptions across host pulls. Under commit `7bac7f7`:
+1. **Git-Ignored Runtime File:** `VERSION` is removed from Git tracking and added to `.gitignore`, preserving the local installed client version across Git operations.
+2. **Setup Initialization:** `setup.sh` records the initial installed release tag or commit hash into `VERSION` upon provisioning.
+3. **Upgrade Validation:** `scripts/upgrade-client.sh` verifies remote Git tags, fetches new artifacts, and updates `VERSION` **only upon successful upgrade completion**.
+4. **Release Automation:** `scripts/release.sh` reads release version numbers directly from Git tags rather than relying on a static committed file.
+
 ```bash
-# Check if a newer release tag is available without mutating containers
+# Check if a newer release tag is available without mutating containers or local files
 bash scripts/upgrade-client.sh --check
 
 # Execute client upgrade with python3 / curl / jq diagnostics fallback
 bash scripts/upgrade-client.sh
 ```
-*(Verified in commit `41fcb99` fix(upgrade): add python3 fallback and explicit diagnostics when jq or curl fails, and commit `7bac7f7` managing local runtime version dynamically).*
+*(Verified in commit `41fcb99` fix(upgrade): add python3 fallback and explicit diagnostics when jq or curl fails, and commit `7bac7f7` feat(version): untrack VERSION and manage local runtime version dynamically).*

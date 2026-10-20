@@ -31,8 +31,8 @@ This register tracks infrastructure-specific configuration quirks, compose file 
 - **Component:** `setup.sh` and `infra`
 - **Fix Details:** Commit `834f934` checks `[ "$(id -u)" -eq 0 ]` and avoids calling `sudo` when running as root, eliminating installation crashes on Alpine or minimal container runners.
 
-### INFRA-03 — Windows Disposable VM Test Runner Prerequisite
+### INFRA-03 — Windows Server Pre-Qualification & Preservation Harness Status
 - **Severity:** `MEDIUM`
-- **Status:** `OPEN`
-- **Component:** `scripts/test-windows-w0.ps1`
-- **Observed Behavior:** The Windows preservation test runner requires an active Hyper-V or cloud VM provider configured in environment variables. Running locally on workstations without Hyper-V skips VM execution.
+- **Status:** `OPEN` (Pre-Qualification Status)
+- **Component:** `scripts/windows/Invoke-W0VmPreservationCheck.ps1`
+- **Observed Behavior:** The Windows preservation test harness requires running inside an explicitly named disposable Windows Server 2025 VM (Build >= 26100) with `-DisposableVm` and `-ExpectedVmName`. It performs read-only baseline capture and comparison of existing IIS configurations; it does not provision VMs, mutate IIS websites, or exercise installer/worker rollback flows. The overall Phase W-0 ADR (`docs/PHASE_W0_ARCHITECTURE_DECISION_RECORD.md`) remains `PROPOSED & RE-GATED FOR STAKEHOLDER SIGN-OFF` (checked 2026-10-06), and Windows Server hosting is strictly unverified for production.

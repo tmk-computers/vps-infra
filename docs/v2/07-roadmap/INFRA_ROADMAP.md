@@ -13,7 +13,7 @@
 
 ```mermaid
 graph LR
-    M1["Milestone 1: Single VPS Pilot (Completed)"] --> M2["Milestone 2: Gate H Server Compatibility"]
+    M1["Milestone 1: Single VPS Staging Pilot (Conditional Hold)"] --> M2["Milestone 2: Gate H Server Compatibility"]
     M2 --> M3["Milestone 3: Windows Server W0-W15 Live Qualification"]
     M3 --> M4["Milestone 4: Multi-Node Clustering (Docker Swarm)"]
 ```

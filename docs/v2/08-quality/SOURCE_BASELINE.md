@@ -16,13 +16,15 @@
 | **Repository Name** | `vps-infra` |
 | **Remote URL** | `git@github.com:tmk-computers/vps-infra.git` |
 | **Tracked Branch** | `main` |
-| **Reviewed Doc Commit** | `2db2a64421ef1d9a19a64547730c80f4480f23e1` |
-| **Source Parent Baseline** | `41fcb993e58d36df5951ee009a48609deb748e88` |
-| **Working Tree Status** | Clean on `docs/v2-gate-remediation` |
-| **Release Version** | `v2.3.1` (managed dynamically) |
+| **Reviewed Candidate Commit** | `d94c8b141d9287bb6f2b4e623085cde02ee20d73` |
+| **Source Parent Baseline** | `7bac7f75de0f0f666d66fd4475a667957b68e898` (feat: dynamic VERSION) |
+| **Remote Drift / Divergence** | Remote `origin/main` has commit `cfb01ab` (fetch tags); not in candidate |
+| **Working Tree Status** | Clean on `docs/v2-gate-r2-remediation` |
+| **Release Version** | `v2.3.1` (managed dynamically via commit `7bac7f7`) |
 | **Verified Operating Systems** | Ubuntu 22.04 LTS, Ubuntu 24.04 LTS |
 | **Docker Compose Engine** | Docker Compose v2.20+ |
-| **OMR Staging Pilot Verdict** | **CONDITIONAL HOLD / PRODUCTION NO-GO** (2026-10-04) |
+| **OMR Staging Pilot Verdict** | **CONDITIONAL HOLD / PRODUCTION NO-GO** (2026-10-16 report) |
+
 
 ---
 
