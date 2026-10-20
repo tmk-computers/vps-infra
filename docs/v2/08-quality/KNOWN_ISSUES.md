@@ -5,7 +5,7 @@
 > **Platform Version:** `v2.3.1`  
 > **Status:** Current Authoritative Register  
 > **Audit Date:** 2026-10-20  
-> **Related Documents:** [PILOT_RELEASE_GATES.md](file:///d:/company/products/vps-infra/vps-infra/docs/v2/08-quality/PILOT_RELEASE_GATES.md), [SOURCE_BASELINE.md](file:///d:/company/products/vps-infra/vps-infra/docs/v2/08-quality/SOURCE_BASELINE.md)
+> **Related Documents:** [PILOT_RELEASE_GATES.md](./PILOT_RELEASE_GATES.md), [SOURCE_BASELINE.md](./SOURCE_BASELINE.md)
 
 ---
 
@@ -23,8 +23,7 @@ This register tracks infrastructure-specific configuration quirks, compose file 
 - **Component:** `docker-compose.yml` (`devops-api-prod`)
 - **Observed Behavior:**
   - Commit `6dedfa3` updated `docker-compose.yml` to set `Database__AutoMigrateOnStartup=false`.
-  - **However:** Inside the API image, `DataSeeder.cs:21-28` still calls `await db.Database.MigrateAsync()`, bypassing this environment variable.
-  - **Operational Workaround:** Until `vps-infra-server` merges Phase GH-1, operators must verify that the database schema has been manually migrated before launching the API container.
+  - **Operational Limitation:** Until `vps-infra-server` implements and verifies Phase GH-1 schema reconciliation, launching the API container against a fresh or un-reconciled database will crash with SQLSTATE 23502. Production release remains on CONDITIONAL HOLD pending this fix. Do not attempt out-of-band manual SQL schema modifications.
 
 ### INFRA-02 — Minimal Docker Base Images Lacking Sudo
 - **Severity:** `MEDIUM`

@@ -4,15 +4,15 @@
 > **Repository:** `vps-infra`  
 > **Status:** Current Authoritative Decision Index  
 > **Audit Date:** 2026-10-20  
-> **Related Documents:** [HOST_ARCHITECTURE.md](file:///d:/company/products/vps-infra/vps-infra/docs/v2/02-architecture/HOST_ARCHITECTURE.md)
+> **Related Documents:** [HOST_ARCHITECTURE.md](../02-architecture/HOST_ARCHITECTURE.md)
 
 ---
 
-## 1. Approved Infrastructure ADRs
+## 1. Re-Gated Architecture Decision Records
 
-| ADR ID | Title | Date Approved | Scope | Status | Canonical Reference |
+| ADR ID | Title | Date Checked | Scope | Status | Canonical Reference |
 |---|---|---|---|---|---|
-| **ADR-W0** | Phase W0 Dual-OS Architecture & Port Allocation | 2026-09-10 | Dual-OS Linux/Windows hosting, port allocations, IIS integration | **APPROVED (Pre-Qualification)** | [docs/PHASE_W0_ARCHITECTURE_DECISION_RECORD.md](file:///d:/company/products/vps-infra/vps-infra/docs/PHASE_W0_ARCHITECTURE_DECISION_RECORD.md) |
+| **ADR-W0** | Phase W0 Dual-OS Architecture & Port Allocation | 2026-10-06 | Dual-OS Linux/Windows hosting, port allocations, IIS coexistence | **PROPOSED & RE-GATED FOR STAKEHOLDER SIGN-OFF** | [docs/PHASE_W0_ARCHITECTURE_DECISION_RECORD.md](../../PHASE_W0_ARCHITECTURE_DECISION_RECORD.md) |
 
 ---
 

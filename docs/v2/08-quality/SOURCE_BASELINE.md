@@ -5,7 +5,7 @@
 > **Audit Date:** 2026-10-20  
 > **Auditor:** DevOps Architect & Documentation Quality Engineer  
 > **Status:** Current Authoritative Baseline  
-> **Related Documents:** [PILOT_RELEASE_GATES.md](file:///d:/company/products/vps-infra/vps-infra/docs/v2/08-quality/PILOT_RELEASE_GATES.md), [KNOWN_ISSUES.md](file:///d:/company/products/vps-infra/vps-infra/docs/v2/08-quality/KNOWN_ISSUES.md)
+> **Related Documents:** [PILOT_RELEASE_GATES.md](./PILOT_RELEASE_GATES.md), [KNOWN_ISSUES.md](./KNOWN_ISSUES.md)
 
 ---
 
@@ -16,12 +16,13 @@
 | **Repository Name** | `vps-infra` |
 | **Remote URL** | `git@github.com:tmk-computers/vps-infra.git` |
 | **Tracked Branch** | `main` |
-| **Full HEAD SHA** | `6dedfa34c6a3279f608565966684c228db377776` |
-| **Working Tree Status** | Clean (0 uncommitted changes) |
-| **Release Version** | `v2.3.1` (tagged in `VERSION`) |
+| **Reviewed Doc Commit** | `2db2a64421ef1d9a19a64547730c80f4480f23e1` |
+| **Source Parent Baseline** | `41fcb993e58d36df5951ee009a48609deb748e88` |
+| **Working Tree Status** | Clean on `docs/v2-gate-remediation` |
+| **Release Version** | `v2.3.1` (managed dynamically) |
 | **Verified Operating Systems** | Ubuntu 22.04 LTS, Ubuntu 24.04 LTS |
 | **Docker Compose Engine** | Docker Compose v2.20+ |
-| **Overall Pilot Gate Verdict** | **CONDITIONAL PASS** (2026-10-19) |
+| **OMR Staging Pilot Verdict** | **CONDITIONAL HOLD / PRODUCTION NO-GO** (2026-10-04) |
 
 ---
 

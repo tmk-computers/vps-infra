@@ -5,7 +5,7 @@
 > **Platform Version:** `v2.3.1`  
 > **Status:** Current Authoritative Integration Specification  
 > **Audit Date:** 2026-10-20  
-> **Related Documents:** [HOST_ARCHITECTURE.md](file:///d:/company/products/vps-infra/vps-infra/docs/v2/02-architecture/HOST_ARCHITECTURE.md), [CROSS_REPO_ARCHITECTURE.md](file:///d:/company/products/vps-infra/vps-infra-server/docs/v2/02-architecture/CROSS_REPO_ARCHITECTURE.md)
+> **Related Documents:** [HOST_ARCHITECTURE.md](./HOST_ARCHITECTURE.md), [CROSS_REPO_ARCHITECTURE.md](../../../../vps-infra-server/docs/v2/02-architecture/CROSS_REPO_ARCHITECTURE.md)
 
 ---
 
@@ -21,53 +21,64 @@ sequenceDiagram
     participant HostInfra as vps-infra (Host VPS)
     participant Docker as Host Docker Engine
 
-    ServerRepo->>ServerRepo: Tag Release v2.3.1
-    ServerRepo->>Registry: Build & Push Images (:v2.3.1)
-    HostInfra->>Registry: docker compose pull (:v2.3.1)
+    ServerRepo->>ServerRepo: Tag Release (e.g. v2.3.1)
+    ServerRepo->>Registry: Build & Push Images (:latest or :tag)
+    HostInfra->>Registry: docker compose pull
     HostInfra->>Docker: docker compose up -d
-    Docker->>Docker: Launch devops-api, agent-runtime, ci-server
-    Docker->>HostInfra: Services Healthy (HTTP 200)
+    Docker->>Docker: Launch devops-api-prod, devops-web-prod, ci-api-prod, ci-web-prod
+    Docker->>HostInfra: Containers Running & Healthy
 ```
 
 ---
 
-## 2. Docker Compose Image Pulling & Version Binding
+## 2. Docker Compose Image Pulling & Environment Overrides
 
-In `vps-infra/docker-compose.yml`, service images are pinned to release versions matching the `VERSION` file:
+In `vps-infra/docker-compose.yml`, service images default to latest pre-built platform images with environment variable overrides:
 
 ```yaml
 services:
   devops-api-prod:
-    image: ghcr.io/tmk-computers/devops-api:v2.3.1
+    image: ${DEVOPS_API_IMAGE:-ghcr.io/tmk-computers/tmk-devops-api:latest}
     environment:
-      - ConnectionStrings__DefaultConnection=Host=postgres-prod;Port=5432;Database=devopspanel_prod;Username=postgres;Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__DefaultConnection=Host=shared_postgres;Port=5432;Database=${POSTGRES_DB:-devops_prod};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
       - Database__AutoMigrateOnStartup=false
     networks:
-      - vps_backend_net
+      - traefik_net
 
-  agent-runtime:
-    image: ghcr.io/tmk-computers/agent-runtime:v2.3.1
+  devops-web-prod:
+    image: ${DEVOPS_WEB_IMAGE:-ghcr.io/tmk-computers/tmk-devops-web:latest}
+    networks:
+      - traefik_net
+
+  ci-api-prod:
+    image: ${CI_API_IMAGE:-ghcr.io/tmk-computers/tmk-ci-api:latest}
     environment:
-      - AgentRuntime__SharedSecret=${AGENT_RUNTIME_SHARED_SECRET}
+      - DATABASE_URL=Host=shared_postgres;Port=5432;Database=${POSTGRES_DB:-devops_prod};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+      - PORT=5051
     networks:
-      - vps_backend_net
+      - traefik_net
 
-  ci-server:
-    image: ghcr.io/tmk-computers/ci-server:v2.3.1
+  ci-web-prod:
+    image: ${CI_WEB_IMAGE:-ghcr.io/tmk-computers/tmk-ci-web:latest}
     networks:
-      - vps_backend_net
+      - traefik_net
+
+networks:
+  traefik_net:
+    name: traefik_net
+    external: true
 ```
 
 ---
 
-## 3. Host Upgrades & Version Checking
+## 3. Host Upgrades & Version Management
 
-The host CLI provides automated version checks against the license server:
+Platform client upgrades are managed via the dedicated standalone script `scripts/upgrade-client.sh`:
 ```bash
-# Check if a new platform version is available
-./infra upgrade --check
+# Check if a newer release tag is available without mutating containers
+bash scripts/upgrade-client.sh --check
 
-# Execute an automated rolling upgrade to latest release
-./infra upgrade
+# Execute client upgrade with python3 / curl / jq diagnostics fallback
+bash scripts/upgrade-client.sh
 ```
-*(Verified in commit `76ce216` feat(upgrade): add --check CLI option to query authoritative release updates).*
+*(Verified in commit `41fcb99` fix(upgrade): add python3 fallback and explicit diagnostics when jq or curl fails, and commit `7bac7f7` managing local runtime version dynamically).*

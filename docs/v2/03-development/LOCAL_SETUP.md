@@ -5,7 +5,7 @@
 > **Platform Version:** `v2.3.1`  
 > **Status:** Current Authoritative Setup Guide  
 > **Audit Date:** 2026-10-20  
-> **Related Documents:** [INDEX.md](file:///d:/company/products/vps-infra/vps-infra/docs/v2/INDEX.md), [CLI_AND_ORCHESTRATION.md](file:///d:/company/products/vps-infra/vps-infra/docs/v2/04-modules/CLI_AND_ORCHESTRATION.md)
+> **Related Documents:** [INDEX.md](../INDEX.md), [CLI_AND_ORCHESTRATION.md](../04-modules/CLI_AND_ORCHESTRATION.md)
 
 ---
 
@@ -29,15 +29,15 @@ shellcheck setup.sh
 shellcheck infra
 shellcheck scripts/*.sh
 
-# 2. Test PowerShell Syntax (on Windows or via pwsh)
-pwsh -Command "Test-ScriptFileInfo setup.ps1; Test-ScriptFileInfo infra.ps1"
+# 2. Test PowerShell Syntax (via PowerShell Language Parser)
+pwsh -Command "$null = [System.Management.Automation.Language.Parser]::ParseFile('setup.ps1', [ref]$null, [ref]$e); if ($e) { throw $e }; $null = [System.Management.Automation.Language.Parser]::ParseFile('infra.ps1', [ref]$null, [ref]$e); if ($e) { throw $e }"
 ```
 
 ---
 
-## 3. Testing Docker Compose Locally
+## 3. Testing Docker Compose Locally (Disposable Test Only)
 
-You can test the entire platform compose stack locally using Docker Desktop:
+You can validate the compose stack locally using Docker Desktop or Docker CE:
 
 ```bash
 # 1. Create a local test .env file
@@ -46,9 +46,12 @@ cp .env.example .env
 # 2. Validate docker-compose.yml syntax
 docker compose config
 
-# 3. Launch the platform in detached mode
+# 3. Launch disposable test containers
 docker compose up -d
 
 # 4. Check service status using the infra CLI
 ./infra status
 ```
+
+> [!WARNING]
+> **Startup Limitation (GH01):** On a fresh, un-migrated database, the `devops-api-prod` container will encounter an uncaught exception during startup (`SQLSTATE 23502: not-null constraint violation on AiAgents.Slug`). Production deployments remain on conditional hold until Phase GH-1 schema remediation is merged.
