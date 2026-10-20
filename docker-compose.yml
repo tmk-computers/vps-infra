@@ -25,6 +25,7 @@ services:
 
       # Database Connection
       - ConnectionStrings__DefaultConnection=Host=shared_postgres;Port=5432;Database=${POSTGRES_DB:-devops_prod};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-StrongPostgres@123};Pooling=true;MaxPoolSize=10;
+      - Database__AutoMigrateOnStartup=false
 
       # Dynamic JWT & SuperAdmin Settings
       - JwtSettings__SecretKey=${JWT_SECRET_KEY:-${DEVOPS_JWT_SECRET}}
