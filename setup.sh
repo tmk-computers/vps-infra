@@ -739,4 +739,9 @@ else
     echo "  2. Log in to the DevOps Manager to register your Products & microservices."
     echo "  3. Use templates in '$SCRIPT_DIR/templates' for new service deployments."
 fi
+
+# Record active installed platform version
+INSTALLED_VER="$(git describe --tags --abbrev=0 2>/dev/null || cat "$SCRIPT_DIR/VERSION" 2>/dev/null || echo "latest")"
+echo "$INSTALLED_VER" > "$SCRIPT_DIR/VERSION"
+
 echo -e "${GREEN}======================================================================${NC}\n"

@@ -26,12 +26,8 @@ done
 
 cd "${ROOT_DIR}"
 
-# 1. Read current version
-if [[ -f "${VERSION_FILE}" ]]; then
-    CURRENT_VERSION=$(tr -d '[:space:]' < "${VERSION_FILE}")
-else
-    CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v2.2.0")
-fi
+# 1. Read current version from git tags first
+CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || (tr -d '[:space:]' < "${VERSION_FILE}" 2>/dev/null) || echo "v2.2.0")
 
 # Ensure leading 'v'
 [[ "${CURRENT_VERSION}" != v* ]] && CURRENT_VERSION="v${CURRENT_VERSION}"
@@ -89,9 +85,8 @@ if git rev-parse "${NEW_VERSION}" >/dev/null 2>&1; then
     exit 1
 fi
 
-# Update VERSION file
+# Update local VERSION file for current environment
 echo "${NEW_VERSION}" > "${VERSION_FILE}"
-git add "${VERSION_FILE}"
 
 if [[ -f "${SCRIPT_DIR}/release.sh" ]]; then
     git add "${SCRIPT_DIR}/release.sh"

@@ -76,6 +76,7 @@ Thumbs.db
 .env
 .env.local
 .env.backup*
+.env.bak*
 __pycache__/
 *.pyc
 *.key
@@ -83,3 +84,5 @@ __pycache__/
 *.sqlite
 *.sqlite3
 *.db-journal
+upgrade.status
+VERSION

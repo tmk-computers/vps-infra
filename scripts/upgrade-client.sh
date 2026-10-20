@@ -261,6 +261,8 @@ echo "▶ $CURRENT_STEP..."
 update_status "IN_PROGRESS" "Verifying service health..." "$CURRENT_STEP"
 
 NEW_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo "latest")"
-echo "✅ Upgrade completed successfully to commit $NEW_COMMIT."
-update_status "SUCCESS" "Platform successfully upgraded to version $NEW_COMMIT." "Completed"
+NEW_VER="$(git describe --tags --abbrev=0 2>/dev/null || echo "$NEW_COMMIT")"
+echo "$NEW_VER" > "$SCRIPT_DIR/VERSION"
+echo "✅ Upgrade completed successfully to version $NEW_VER ($NEW_COMMIT)."
+update_status "SUCCESS" "Platform successfully upgraded to version $NEW_VER ($NEW_COMMIT)." "Completed"
 exit 0
