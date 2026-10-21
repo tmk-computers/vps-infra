@@ -1,6 +1,6 @@
 # Host Architecture & Container Network Topology
 
-> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server d7e8df99cb2b099eb8b6290e524af4d01a6c4a4d; infra b84f9d5de8da991cb603d696b94f829f5361e64a. **Last verified:**2026-10-21. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
 
 > **Document ID:** `V2-INFRA-ARCH-001`  
 > **Repository:** `vps-infra`  
@@ -8,6 +8,8 @@
 > **Status:** Source-aligned reference candidate; independent approval pending
 > **Audit Date:** 2026-10-20  
 > **Related Documents:** [SERVER_INTEGRATION.md](./SERVER_INTEGRATION.md), [HOST_SECURITY.md](../05-security/HOST_SECURITY.md)
+
+> **Architecture authority:** [Customer-hosted platform and current packaging limits](../../../../vps-infra-server/docs/v2/02-architecture/SELF_HOSTED_PLATFORM.md). Repository ownership is not hosting location; TMK licensing remains separately central.
 
 ---
 
@@ -26,7 +28,7 @@ graph TD
         ACME["ACME TLS Resolver (myresolver)"]
     end
 
-    subgraph "Core Application Services (docker-compose.yml on traefik_net)"
+    subgraph "One customer installation: local API and CI services on traefik_net"
         API["DevOps API (devops-api-prod :8080)"]
         Web["DevOps Web (devops-web-prod :80)"]
         CIAPI["CI Server API (ci-api-prod :5051)"]
@@ -72,7 +74,7 @@ The host platform organizes network connectivity around the external Docker brid
    - `pgAdmin` binds default host port 5050 strictly to `127.0.0.1` (`${PGADMIN_PORT_BIND:-127.0.0.1:5050}:80`).
    - These are loopback defaults only; POSTGRES_PORT_BIND and PGADMIN_PORT_BIND overrides can expose them. Inspect effective configuration before release.
 3. **Agent Runtime Isolation:**
-   - The Agent Runtime is deployed as a standalone managed service or process; it is **not** included in the root `vps-infra/docker-compose.yml`.
+   - The Agent Runtime is intended inside each customer installation, but is **not** included in root vps-infra/docker-compose.yml or its publish matrix. Server Dockerfile/source-build production Compose exists; a qualified standard customer runtime image/install/network/callback/secret configuration is PARTIAL, not a proven installed managed service.
 
 ---
 

@@ -1,12 +1,14 @@
 # VPS Infrastructure Documentation V2 — Navigation Hub
 
-> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server d7e8df99cb2b099eb8b6290e524af4d01a6c4a4d; infra b84f9d5de8da991cb603d696b94f829f5361e64a. **Last verified:**2026-10-21. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
 
 > **Project:** Unified VPS-Infra Platform  
 > **Repository:** `vps-infra`  
 > **Platform Version:** `v2.3.1`  
-> **Authoritative Baseline:** Commit [`6dedfa3`](./08-quality/SOURCE_BASELINE.md) (2026-10-20)  
-> **Companion Repository:** [`vps-infra-server` (Control Plane & AI Runtime)](../../../vps-infra-server/docs/v2/INDEX.md)
+> **Inspected merged-main baseline:** `b84f9d5de8da991cb603d696b94f829f5361e64a` (2026-10-21); see [source baseline](./08-quality/SOURCE_BASELINE.md).
+> **Companion Repository:** [`vps-infra-server` (application source, built for customer installations)](../../../vps-infra-server/docs/v2/INDEX.md)
+
+> **Customer-hosted scope (ARCH-SELFHOST-01):** Repository names describe source/distribution responsibilities, not hosting locations. Each customer operates its local Control Plane, CI and operational state; TMK centrally operates the separate License Server. Full supported runtime packaging remains partial. [Authoritative architecture](../../../vps-infra-server/docs/v2/02-architecture/SELF_HOSTED_PLATFORM.md).
 
 ---
 

@@ -1,6 +1,6 @@
 # VPS Infrastructure — Start Here
 
-> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server d7e8df99cb2b099eb8b6290e524af4d01a6c4a4d; infra b84f9d5de8da991cb603d696b94f829f5361e64a. **Last verified:**2026-10-21. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
 
 > **Document ID:** `V2-INFRA-START-001`  
 > **Repository:** `vps-infra`  
@@ -9,6 +9,8 @@
 > **Target Audience:** DevOps Engineers, System Administrators & Operators  
 > **Related Documents:** [INDEX.md](./INDEX.md), [06-operations/OPERATOR_RUNBOOK.md](./06-operations/OPERATOR_RUNBOOK.md)
 
+> **Architecture authority:** [Customer-hosted platform and current packaging limits](../../../vps-infra-server/docs/v2/02-architecture/SELF_HOSTED_PLATFORM.md). Repository ownership is not hosting location; TMK licensing remains separately central.
+
 ---
 
 ## 1. What is `vps-infra`?
@@ -16,7 +18,7 @@
 The **`vps-infra`** repository contains host setup, Compose and operator scripts for the hosting platform. Actual security and release qualification depend on the specific environment and independent engineering gates.
 
 It provides:
-- **`setup.sh` / `setup.ps1`:** Host bootstrapping scripts that install Docker, configure firewall rules, create system directories, and launch the platform.
+- **`setup.sh` / `setup.ps1`:** Source installer entry points; Linux scripts/setup-vps.sh provisions prerequisites, while setup.sh requires Docker/Compose and configures support/root services. PowerShell source does not qualify native Windows installation.
 - **`docker-compose.yml` & Platform Compose Stacks:** Multi-container orchestration running `devops-api-prod`, `devops-web-prod`, `ci-api-prod`, `ci-web-prod` on `traefik_net`, alongside Traefik edge reverse proxying and `shared_postgres`.
 - **`infra` CLI Tool:** Host management dispatch supporting: `up`, `down`, `restart`, `status` / `ps`, `logs`, `backup`, and `help`.
 - **`templates/`:** Pre-built application stack definitions allowing tenants to deploy customer web apps in Docker with Traefik edge routing labels.

@@ -1,6 +1,6 @@
 # Host Security, Firewall & TLS Architecture
 
-> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server d7e8df99cb2b099eb8b6290e524af4d01a6c4a4d; infra b84f9d5de8da991cb603d696b94f829f5361e64a. **Last verified:**2026-10-21. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
 
 > **Document ID:** `V2-INFRA-SEC-001`  
 > **Repository:** `vps-infra`  
@@ -9,6 +9,8 @@
 > **Audit Date:** 2026-10-20  
 > **Related Documents:** [HOST_ARCHITECTURE.md](../02-architecture/HOST_ARCHITECTURE.md), [OPERATOR_RUNBOOK.md](../06-operations/OPERATOR_RUNBOOK.md)
 
+
+> **Customer-hosted scope (ARCH-SELFHOST-01):** Trust boundaries are vendor distribution/central licensing versus each customer-local operational installation. Separate local state does not repair intra-installation tenancy/authentication flaws or prove air-gapped operation. [Authoritative architecture](../../../../vps-infra-server/docs/v2/02-architecture/SELF_HOSTED_PLATFORM.md).
 
 ---
 
