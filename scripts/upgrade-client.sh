@@ -95,6 +95,29 @@ except Exception:
     fi
 fi
 
+# Prevent suicide if invoked directly inside devops-api-prod container
+CURRENT_CID="$(cat /etc/hostname 2>/dev/null || true)"
+if [ "${DETACHED_UPGRADE_RUNNER:-false}" != "true" ] && [ -n "$CURRENT_CID" ]; then
+    if docker ps --filter "name=devops-api-prod" --format "{{.ID}}" 2>/dev/null | grep -q "^${CURRENT_CID}"; then
+        echo "▶ Detected invocation from within devops-api-prod container ($CURRENT_CID)."
+        echo "▶ Spawning isolated background runner container (vps-infra-upgrade-runner)..."
+        docker rm -f vps-infra-upgrade-runner 2>/dev/null || true
+        rm -f "$LOCK_FILE"
+        docker run -d --name vps-infra-upgrade-runner --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v /var/www:/var/www \
+            -v /root/.ssh:/root/.ssh:ro \
+            -v /root/.docker:/root/.docker:ro \
+            -e DETACHED_UPGRADE_RUNNER=true \
+            -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
+            --entrypoint /bin/bash \
+            ghcr.io/tmk-computers/tmk-devops-api:latest \
+            -c "bash /var/www/vps-infra/scripts/upgrade-client.sh"
+        echo "✅ Decoupled upgrade runner container launched successfully."
+        exit 0
+    fi
+fi
+
 # Prevent concurrent upgrade executions
 if [ -f "$LOCK_FILE" ]; then
     PID=$(cat "$LOCK_FILE" 2>/dev/null || true)
@@ -234,6 +257,26 @@ fi
 
 # 3. Ensure executable permissions on setup scripts
 chmod +x "$SCRIPT_DIR/setup.sh" "$SCRIPT_DIR/uninstall.sh" "$SCRIPT_DIR/scripts/"*.sh 2>/dev/null || true
+
+# If invoked inside devops-api-prod, hand off to decoupled runner before executing setup.sh
+if [ "${DETACHED_UPGRADE_RUNNER:-false}" != "true" ] && [ -n "$CURRENT_CID" ]; then
+    if docker ps --filter "name=devops-api-prod" --format "{{.ID}}" 2>/dev/null | grep -q "^${CURRENT_CID}"; then
+        echo "▶ Handing off execution to decoupled supervisor container before service restart..."
+        docker rm -f vps-infra-upgrade-runner 2>/dev/null || true
+        rm -f "$LOCK_FILE"
+        docker run -d --name vps-infra-upgrade-runner --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v /var/www:/var/www \
+            -v /root/.ssh:/root/.ssh:ro \
+            -v /root/.docker:/root/.docker:ro \
+            -e DETACHED_UPGRADE_RUNNER=true \
+            -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
+            --entrypoint /bin/bash \
+            ghcr.io/tmk-computers/tmk-devops-api:latest \
+            -c "bash /var/www/vps-infra/scripts/upgrade-client.sh"
+        exit 0
+    fi
+fi
 
 # 4. Migrate legacy folder structure if present
 if [ -f "$SCRIPT_DIR/scripts/migrate-folder-structure.sh" ]; then
