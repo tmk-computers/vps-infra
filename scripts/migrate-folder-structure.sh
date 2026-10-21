@@ -55,7 +55,18 @@ echo -e "${YELLOW}⚠️ Legacy folder structure detected. Starting automated mi
 
 # 1. Stop platform containers cleanly to release volume locks
 echo -e "\n${CYAN}▶ Step 1: Stopping containers to release disk locks...${NC}"
-docker compose stop 2>/dev/null || true
+CURRENT_CID="$(cat /etc/hostname 2>/dev/null || true)"
+IS_INSIDE_API=false
+if [ -n "$CURRENT_CID" ] && docker ps --filter "name=devops-api-prod" --format "{{.ID}}" 2>/dev/null | grep -q "^${CURRENT_CID}"; then
+    IS_INSIDE_API=true
+fi
+
+if [ "$IS_INSIDE_API" = true ]; then
+    echo "   • Detected execution inside devops-api-prod; stopping other services to prevent container termination..."
+    docker compose stop devops-web-prod ci-web-prod ci-api-prod shared_postgres shared_mysql 2>/dev/null || true
+else
+    docker compose stop 2>/dev/null || true
+fi
 
 # 2. Migrate volumes/ -> docker/volumes/
 echo -e "\n${CYAN}▶ Step 2: Migrating volumes/ -> docker/volumes/...${NC}"
