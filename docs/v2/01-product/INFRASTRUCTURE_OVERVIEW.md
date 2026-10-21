@@ -1,11 +1,13 @@
 # Infrastructure Product Overview & Feasibility
 
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+
 > **Document ID:** `V2-INFRA-PROD-001`  
 > **Repository:** `vps-infra`  
 > **Platform Version:** `v2.3.1`  
-> **Status:** Current Authoritative Product Specification  
+> **Status:** Source-aligned reference candidate; independent approval pending
 > **Audit Date:** 2026-10-20  
-> **Related Documents:** [INDEX.md](file:///d:/company/products/vps-infra/vps-infra/docs/v2/INDEX.md), [HOST_ARCHITECTURE.md](file:///d:/company/products/vps-infra/vps-infra/docs/v2/02-architecture/HOST_ARCHITECTURE.md)
+> **Related Documents:** [INDEX.md](../INDEX.md), [HOST_ARCHITECTURE.md](../02-architecture/HOST_ARCHITECTURE.md)
 
 ---
 
@@ -20,16 +22,17 @@ The **VPS Infrastructure Platform** (`vps-infra`) is engineered for developers, 
 
 ---
 
-## 2. Single-VPS Go-Live Feasibility
+## 2. Historical Staging Feasibility Baseline
 
-An authoritative technical assessment conducted on 2026-10-16 (`docs/audits/2026-10-16-single-vps-go-live-feasibility.md`) evaluated whether the entire Unified Platform (API, Web, CI Server, Agent Runtime, PostgreSQL, Redis, and customer apps) can run reliably on a **single 8-core / 16 GB RAM VPS**:
+A historical architecture and capacity audit conducted on 2026-10-16 (`docs/audits/2026-10-16-single-vps-go-live-feasibility.md`) evaluated an **OMR Enterprise SaaS platform workload** deployed on a **single 8-core / 32 GB RAM VPS** running Ubuntu 24.04 LTS:
 
-### Key Feasibility Findings:
-1. **CPU & RAM Headroom:**
-   - Base Platform Footprint (Idle): ~2.8 GB RAM across all system containers.
-   - Active Agent Reasoning / Heavy CI Build: Peaks at ~6.2 GB RAM and 4–5 CPU cores.
-   - Headroom: ~9.8 GB RAM remains available for customer applications and PostgreSQL buffer cache.
-2. **Concurrency Throttling:**
-   - To protect the host, the CI Server build queue is configured with a strict concurrency limit of **2 concurrent builds**.
-   - Agent execution loops are capped at **5 concurrent reasoning streams**.
-3. **Verdict:** **HIGHLY FEASIBLE** for small-to-medium agencies hosting up to 25 customer web applications alongside moderate AI workloads.
+### Scoped Historical Audit Findings:
+1. **Audited Hardware & Workload:**
+   - Host: 8 vCPUs (x86_64), 31.34 GiB RAM (32 GB), ~387 GB NVMe storage, Linux swap disabled.
+   - Workload: Dedicated OMR SaaS container suite (`omr-api`, `omr-worker:qa`, `omr-web:qa`, PostgreSQL, RabbitMQ, and Traefik).
+   - This evaluation did **NOT** audit or certify the merged Control Plane API, CI Server engine, or Agent Runtime platform on a 16 GB VPS.
+2. **Operational Blockers Identified (CONDITIONAL HOLD / Production NO-GO):**
+   - **Off-Host Disaster Replication Blocker:** Backups were written to `/var/www/vps-infra/volumes/offhost_backup_destination` on the primary local VPS disk; no remote S3/R2 bucket was configured.
+   - **Origin TLS Certificate Blocker:** Traefik served a default self-signed certificate, blocking Cloudflare *Full (strict)* origin verification.
+3. **Formal Verdict:** **CONDITIONAL HOLD / PRODUCTION NO-GO AS-IS**.
+   - Any prior assertion that the platform was certified as "Production Ready" for 25 customer apps alongside AI agent reasoning on a 16 GB VPS was an unsupported extrapolation and is formally withdrawn. Sizing for multi-tenant AI workloads remains a proposed envelope requiring empirical benchmarking.

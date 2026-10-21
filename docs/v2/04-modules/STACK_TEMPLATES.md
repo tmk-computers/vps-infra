@@ -1,11 +1,13 @@
 # Application Stack Templates Specification
 
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+
 > **Document ID:** `V2-INFRA-MOD-002`  
 > **Repository:** `vps-infra`  
 > **Platform Version:** `v2.3.1`  
-> **Status:** Current Authoritative Module Specification  
+> **Status:** Source-aligned reference candidate; independent approval pending
 > **Audit Date:** 2026-10-20  
-> **Related Documents:** [HOST_ARCHITECTURE.md](file:///d:/company/products/vps-infra/vps-infra/docs/v2/02-architecture/HOST_ARCHITECTURE.md), [OPERATOR_RUNBOOK.md](file:///d:/company/products/vps-infra/vps-infra/docs/v2/06-operations/OPERATOR_RUNBOOK.md)
+> **Related Documents:** [HOST_ARCHITECTURE.md](../02-architecture/HOST_ARCHITECTURE.md), [OPERATOR_RUNBOOK.md](../06-operations/OPERATOR_RUNBOOK.md)
 
 ---
 
@@ -15,33 +17,37 @@ The platform provides standardized application deployment recipes located in `vp
 
 ---
 
-## 2. Supported Application Runtimes
+## 2. Supported Application Runtimes & Template Files
 
-| Stack Name | Template Directory | Base Docker Image | Default Port | Health Check Path |
-|---|---|---|---|---|
-| **Node.js** | `templates/node/` | `node:22-alpine` | `3000` | `/health` or `/` |
-| **.NET Core** | `templates/dotnet/` | `mcr.microsoft.com/dotnet/aspnet:10.0` | `8080` | `/health` |
-| **PHP / WordPress**| `templates/php/` | `php:8.3-fpm-alpine` + Nginx | `80` | `/index.php` |
-| **Python** | `templates/python/` | `python:3.12-slim` + Uvicorn/FastAPI | `8000` | `/health` |
-| **Static Web** | `templates/static/` | `nginx:alpine` | `80` | `/index.html` |
+Templates in `templates/` are organized as Docker Compose template files and Dockerfiles:
+
+| Stack / Runtime | Compose Template File | Supporting Dockerfile / Config | Target Internal Port |
+|---|---|---|---|
+| **Node.js Web** | `templates/docker-compose.node-web.template.yml` | `Dockerfile.express` | `3000` |
+| **Express API** | `templates/docker-compose.express-api.template.yml` | `Dockerfile.express` | `3000` |
+| **.NET API** | `templates/docker-compose.dotnet-api.template.yml` | `Dockerfile.dotnet` | `8080` |
+| **Python FastAPI** | `templates/docker-compose.fastapi.template.yml` | `Dockerfile.fastapi` | `8000` |
+| **Python AI** | `templates/docker-compose.python-ai.template.yml` | Python / vLLM / requirements | `8000` |
+| **PHP / Laravel** | `templates/docker-compose.laravel.template.yml` | `Dockerfile.laravel`, `nginx.laravel.conf` | `80` |
+| **React SPA** | `templates/docker-compose.react-web.template.yml` | `Dockerfile.react`, `nginx.spa.conf` | `80` |
+| **Angular SPA** | `templates/docker-compose.angular-web.template.yml`| `Dockerfile.angular`, `nginx.spa.conf` | `80` |
+| **Spring Boot** | `templates/docker-compose.spring-boot.template.yml`| `Dockerfile.spring-boot` | `8080` |
+| **Static Web** | `templates/docker-compose.static-web.template.yml` | `nginx:alpine` | `80` |
 
 ---
 
-## 3. Automated Reverse Proxy Configuration
+## 3. Automated Reverse Proxy Configuration via Traefik
 
-When a stack template is deployed:
-1. The CI Server allocates an available internal dynamic port on `vps_backend_net`.
-2. A virtual host entry is added to Nginx:
-   ```nginx
-   server {
-       server_name app.tenant-domain.com;
-       location / {
-           proxy_pass http://customer-app-container:3000;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-       }
-   }
+When an application stack is deployed by the CI Server:
+1. The container is attached to the external bridge network `traefik_net`.
+2. Dynamic routing labels are embedded directly in the generated `docker-compose.yml`:
+   ```yaml
+   labels:
+     - "traefik.enable=true"
+     - "traefik.http.routers.${APP_NAME}.rule=Host(`${APP_DOMAIN}`)"
+     - "traefik.http.routers.${APP_NAME}.entrypoints=websecure"
+     - "traefik.http.routers.${APP_NAME}.tls=true"
+     - "traefik.http.routers.${APP_NAME}.tls.certresolver=myresolver"
+     - "traefik.http.services.${APP_NAME}.loadbalancer.server.port=${INTERNAL_PORT}"
    ```
-3. Certbot or Caddy automatically requests and installs an SSL/TLS certificate.
+3. Traefik automatically discovers the container, configures the reverse proxy route, and provisions Let's Encrypt TLS certificates using the `myresolver` ACME challenge. (Static Nginx host virtual-hosts are not used for edge routing).

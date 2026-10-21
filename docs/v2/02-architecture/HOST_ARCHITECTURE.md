@@ -1,17 +1,19 @@
 # Host Architecture & Container Network Topology
 
+> **Maintained by:** repository documentation owner (role; individual approval pending). **Reviewed source parents:** server c458c831711ba2e82a382719f76c98551d7d5a70; infra44a5d6a32bf59f50e7c13b663dbd22bac31eb53d. **Last verified:**2026-10-20. **Review trigger:** any source/DTO/config/schema/package/CLI/deployment change. [Maintenance and checks](../../../../vps-infra-server/docs/v2/08-quality/MAINTENANCE.md).
+
 > **Document ID:** `V2-INFRA-ARCH-001`  
 > **Repository:** `vps-infra`  
 > **Platform Version:** `v2.3.1`  
-> **Status:** Current Authoritative Host Architecture  
+> **Status:** Source-aligned reference candidate; independent approval pending
 > **Audit Date:** 2026-10-20  
-> **Related Documents:** [SERVER_INTEGRATION.md](file:///d:/company/products/vps-infra/vps-infra/docs/v2/02-architecture/SERVER_INTEGRATION.md), [HOST_SECURITY.md](file:///d:/company/products/vps-infra/vps-infra/docs/v2/05-security/HOST_SECURITY.md)
+> **Related Documents:** [SERVER_INTEGRATION.md](./SERVER_INTEGRATION.md), [HOST_SECURITY.md](../05-security/HOST_SECURITY.md)
 
 ---
 
 ## 1. Host Architecture Overview
 
-The host architecture is optimized for single-node Linux VPS environments, structuring services into strict isolation boundaries using Docker bridge networks and host volume mounts:
+The host architecture is optimized for single-node Linux VPS environments, using shared Docker networks and host volume mounts; isolation must be verified per environment:
 
 ```mermaid
 graph TD
@@ -19,58 +21,66 @@ graph TD
         Client["Browser / Client (Port 80/443)"]
     end
 
-    subgraph "Edge Ingress Layer (vps_public_net)"
-        Nginx["Nginx / Caddy Reverse Proxy"]
-        Certbot["ACME TLS Client"]
+    subgraph "Edge Ingress Layer (traefik_net)"
+        Traefik["Traefik Global Ingress (:80/:443)"]
+        ACME["ACME TLS Resolver (myresolver)"]
     end
 
-    subgraph "Internal Platform Services (vps_backend_net)"
-        API["DevOps API (devops-api-prod)"]
-        CI["CI Server (ci-server)"]
-        MAF["Agent Runtime (agent-runtime :5050)"]
-        PG[("PostgreSQL 16 (postgres-prod :5432)")]
-        Redis[("Redis 7 (redis-prod :6379)")]
+    subgraph "Core Application Services (docker-compose.yml on traefik_net)"
+        API["DevOps API (devops-api-prod :8080)"]
+        Web["DevOps Web (devops-web-prod :80)"]
+        CIAPI["CI Server API (ci-api-prod :5051)"]
+        CIWeb["CI Server Web (ci-web-prod :80)"]
+    end
+
+    subgraph "Platform Supporting Services"
+        PG[("PostgreSQL 16 (shared_postgres 127.0.0.1:5432)")]
+        Registry["Docker Registry (registry :5000)"]
     end
 
     subgraph "Customer Application Containers"
-        App1["Customer App 1 (Node.js)"]
-        App2["Customer App 2 (.NET Core)"]
+        App1["Customer App 1 (Node / Express)"]
+        App2["Customer App 2 (.NET API)"]
     end
 
-    Client --> Nginx
-    Nginx -->|Proxy Pass| API
-    Nginx -->|Proxy Pass| CI
-    Nginx -->|Proxy Pass| App1
-    Nginx -->|Proxy Pass| App2
+    Client --> Traefik
+    Traefik -->|Label Route| API
+    Traefik -->|Label Route| Web
+    Traefik -->|Label Route| CIAPI
+    Traefik -->|Label Route| CIWeb
+    Traefik -->|Label Route| App1
+    Traefik -->|Label Route| App2
 
     API --> PG
-    API --> Redis
-    API -->|HMAC SHA-256| MAF
-    CI -->|Dynamic Firewall| Nginx
+    CIAPI -->|"Direct DB mode"| PG
+    CIAPI --> Registry
 ```
 
 ---
 
 ## 2. Network Topology & Port Isolation
 
-The host defines two distinct Docker bridge networks in `docker-compose.yml`:
+The host platform organizes network connectivity around the external Docker bridge network:
 
-1. **`vps_public_net` (Edge Network):**
-   - Attached to the Nginx reverse proxy.
-   - Binds to host ports `80` (HTTP) and `443` (HTTPS).
-   - Serves incoming public web traffic and terminates TLS certificates.
-2. **`vps_backend_net` (Internal Backend Network):**
-   - Isolated private bridge network with `internal: true` or unmapped host ports.
-   - Connects `devops-api-prod`, `agent-runtime`, `ci-server`, `postgres-prod`, and `redis-prod`.
-   - **Zero ports** are published to the host's public network interface. The database and agent runtime cannot be accessed from outside the host.
+1. **`traefik_net` (External Bridge Network):**
+   - Defined externally in `docker-compose.yml` (`external: true`) and created during platform setup.
+   - Attached to the Traefik edge reverse proxy (`platform/network/traefik/docker-compose.yml`).
+   - Binds host ports `80` (HTTP) and `443` (HTTPS) to serve public web traffic and automatically provision Let's Encrypt TLS certificates.
+   - Core platform services (`devops-api-prod`, `devops-web-prod`, `ci-api-prod`, `ci-web-prod`) communicate internally over `traefik_net` without publishing container ports to external network interfaces.
+2. **Loopback Port Isolation (127.0.0.1):**
+   - The primary relational database (`shared_postgres`) binds host port 5432 strictly to `127.0.0.1` (`${POSTGRES_PORT_BIND:-127.0.0.1:5432}:5432`).
+   - `pgAdmin` binds default host port 5050 strictly to `127.0.0.1` (`${PGADMIN_PORT_BIND:-127.0.0.1:5050}:80`).
+   - These are loopback defaults only; POSTGRES_PORT_BIND and PGADMIN_PORT_BIND overrides can expose them. Inspect effective configuration before release.
+3. **Agent Runtime Isolation:**
+   - The Agent Runtime is deployed as a standalone managed service or process; it is **not** included in the root `vps-infra/docker-compose.yml`.
 
 ---
 
 ## 3. Persistent Storage & Volume Layout
 
-All stateful data is mounted to dedicated host directories under `/opt/vps-infra/data/`:
-- `/opt/vps-infra/data/postgres/`: PostgreSQL database cluster files (`PGDATA`).
-- `/opt/vps-infra/data/redis/`: Redis append-only file (`appendonly.aof`).
-- `/opt/vps-infra/data/caddy_data/`: ACME account keys and renewed TLS certificates.
-- `/opt/vps-infra/apps/`: Application deployment codebases and build artifacts.
-- `/opt/vps-infra/backups/`: Physical PostgreSQL `.dump` backup files.
+Default stateful mount examples (not a complete inventory) are under host directories under `/var/www/vps-infra/` (or `${INFRA_BASE_DIR:-/var/www/vps-infra}`):
+- `/var/www/vps-infra/docker/volumes/db/postgres/data/`: PostgreSQL database cluster files (`PGDATA`).
+- `/var/www/vps-infra/docker/volumes/db/postgres/backups/`: Plain SQL database backup dumps (`devops_prod_*.sql`).
+- `/var/www/vps-infra/platform/network/traefik/acme.json`: ACME account keys and automated Let's Encrypt TLS certificates.
+- `/var/www/`: Customer application deployment codebases and persistent application storage.
+- `/var/www/vps-infra/docker/volumes/license.key`: Local license key verification mount.
