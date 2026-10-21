@@ -24,7 +24,7 @@ services:
       - TMK_LICENSE_SERVER=${TMK_LICENSE_SERVER:-https://license.tmkcomputers.in}
 
       # Database Connection
-      - ConnectionStrings__DefaultConnection=Host=shared_postgres;Port=5432;Database=${POSTGRES_DB:-devops_prod};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-StrongPostgres@123};Pooling=true;MaxPoolSize=10;
+      - ConnectionStrings__DefaultConnection=Host=shared_postgres;Port=5432;Database=${POSTGRES_DB:-devops_prod};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-StrongPostgres@123};Pooling=true;MaxPoolSize=10;Persist Security Info=true;
       - Database__AutoMigrateOnStartup=false
 
       # Dynamic JWT & SuperAdmin Settings
