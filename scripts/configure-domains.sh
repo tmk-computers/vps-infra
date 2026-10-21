@@ -43,8 +43,8 @@ configure_domains() {
 
     if is_ip_address "$domain"; then
         echo "Detected IP address for PRIMARY_DOMAIN: $domain"
-        mkdir -p "$SCRIPT_DIR/volumes/env-backups" || return 1
-        cp -p "$SCRIPT_DIR/.env" "$SCRIPT_DIR/volumes/env-backups/.env.backup.$(date +%Y%m%d%H%M%S).$$" || return 1
+        mkdir -p "$SCRIPT_DIR/docker/volumes/env-backups" || return 1
+        cp -p "$SCRIPT_DIR/.env" "$SCRIPT_DIR/docker/volumes/env-backups/.env.backup.$(date +%Y%m%d%H%M%S).$$" || return 1
         save_domain_value PRIMARY_DOMAIN "$domain"
         save_domain_value NETWORK_MODE "private"
         save_domain_value PRIVATE_IP "$domain"
@@ -84,8 +84,8 @@ configure_domains() {
         esac
     done
 
-    mkdir -p "$SCRIPT_DIR/volumes/env-backups" || return 1
-    cp -p "$SCRIPT_DIR/.env" "$SCRIPT_DIR/volumes/env-backups/.env.backup.$(date +%Y%m%d%H%M%S).$$" || return 1
+    mkdir -p "$SCRIPT_DIR/docker/volumes/env-backups" || return 1
+    cp -p "$SCRIPT_DIR/.env" "$SCRIPT_DIR/docker/volumes/env-backups/.env.backup.$(date +%Y%m%d%H%M%S).$$" || return 1
     save_domain_value PRIMARY_DOMAIN "$domain"
     while read -r key prefix; do
         value="${!key}"
