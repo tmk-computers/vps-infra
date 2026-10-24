@@ -149,6 +149,10 @@ services:
       - PILOT_EXAM_END_DATE=${PILOT_EXAM_END_DATE:-2026-10-25}
       - PILOT_EXAM_DAILY_START_IST=${PILOT_EXAM_DAILY_START_IST:-08:30}
       - PILOT_EXAM_DAILY_END_IST=${PILOT_EXAM_DAILY_END_IST:-15:30}
+      - CI_MAX_MEM=${CI_MAX_MEM:-6g}
+      - CI_MAX_CPUS=${CI_MAX_CPUS:-4}
+      - CI_CPU_SHARES=${CI_CPU_SHARES:-1024}
+      - CI_JOB_TIMEOUT_MINUTES=${CI_JOB_TIMEOUT_MINUTES:-60}
     volumes:
       - ${DOCKER_SOCK_PATH:-/var/run/docker.sock}:/var/run/docker.sock
       - ${WWW_ROOT:-/var/www}:/var/www
