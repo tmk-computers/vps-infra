@@ -91,6 +91,7 @@ services:
       - ${DOCKER_CONFIG_PATH:-/root/.docker}:/root/.docker:ro
       - ${SSH_CONFIG_PATH:-/root/.ssh}:/root/.ssh:ro
       - /etc/vps-infra:/etc/vps-infra:ro
+      - /etc/vps-infra/secrets:/etc/vps-infra/secrets:rw
 
     networks:
       - traefik_net
