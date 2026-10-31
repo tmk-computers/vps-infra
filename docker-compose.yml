@@ -38,6 +38,12 @@ services:
       # Cross-Machine CI Deployment & REST Sync Secret
       - DeploySettings__CiSecret=${CI_SECRET:?CI_SECRET must be set and non-empty}
 
+      # Infrastructure & Deployment Paths
+      - INFRA_BASE_DIR=${INFRA_BASE_DIR:-/var/www/vps-infra}
+      - DeploySettings__CodeBaseDirectory=${CODE_BASE_DIR:-/var/www/vps-infra/src}
+      - DeploySettings__AppsBaseDirectory=${APPS_BASE_DIR:-/var/www/vps-infra/apps}
+      - DeploySettings__VolumesBaseDirectory=${VOLUMES_BASE_DIR:-/var/www/vps-infra/docker/volumes/apps}
+
       # Docker Registry Settings
       - DOCKER_REGISTRY_HOST=${DOCKER_REGISTRY_HOST:-${REGISTRY_HOST:-registry.tmkcomputers.in}}
       - REGISTRY_HOST=${REGISTRY_HOST:-${DOCKER_REGISTRY_HOST:-registry.tmkcomputers.in}}

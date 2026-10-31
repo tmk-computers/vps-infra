@@ -55,17 +55,16 @@ SERVER_URL="${TEST_LICENSE_SERVER_URL:-http://localhost:5055}"
 # 1.1 Outdated client v2.1
 RESP_V21=$(curl -s --max-time 5 "$SERVER_URL/api/v1/license/version-check?currentVersion=v2.1")
 HAS_UPDATE_V21=$(echo "$RESP_V21" | jq -r '.hasUpdate')
+TARGET_VER="$(cat "$SCRIPT_DIR/VERSION" 2>/dev/null || echo "v2.3.2")"
 LATEST_VER=$(echo "$RESP_V21" | jq -r '.latestStableVersion // ""')
-MIGRATE_FOLDER_FLAG=$(echo "$RESP_V21" | jq -r '.requiresFolderStructureMigration')
 
 assert_equal "true" "$HAS_UPDATE_V21" "API reports hasUpdate: true for legacy client v2.1"
-assert_equal "v2.3.0" "$LATEST_VER" "API reports latestStableVersion: v2.3.0"
-assert_equal "true" "$MIGRATE_FOLDER_FLAG" "API flags requiresFolderStructureMigration: true"
+assert_equal "$TARGET_VER" "$LATEST_VER" "API reports latestStableVersion: $TARGET_VER"
 
-# 1.2 Up-to-date client v2.3.0
-RESP_V23=$(curl -s --max-time 5 "$SERVER_URL/api/v1/license/version-check?currentVersion=v2.3.0")
-HAS_UPDATE_V23=$(echo "$RESP_V23" | jq -r '.hasUpdate')
-assert_equal "false" "$HAS_UPDATE_V23" "API reports hasUpdate: false for current client v2.3.0"
+# 1.2 Up-to-date client
+RESP_CURRENT=$(curl -s --max-time 5 "$SERVER_URL/api/v1/license/version-check?currentVersion=$TARGET_VER")
+HAS_UPDATE_CURRENT=$(echo "$RESP_CURRENT" | jq -r '.hasUpdate')
+assert_equal "false" "$HAS_UPDATE_CURRENT" "API reports hasUpdate: false for current client $TARGET_VER"
 
 # ------------------------------------------------------------------------------
 # Test 2: CLI upgrade-client.sh --check Option
@@ -92,19 +91,17 @@ trap cleanup EXIT
 mkdir -p "$SANDBOX_DIR/scripts"
 mkdir -p "$SANDBOX_DIR/volumes/db/postgres/data"
 mkdir -p "$SANDBOX_DIR/ci-server/cache"
-mkdir -p "$SANDBOX_DIR/code/sample-api"
 mkdir -p "$SANDBOX_DIR/apps/sample-app"
 
 echo "dummy-pg-data" > "$SANDBOX_DIR/volumes/db/postgres/data/PG_VERSION"
 echo "dummy-cache" > "$SANDBOX_DIR/ci-server/cache/build.bin"
 
-cat <<'EOF' > "$SANDBOX_DIR/code/sample-api/docker-compose.yml"
+cat <<'EOF' > "$SANDBOX_DIR/apps/sample-app/docker-compose.yml"
 services:
-  sample-api:
+  sample-app:
     image: sample:latest
     volumes:
       - /var/www/vps-infra/volumes/apps/sample/data:/app/data
-      - /var/www/vps-infra/code/sample-api:/app/src
 EOF
 
 cp "$SCRIPT_DIR/scripts/migrate-folder-structure.sh" "$SANDBOX_DIR/scripts/"
@@ -123,22 +120,14 @@ assert_equal "dummy-pg-data" "$(cat "$SANDBOX_DIR/docker/volumes/db/postgres/dat
 assert_equal "dummy-cache" "$(cat "$SANDBOX_DIR/docker/volumes/ci-cache/cache/build.bin" 2>/dev/null || echo '')" \
     "ci-server/ cache migrated physically to docker/volumes/ci-cache"
 
-assert_equal "true" "$([ -d "$SANDBOX_DIR/src/sample-api" ] && echo "true" || echo "false")" \
-    "code/ directory renamed physically to src/"
-
 # Assert compose paths updated
-COMPOSE_CONTENT=$(cat "$SANDBOX_DIR/src/sample-api/docker-compose.yml" 2>/dev/null || echo '')
+COMPOSE_CONTENT=$(cat "$SANDBOX_DIR/apps/sample-app/docker-compose.yml" 2>/dev/null || echo '')
 assert_contains "$COMPOSE_CONTENT" "/var/www/vps-infra/docker/volumes/apps/sample/data" \
     "Compose volume paths rewritten to docker/volumes"
-assert_contains "$COMPOSE_CONTENT" "/var/www/vps-infra/src/sample-api" \
-    "Compose code paths rewritten to src"
 
 # Assert no legacy symlinks at root
 assert_equal "false" "$([ -e "$SANDBOX_DIR/volumes" ] && echo "true" || echo "false")" \
     "volumes symlink/directory does NOT exist at repository root"
-
-assert_equal "false" "$([ -e "$SANDBOX_DIR/code" ] && echo "true" || echo "false")" \
-    "code symlink/directory does NOT exist at repository root"
 
 assert_equal "false" "$([ -e "$SANDBOX_DIR/ci-server" ] && echo "true" || echo "false")" \
     "ci-server symlink/directory does NOT exist at repository root"

@@ -1,8 +1,6 @@
-# Exclude all projects in apps, code, and src folders
+# Exclude all projects in apps and src folders
 apps/*
 !apps/.gitkeep
-code/*
-!code/.gitkeep
 src/*
 !src/.gitkeep
 

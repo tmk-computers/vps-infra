@@ -375,7 +375,7 @@ async def run_test_suite():
         # 2.9 Path traversal escape (../../etc)
         status, _, jdata = await send_raw_http_request(
             filter_sock, "POST", "/v1.45/containers/create",
-            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/code/../../etc/passwd:/secret:ro"]}})
+            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/src/../../etc/passwd:/secret:ro"]}})
         )
         record_test("Path traversal escape (../../etc) denied with 403 Forbidden",
                     status == 403, f"Status: {status}, msg: {jdata.get('message')}")
@@ -565,13 +565,13 @@ async def run_test_suite():
                     status == 200 and jdata.get("Version") == "28.5.1" and len(mock_server.received_requests) == 1,
                     f"Status: {status}, Version: {jdata.get('Version')}")
 
-        # 6.3 Legitimate code repo mount (/var/www/vps-infra/code/my-app)
+        # 6.3 Legitimate source repo mount (/var/www/vps-infra/src/my-app)
         mock_server.received_requests.clear()
         status, _, jdata = await send_raw_http_request(
             filter_sock, "POST", "/v1.45/containers/create",
-            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/code/my-app:/app:rw"]}})
+            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/src/my-app:/app:rw"]}})
         )
-        record_test("Legitimate code repo mount forwarded and returns 201 Created",
+        record_test("Legitimate source repo mount forwarded and returns 201 Created",
                     status == 201 and len(mock_server.received_requests) == 1,
                     f"Status: {status}, mock requests: {len(mock_server.received_requests)}")
 

@@ -28,9 +28,8 @@ SOCKET_MODE = int(os.getenv("FILTER_PROXY_SOCKET_MODE", "0660"), 8)
 
 # Approved path prefixes for host mounts (strictly scoped, no raw /tmp or /volumes)
 ALLOWED_MOUNT_PREFIXES = (
-    "/var/www/vps-infra/code",
+    "/var/www/vps-infra/src",
     "/var/www/vps-infra/apps",
-    "/var/www/vps-infra/ci-server",
     "/var/www/vps-infra/docker/volumes/artifacts",
     "/var/www/vps-infra/docker/volumes/apk",
     "/var/www/vps-infra/docker/volumes/apps",

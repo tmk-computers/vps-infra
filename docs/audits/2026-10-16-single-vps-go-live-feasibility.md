@@ -86,8 +86,8 @@ Repository                  Tracked Branch                  Head Commit ID  Comm
 ------------------------------------------------------------------------------------------------------------------------
 /var/www/vps-infra          main                            1704bf1dc01d    2026-10-15 08:55:41 +0000       Clean
 /var/www/vps-infra-server   main                            b637df795591    2026-10-15 05:20:27 +0000       Clean
-/var/www/vps-infra/code/omr-api  feat/async-omr-durable-storage 6d1aa19fb15f    2026-10-15 18:18:01 +0000       Clean
-/var/www/vps-infra/code/omr-web  feat/async-omr-frontend-controls 744962c0ad6a  2026-10-14 16:58:04 +0000       Clean
+/var/www/vps-infra/src/omr-api  feat/async-omr-durable-storage 6d1aa19fb15f    2026-10-15 18:18:01 +0000       Clean
+/var/www/vps-infra/src/omr-web  feat/async-omr-frontend-controls 744962c0ad6a  2026-10-14 16:58:04 +0000       Clean
 ```
 
 #### Running Image Digest vs Code Inspection:
@@ -131,7 +131,7 @@ Audit of QA Drill script (`scripts/qa_acceptance_drills.py`) and runtime resourc
 ### 3.1 Launch Blockers (Must Fix Before October 20 Launch)
 
 #### Finding B-1: Tenant Authorization Bypass & Cross-Tenant Data Leak in `GetScanDetailsAsync`
-- **Location:** [`ScanSessionService.cs:759-762, 767, 776-779, 782, 791-794`](file:///var/www/vps-infra/code/omr-api/Modules/Exams/Services/ScanSessionService.cs#L759-L794)
+- **Location:** [`ScanSessionService.cs:759-762, 767, 776-779, 782, 791-794`](file:///var/www/vps-infra/src/omr-api/Modules/Exams/Services/ScanSessionService.cs#L759-L794)
 - **Evidence:**
   ```csharp
   // ScanSessionService.cs:759
@@ -150,7 +150,7 @@ Audit of QA Drill script (`scripts/qa_acceptance_drills.py`) and runtime resourc
 - **Fix:** Fail closed. If `clientId == null` or `clientId == Guid.Empty` and `!isSuperAdmin`, immediately reject the request (return 401/403 or return null). Never call `IgnoreQueryFilters()` on tenant data paths unless verified `isSuperAdmin`.
 
 #### Finding B-2: Unsanitized Tenant Header Spoofing in `UserContextService`
-- **Location:** [`UserContextService.cs:45-51`](file:///var/www/vps-infra/code/omr-api/Core/Services/UserContextService.cs#L45-L51)
+- **Location:** [`UserContextService.cs:45-51`](file:///var/www/vps-infra/src/omr-api/Core/Services/UserContextService.cs#L45-L51)
 - **Evidence:**
   ```csharp
   var headerOrQuery = _httpContextAccessor.HttpContext?.Request.Headers["X-Client-Id"].FirstOrDefault()
@@ -167,7 +167,7 @@ Audit of QA Drill script (`scripts/qa_acceptance_drills.py`) and runtime resourc
 - **Fix:** Restrict `X-Client-Id` header overrides strictly to users with verified `SuperAdmin` role claims. Reject arbitrary header-based tenant switching for standard users.
 
 #### Finding B-3: 100 MB Multipart Memory Threshold vs 1.5 GB Container Limit (Memory Spikes & OOM Exposure)
-- **Location:** [`Program.cs:95-106`](file:///var/www/vps-infra/code/omr-api/Program.cs#L95-L106)
+- **Location:** [`Program.cs:95-106`](file:///var/www/vps-infra/src/omr-api/Program.cs#L95-L106)
 - **Evidence:**
   ```csharp
   builder.WebHost.ConfigureKestrel(serverOptions => {
@@ -223,7 +223,7 @@ Audit of QA Drill script (`scripts/qa_acceptance_drills.py`) and runtime resourc
 ### 3.2 Required Before Wider Onboarding (Post-Launch Phase 1)
 
 #### Finding R-1: Unpaginated Progress Polling Response & Entity Flooding
-- **Location:** [`ScanSessionService.cs:798-802, 825-829`](file:///var/www/vps-infra/code/omr-api/Modules/Exams/Services/ScanSessionService.cs#L798-L829)
+- **Location:** [`ScanSessionService.cs:798-802, 825-829`](file:///var/www/vps-infra/src/omr-api/Modules/Exams/Services/ScanSessionService.cs#L798-L829)
 - **Evidence:** When `GetScanDetailsAsync` is called during processing or completion, it executes:
   ```csharp
   var completedSessionSheets = await sessionSheetsQuery
@@ -239,7 +239,7 @@ Audit of QA Drill script (`scripts/qa_acceptance_drills.py`) and runtime resourc
   2. Paginated sheets endpoint (`GET /api/ScanSessions/{id}/sheets?page=1&pageSize=20`): loads sheets on-demand with pagination.
 
 #### Finding R-2: Repeated Full-Batch Progress Aggregation Contention
-- **Location:** [`ScanJobManager.cs:622-627`](file:///var/www/vps-infra/code/omr-api/Core/Storage/ScanJobManager.cs#L622-L627), [`ProcessSheetConsumer.cs:300`](file:///var/www/vps-infra/code/omr-api/Core/Storage/Messaging/Consumers/ProcessSheetConsumer.cs#L300)
+- **Location:** [`ScanJobManager.cs:622-627`](file:///var/www/vps-infra/src/omr-api/Core/Storage/ScanJobManager.cs#L622-L627), [`ProcessSheetConsumer.cs:300`](file:///var/www/vps-infra/src/omr-api/Core/Storage/Messaging/Consumers/ProcessSheetConsumer.cs#L300)
 - **Evidence:** On **every single sheet completed**, `ProcessSheetConsumer` calls `DeriveAndCommitBatchProgressAsync`, which executes:
   ```csharp
   var sheets = await _dbContext.OmrSheets
@@ -253,12 +253,12 @@ Audit of QA Drill script (`scripts/qa_acceptance_drills.py`) and runtime resourc
 - **Remediation:** Use atomic SQL increments (`UPDATE "ScanSessions" SET "ProcessedFiles" = "ProcessedFiles" + 1 ... WHERE "Id" = @id`), and only run full aggregation when `ProcessedFiles >= TotalUploadedFiles`.
 
 #### Finding R-3: Missing Tenant Admission Quotas & Noisy-Neighbor Starvation
-- **Location:** [`MassTransitRegistrationExtensions.cs:80-98`](file:///var/www/vps-infra/code/omr-api/Core/Storage/Messaging/MassTransitRegistrationExtensions.cs#L80-L98)
+- **Location:** [`MassTransitRegistrationExtensions.cs:80-98`](file:///var/www/vps-infra/src/omr-api/Core/Storage/Messaging/MassTransitRegistrationExtensions.cs#L80-L98)
 - **Evidence:** MassTransit consumes from a single shared FIFO queue (`omr-sheet-queue`). There are no per-tenant rate limits or fair-dispatch queues. If Institute A uploads 1,000 sheets, Institute B's 10-sheet batch is enqueued behind Institute A's 1,000 sheets and must wait ~5.4 minutes before its first sheet is graded.
 - **Remediation:** Implement admission throttling (max 100 outstanding queued sheets per tenant), or use RabbitMQ priority queues/sharded per-tenant routing keys.
 
 #### Finding R-4: Embedded Registry Credentials in Repository Script
-- **Location:** [`build-and-push.ps1:8`](file:///var/www/vps-infra/code/omr-api/build-and-push.ps1#L8)
+- **Location:** [`build-and-push.ps1:8`](file:///var/www/vps-infra/src/omr-api/build-and-push.ps1#L8)
 - **Evidence:**
   ```powershell
   docker login $Registry -u admin -p tmkregistry2026
