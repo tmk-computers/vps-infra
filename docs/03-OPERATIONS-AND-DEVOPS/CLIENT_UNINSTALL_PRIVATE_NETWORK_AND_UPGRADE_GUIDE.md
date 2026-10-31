@@ -177,7 +177,7 @@ If any step in `upgrade-client.sh` fails:
    }
    ```
 2. The script extracts the tail of `/var/www/vps-infra/upgrade.log` and automatically sends a telemetry payload to the Central Licensing Server:
-   * **Endpoint**: `POST https://license.tmkcomputers.in/api/v1/telemetry/upgrade-failure`
+   * **Endpoint**: `POST https://license.example.com/api/v1/telemetry/upgrade-failure`
    * **Payload**:
      ```json
      {
@@ -200,7 +200,7 @@ If any step in `upgrade-client.sh` fails:
      > *(Detailed diagnostics have been automatically reported to TMK support.)*
 
 ### 3.4 Support Triage Workflow in Central Licensing Authority
-Support engineers can view and diagnose all upgrade issues directly in the Central Licensing Portal (`https://license.tmkcomputers.in`):
+Support engineers can view and diagnose all upgrade issues directly in the Central Licensing Portal (`https://license.example.com`):
 1. Navigate to the **Upgrade Failure Reports** tab in the Licensing Authority UI.
 2. View real-time reports sorted by timestamp, showing client organization, IP address, operating system, and target version.
 3. Click **Inspect Logs** to open the full diagnostic modal showing the exact command that failed, without requiring the client to manually retrieve log files.

@@ -137,13 +137,13 @@ Based on live scanning of all 21 deployable units in `/var/www/vps-infra/src`:
 
 | Product | Overall AMS | Grade | Deployable Units Breakdown | CCC Compliance |
 | :--- | :---: | :---: | :--- | :---: |
-| **Clever Lord** | **87.5** | **A** | API: 84 (B) • Mobile: 91 (A) • Web: 88 (A) | **93%** |
-| **Clever Sales** | **87.2** | **A** | API: 93 (A) • Mobile: 83 (B) • Web: 85 (A) | **87%** |
-| **Kaksha Plus** | **86.3** | **A** | API: 90 (A) • Mobile: 88 (A) • Web: 81 (B) | **93%** |
-| **Clever Farmer** | **83.3** | **B** | API: 84 (B) • Mobile: 77 (B) • Web: 88 (A) | **87%** |
-| **OMR** | **77.1** | **B** | AI-Service: 68 (C) • API: 84 (B) • Web: 78 (B) | **67%** |
-| **Bank Mitra** | **74.2** | **C** | API: 79 (B) • Mobile: 64 (D) • Web: 78 (B) | **53%** |
-| **Clever Bill** | **72.0** | **C** | API: 58 (D) • Mobile: 80 (B) • Web: 79 (B) | **60%** |
+| **Sample Platform** | **87.5** | **A** | API: 84 (B) • Mobile: 91 (A) • Web: 88 (A) | **93%** |
+| **Sample Sales** | **87.2** | **A** | API: 93 (A) • Mobile: 83 (B) • Web: 85 (A) | **87%** |
+| **Sample App Suite** | **86.3** | **A** | API: 90 (A) • Mobile: 88 (A) • Web: 81 (B) | **93%** |
+| **Sample Field App** | **83.3** | **B** | API: 84 (B) • Mobile: 77 (B) • Web: 88 (A) | **87%** |
+| **Sample AI Service** | **77.1** | **B** | AI-Service: 68 (C) • API: 84 (B) • Web: 78 (B) | **67%** |
+| **Sample Portal** | **74.2** | **C** | API: 79 (B) • Mobile: 64 (D) • Web: 78 (B) | **53%** |
+| **Sample Billing** | **72.0** | **C** | API: 58 (D) • Mobile: 80 (B) • Web: 79 (B) | **60%** |
 | **Platform Summary** | **81.1** | **B** | **21 Deployable Units across 7 Products** | **81%** |
 
 ---
@@ -192,7 +192,7 @@ GET /api/ci/modernization/products
 ```http
 GET /api/ci/modernization/products/:productId
 ```
-*Example: `/api/ci/modernization/products/clever-sales`*
+*Example: `/api/ci/modernization/products/sample-sales`*
 
 ### 4. On-Demand Product Recalculation
 ```http
@@ -213,7 +213,7 @@ Authorization: Bearer <TOKEN>
 The Application Modernization Score (AMS) is available across two primary administrative interfaces:
 
 ### Option A: Directly in DevOps Manager Panel (Recommended)
-Accessible via `https://devops.tmkcomputers.in` (or local DevOps Manager URL):
+Accessible via `https://devops.example.com` (or local DevOps Manager URL):
 1. Navigate to **Product Suites & Maintenance** (`/products` in the sidebar).
 2. Look at the **AMS Health Score** column in the Products table:
    - Each product displays an interactive letter grade pill and numerical score:
@@ -229,7 +229,7 @@ Accessible via `https://devops.tmkcomputers.in` (or local DevOps Manager URL):
      - **High-Impact Remediation Roadmap:** Top prioritized suggestions with concrete estimated score boosts (e.g. `+5.0 pts: Add Non-root user in Dockerfile`).
 
 ### Option B: Dedicated Modernization Index in CI Server UI
-Accessible via `https://ci.tmkcomputers.in`:
+Accessible via `https://ci.example.com`:
 1. In the top navigation bar, click the **"Modernization Index"** tab (next to *Build Logs*).
 2. Features the global platform health banner, grade distribution counters, grade filters (`ALL`, `A+`, `A`, `B`, `C`, `D`, `F`), and product score cards.
 

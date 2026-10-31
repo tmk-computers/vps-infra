@@ -595,11 +595,11 @@ async def run_test_suite():
                     status == 201 and len(mock_server.received_requests) == 1,
                     f"Status: {status}, mock requests: {len(mock_server.received_requests)}")
 
-        # 6.6 Legitimate apps persistent volume mount (/var/www/vps-infra/docker/volumes/apps/omr-api)
+        # 6.6 Legitimate apps persistent volume mount (/var/www/vps-infra/docker/volumes/apps/sample-api)
         mock_server.received_requests.clear()
         status, _, jdata = await send_raw_http_request(
             filter_sock, "POST", "/v1.45/containers/create",
-            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/docker/volumes/apps/omr-api:/data:rw"]}})
+            body=json.dumps({"HostConfig": {"Binds": ["/var/www/vps-infra/docker/volumes/apps/sample-api:/data:rw"]}})
         )
         record_test("Legitimate app volume mount forwarded and returns 201 Created",
                     status == 201 and len(mock_server.received_requests) == 1,

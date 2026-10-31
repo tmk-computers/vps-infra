@@ -9,11 +9,11 @@ This guide documents the architecture, operational runbook, configuration toggle
 ### 1.1 Why This Protection Exists
 On single-host VPS deployments, concurrent Docker BuildKit compilations (e.g., .NET AOT/SDK builds, Node build trees, Playwright headless browser runners) consume 100% of all host vCPUs and substantial RAM. 
 
-During live exam operational hours, high-priority workloads—including:
-* **OMR Ingestion API** (`omr-api`)
-* **Background Sheet Grading Workers** (`omr-worker`)
-* **RabbitMQ Message Broker** (`omr-batch-queue`, `omr-sheet-queue`)
-* **Redis Caching & Result Deduplication** (`omr-ai-redis`)
+During live peak operational hours, high-priority workloads—including:
+* **Ingestion API** (`sample-ingestion-api`)
+* **Background Worker Services** (`sample-worker`)
+* **Message Broker & Queue** (`batch-queue`, `task-queue`)
+* **Redis Caching & Deduplication** (`cache-redis`)
 
 must execute with sub-second latency and zero CPU starvation. To prevent accidental or automated CI builds from degrading live exam processing, **Gate 7 (Host CPU/RAM Preservation via CI Suspension)** enforces fail-fast rejection of build requests before any build container or process tree is spawned.
 
@@ -303,7 +303,7 @@ curl -s -X POST http://localhost:5051/api/ci/pilot-window/unfreeze \
 
 ### 5.1 Symptom: "Build Failed to Queue"
 ```text
-CI_SUSPENDED_DURING_PILOT_EXAM_WINDOW: Builds are strictly suspended during the active pilot exam operational window (Automated Pilot Exam Window Active (2026-10-19 08:30-15:30 IST)). VPS CPU and RAM are reserved exclusively for live OMR ingestion and grading.
+CI_SUSPENDED_DURING_PILOT_EXAM_WINDOW: Builds are strictly suspended during the active pilot exam operational window (Automated Pilot Exam Window Active (2026-10-19 08:30-15:30 IST)). VPS CPU and RAM are reserved exclusively for live ingestion and grading.
 ```
 
 ### 5.2 Resolution Checklist

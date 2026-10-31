@@ -59,7 +59,7 @@ Public endpoint returning the current maintenance state. Always returns `HTTP 20
 ```json
 {
   "isMaintenance": true,
-  "statusMessage": "Kaksha+ is undergoing scheduled examination system upgrades. Services will resume at 2:00 PM.",
+  "statusMessage": "System is undergoing scheduled maintenance upgrades. Services will resume at 2:00 PM.",
   "version": "1.0.0",
   "minSupportedVersion": "1.0.0",
   "showMaintenanceForMobile": true,
@@ -74,29 +74,29 @@ When `IsMaintenance == true`, all other endpoints return `HTTP 503 Service Unava
 ```json
 {
   "isMaintenance": true,
-  "statusMessage": "Kaksha+ is undergoing scheduled examination system upgrades. Services will resume at 2:00 PM.",
-  "message": "Kaksha+ is undergoing scheduled examination system upgrades. Services will resume at 2:00 PM."
+  "statusMessage": "System is undergoing scheduled maintenance upgrades. Services will resume at 2:00 PM.",
+  "message": "System is undergoing scheduled maintenance upgrades. Services will resume at 2:00 PM."
 }
 ```
 
 ---
 
-## 3. End-to-End Walkthrough Example: Kaksha+ Maintenance
+## 3. End-to-End Walkthrough Example: Sample App Maintenance
 
-This concrete scenario walks through placing **Kaksha+ School ERP** under maintenance during an annual examination grade publishing window.
+This concrete scenario walks through placing **Sample Application Suite** under maintenance during an annual examination grade publishing window.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Admin as DevOps Administrator
     participant DevOps as DevOps Manager
-    participant API as Kaksha+ Backend API
-    participant Web as Kaksha+ Web (React)
-    participant Mobile as Kaksha+ Mobile (Flutter)
+    participant API as Sample Backend API
+    participant Web as Sample Web (React)
+    participant Mobile as Sample Mobile (Flutter)
 
     Note over Admin,DevOps: Step 1: Initiation
-    Admin->>DevOps: Open Product -> Kaksha+ -> Maintenance Modal
-    Admin->>DevOps: Enable Maintenance Mode<br/>Message: "Kaksha+ examination processing in progress..."<br/>Web=True, Mobile=True
+    Admin->>DevOps: Open Product -> Sample App -> Maintenance Modal
+    Admin->>DevOps: Enable Maintenance Mode<br/>Message: "System upgrade in progress..."<br/>Web=True, Mobile=True
     DevOps->>API: Inject SystemStatus Environment Variables & Update State
 
     Note over API,Mobile: Step 2: Enforcement & Mid-Flight Interception
@@ -129,12 +129,12 @@ sequenceDiagram
 
 ### Step 1: DevOps Manager Initiation
 
-1. Navigate to **DevOps Manager UI** (`https://devops.tmkcomputers.in` or local portal).
-2. Go to **Products** and click on **Kaksha+**.
+1. Navigate to **DevOps Manager UI** (`https://devops.example.com` or local portal).
+2. Go to **Products** and click on **Sample App**.
 3. Click the **"Maintenance Mode"** button on the product details page.
 4. Fill in the parameters:
    - **Status:** `Active (Checked)`
-   - **Maintenance Message:** `"Kaksha+ examination processing in progress. Normal access will resume at 2:00 PM."`
+   - **Maintenance Message:** `"System upgrade in progress. Normal access will resume at 2:00 PM."`
    - **Show on Web:** `true`
    - **Show on Mobile:** `true`
    - **Environment:** `All Environments` (or target specific UAT/PROD)
@@ -143,14 +143,14 @@ sequenceDiagram
    ```yaml
    # docker-compose.yml / Environment override
    - SystemStatus__IsMaintenance=true
-   - SystemStatus__StatusMessage=Kaksha+ examination processing in progress. Normal access will resume at 2:00 PM.
+   - SystemStatus__StatusMessage=System upgrade in progress. Normal access will resume at 2:00 PM.
    - SystemStatus__ShowMaintenanceForWeb=true
    - SystemStatus__ShowMaintenanceForMobile=true
    ```
 
 ---
 
-### Step 2: Backend Enforcement (`kaksha-plus-api`)
+### Step 2: Backend Enforcement (`sample-app-api`)
 
 The `MaintenanceModeMiddleware` runs at the entry of the ASP.NET Core request pipeline:
 
@@ -196,7 +196,7 @@ public async Task InvokeAsync(HttpContext context)
 
 ---
 
-### Step 3: Frontend Web Experience (`kaksha-plus-web`)
+### Step 3: Frontend Web Experience (`sample-app-web`)
 
 1. **Global Axios Response Interceptor:**
    When an in-flight API call returns `503`, the Axios interceptor in `src/services/api.ts` traps it and dispatches an event:
@@ -220,12 +220,12 @@ public async Task InvokeAsync(HttpContext context)
    - Amber status badge: `MAINTENANCE IN PROGRESS`
    - Heading: `"System Under Maintenance"`
    - Exact message configured by the administrator in DevOps Manager.
-   - Assurance callout: *"Student attendance, fee receipts, and exam records are safely preserved."*
+   - Assurance callout: *"Application state and persistent records are safely preserved."*
    - **"Check Again"** button with automated state re-check.
 
 ---
 
-### Step 4: Mobile App Experience (`kaksha-plus-mobile`)
+### Step 4: Mobile App Experience (`sample-app-mobile`)
 
 The Flutter client incorporates two layers of protection:
 
@@ -252,7 +252,7 @@ The Flutter client incorporates two layers of protection:
    ```dart
    onError: (error, handler) {
      if (error.response?.statusCode == 503) {
-       String msg = 'Kaksha+ is currently undergoing scheduled maintenance.';
+       String msg = 'System is currently undergoing scheduled maintenance.';
        final data = error.response?.data;
        if (data is Map && data['statusMessage'] != null) {
          msg = data['statusMessage'].toString();
@@ -285,12 +285,12 @@ The Flutter client incorporates two layers of protection:
 
 | Product | Backend Middleware / Filter | Web Interceptor & Component | Mobile Interceptor & Component |
 | :--- | :--- | :--- | :--- |
-| **Kaksha+** | `MaintenanceModeMiddleware.cs` (C# .NET 9) | `api.ts` + `MaintenanceOverlay.tsx` (React) | `dio_provider.dart` + `maintenance_overlay.dart` (Flutter) |
-| **Clever Sales** | `MaintenanceModeMiddleware.cs` (C# .NET 9) | `axiosInstance.js` + `MaintenanceOverlay.jsx` (React) | `ApiService.ts` + `MaintenanceOverlay.tsx` (React Native) |
-| **Clever Farmer** | `MaintenanceModeMiddleware.cs` (C# .NET 10) | `axiosInstance.ts` + `MaintenanceOverlay.tsx` (React) | `ApiService.ts` + `MaintenanceOverlay.tsx` (React Native) |
-| **Clever Lord** | `MaintenanceModeMiddleware.cs` (C# .NET 9) | `axiosInstance.ts` + `MaintenanceOverlay.tsx` (React) | `ApiService.ts` + `MaintenanceOverlay.tsx` (React Native) |
-| **Clever Bill** | `MaintenanceModeFilter.java` (Spring Boot Java 21) | `axiosInstance.js` + `MaintenanceOverlay.jsx` (React) | `dio_error_mapper.dart` + `maintenance_overlay.dart` (Flutter) |
-| **Bank Mitra** | `MaintenanceModeMiddleware.cs` (C# .NET 9) | `views.route.ts` (Angular) | `MaintenanceInterceptor.java` + `dialog_maintenance_mode.xml` (Android) |
+| **Sample App** | `MaintenanceModeMiddleware.cs` (C# .NET 9) | `api.ts` + `MaintenanceOverlay.tsx` (React) | `dio_provider.dart` + `maintenance_overlay.dart` (Flutter) |
+| **Sample Sales** | `MaintenanceModeMiddleware.cs` (C# .NET 9) | `axiosInstance.js` + `MaintenanceOverlay.jsx` (React) | `ApiService.ts` + `MaintenanceOverlay.tsx` (React Native) |
+| **Sample Field App** | `MaintenanceModeMiddleware.cs` (C# .NET 10) | `axiosInstance.ts` + `MaintenanceOverlay.tsx` (React) | `ApiService.ts` + `MaintenanceOverlay.tsx` (React Native) |
+| **Sample Platform** | `MaintenanceModeMiddleware.cs` (C# .NET 9) | `axiosInstance.ts` + `MaintenanceOverlay.tsx` (React) | `ApiService.ts` + `MaintenanceOverlay.tsx` (React Native) |
+| **Sample Billing** | `MaintenanceModeFilter.java` (Spring Boot Java 21) | `axiosInstance.js` + `MaintenanceOverlay.jsx` (React) | `dio_error_mapper.dart` + `maintenance_overlay.dart` (Flutter) |
+| **Sample Portal** | `MaintenanceModeMiddleware.cs` (C# .NET 9) | `views.route.ts` (Angular) | `MaintenanceInterceptor.java` + `dialog_maintenance_mode.xml` (Android) |
 
 ---
 

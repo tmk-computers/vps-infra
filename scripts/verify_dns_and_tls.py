@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 # ==============================================================================
-# 🌐 OMR SaaS Production DNS & Trusted TLS Verification Script
-# Validates actual domain resolution and TLS certificate chains for:
-#   1. qa-omr-api.kakshaplus.com
-#   2. qa-omr.kakshaplus.com
-#   3. omr-api.kakshaplus.com
-#   4. omr.kakshaplus.com
+# 🌐 Platform Production DNS & Trusted TLS Verification Script
+# Validates actual domain resolution and TLS certificate chains for configured domains.
 # ==============================================================================
 import socket
 import ssl
@@ -14,12 +10,16 @@ import datetime
 import sys
 import os
 
-DOMAINS = [
-    "qa-omr-api.kakshaplus.com",
-    "qa-omr.kakshaplus.com",
-    "omr-api.kakshaplus.com",
-    "omr.kakshaplus.com"
+DEFAULT_DOMAINS = [
+    "qa-api.example.com",
+    "qa-web.example.com",
+    "api.example.com",
+    "web.example.com"
 ]
+
+DOMAINS = sys.argv[1:] if len(sys.argv) > 1 else (
+    [d.strip() for d in os.getenv("TARGET_DOMAINS", "").split(",") if d.strip()] or DEFAULT_DOMAINS
+)
 
 EVIDENCE_FILE = "/var/www/vps-infra/docs/audits/dns-tls-evidence.json"
 
@@ -88,7 +88,7 @@ def verify_domain(domain):
 
 def main():
     print("=" * 80)
-    print(" 🌐 OMR SAAS PRODUCTION DNS & TRUSTED TLS VERIFICATION")
+    print(" 🌐 PLATFORM PRODUCTION DNS & TRUSTED TLS VERIFICATION")
     print(f" Timestamp: {datetime.datetime.now(datetime.timezone.utc).isoformat()}")
     print("=" * 80)
 

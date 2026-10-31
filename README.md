@@ -68,7 +68,7 @@ The runtime filesystem strictly separates deployment specifications, cloned sour
 ```text
 vps-infra/
 ├── apps/                 # Application runtime definitions and deployment compose files
-│   └── <project>/        # Per-service compose manifests (e.g. apps/omr-api/docker-compose.yml)
+│   └── <project>/        # Per-service compose manifests (e.g. apps/sample-api/docker-compose.yml)
 ├── src/                  # Customer product source code repositories (cloned & tested by CI)
 │   └── <project>/        # Git working trees for builds and quality gates
 ├── templates/            # Reusable app & config scaffolding templates (Dockerfiles, Compose)

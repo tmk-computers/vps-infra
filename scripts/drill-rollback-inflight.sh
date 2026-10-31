@@ -15,8 +15,8 @@ EVIDENCE_DIR="${BASE_DIR}/docs/audits"
 EVIDENCE_JSON="${EVIDENCE_DIR}/rollback-inflight-evidence.json"
 
 API_BASE="https://127.0.0.1"
-API_HOST="qa-omr-api.kakshaplus.com"
-FIXTURE_PATH="/var/www/vps-infra/src/omr-api/tests/data/OMR/100Q/Scan_0025.jpg"
+API_HOST="${API_HOST:-qa-api.example.com}"
+FIXTURE_PATH="/var/www/vps-infra/src/sample-api/tests/data/fixtures/sample.jpg"
 
 TENANT_A="11111111-2222-3333-4444-555555555555"
 BRANCH_A="22222222-3333-4444-5555-666666666666"

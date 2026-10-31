@@ -46,10 +46,10 @@ flowchart TD
 
 ### 📦 Pre-Built Container Image Distribution:
 All core services are distributed as pre-compiled, production-hardened container images via GitHub Container Registry (`ghcr.io`). **No compilers, SDKs, or raw source code are required on the host server**:
-* `ghcr.io/tmk-computers/tmk-devops-api:latest`
-* `ghcr.io/tmk-computers/tmk-devops-web:latest`
-* `ghcr.io/tmk-computers/tmk-ci-api:latest`
-* `ghcr.io/tmk-computers/tmk-ci-web:latest`
+* `ghcr.io/sample-org/tmk-devops-api:latest`
+* `ghcr.io/sample-org/tmk-devops-web:latest`
+* `ghcr.io/sample-org/tmk-ci-api:latest`
+* `ghcr.io/sample-org/tmk-ci-web:latest`
 
 ---
 
@@ -73,7 +73,7 @@ Ensure your target server meets the following specifications before beginning in
 ### Step 1: Clone the Runtime Repository
 Clone this repository to `/var/www/vps-infra`:
 ```bash
-git clone https://github.com/tmk-computers/vps-infra.git /var/www/vps-infra
+git clone https://github.com/sample-org/vps-infra.git /var/www/vps-infra
 cd /var/www/vps-infra
 ```
 
@@ -189,7 +189,7 @@ If a new client clones the repository and starts the framework without providing
    # Method 3 (From Web UI):
    # Visit https://devops.yourdomain.com -> Click "Copy Fingerprint" on the lock screen
    ```
-2. Send this fingerprint to **TMK Computers Licensing Team** (`licensing@tmkcomputers.in` or via your client account manager).
+2. Send this fingerprint to **TMK Computers Licensing Team** (`licensing@example.com` or via your client account manager).
 3. TMK Computers issues your cryptographic `TMK_LICENSE_KEY`.
 4. Apply the key using any method:
    - **Method A (1-Click CLI Script - Recommended)**:
@@ -244,24 +244,24 @@ Application secrets reside outside the `/var/www/vps-infra` git repository under
 
 ```text
 /etc/vps-infra/secrets/
-├── [drwx------ root:root]  clever-bill-api/
+├── [drwx------ root:root]  sample-billing-api/
 │   ├── [-rw------- root:root]  prod.env
 │   └── [-rw------- root:root]  uat.env
-├── [drwx------ root:root]  clever-farmer-api/
+├── [drwx------ root:root]  sample-service-api/
 │   ├── [-rw------- root:root]  prod.env
 │   └── [-rw------- root:root]  uat.env
-├── [drwx------ root:root]  clever-lord-api/
+├── [drwx------ root:root]  sample-platform-api/
 │   ├── [-rw------- root:root]  prod.env
 │   └── [-rw------- root:root]  uat.env
-├── [drwx------ root:root]  clever-sales-api/
+├── [drwx------ root:root]  sample-sales-api/
 │   ├── [-rw------- root:root]  prod.env
 │   └── [-rw------- root:root]  uat.env
-├── [drwx------ root:root]  kaksha-plus-api/
+├── [drwx------ root:root]  sample-app-api/
 │   ├── [-rw------- root:root]  prod.env
 │   ├── [-rw------- root:root]  uat.env
 │   ├── [-rw------- root:root]  dev.env
 │   └── [-rw------- root:root]  qa.env
-└── [drwx------ root:root]  omr-api/
+└── [drwx------ root:root]  demo-service-api/
     ├── [-rw------- root:root]  prod.env
     └── [-rw------- root:root]  uat.env
 ```
@@ -404,7 +404,7 @@ git pull origin main
 ```bash
 docker compose pull
 ```
-*(Docker pulls the new pre-compiled images from `ghcr.io/tmk-computers/tmk-*` in seconds without requiring compilers or build tools).*
+*(Docker pulls the new pre-compiled images from `ghcr.io/sample-org/tmk-*` in seconds without requiring compilers or build tools).*
 
 ### Step 3: Apply the Update (Zero-Downtime)
 ```bash
@@ -451,9 +451,9 @@ VPS-Infra includes a dedicated database management CLI tool in `db/`:
 ## 📞 9. Enterprise Support & Contact
 
 For assistance, custom extensions, or licensing renewals:
-* **Support Email**: `support@tmkcomputers.in`
-* **Enterprise Portal**: [https://tmkcomputers.in](https://tmkcomputers.in)
-* **Documentation**: [https://docs.tmkcomputers.in](https://docs.tmkcomputers.in)
+* **Support Email**: `support@example.com`
+* **Enterprise Portal**: [https://example.com](https://example.com)
+* **Documentation**: [https://docs.example.com](https://docs.example.com)
 
 ---
 
