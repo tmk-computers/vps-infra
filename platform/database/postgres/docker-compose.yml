@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     container_name: shared_postgres
     restart: always
-    mem_limit: 1024m
+    mem_limit: 2048m
     cpus: 1.5
     logging:
       driver: "json-file"
