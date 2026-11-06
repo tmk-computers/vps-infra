@@ -3,8 +3,8 @@ services:
     image: rabbitmq:3.13-management-alpine@sha256:606d8c0d6b3c18d1da9afc53bc7cdb2a8d5486df91b5a9830e9e07626c9ae281
     container_name: shared_rabbitmq
     restart: always
-    mem_limit: 2048m
-    cpus: 1.5
+    mem_limit: 4096m
+    cpus: 2.5
     logging:
       driver: "json-file"
       options:
