@@ -5,6 +5,10 @@ services:
     restart: always
     mem_limit: 6144m
     cpus: 3.5
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     logging:
       driver: "json-file"
       options:
