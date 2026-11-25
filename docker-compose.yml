@@ -26,6 +26,16 @@ services:
       # Database Connection
       - ConnectionStrings__DefaultConnection=Host=shared_postgres;Port=5432;Database=${POSTGRES_DB:-devops_prod};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-StrongPostgres@123};Pooling=true;MaxPoolSize=10;Persist Security Info=true;
       - Database__AutoMigrateOnStartup=false
+      - DATA_PROTECTION_KEY_DIR=${DATA_PROTECTION_KEY_DIR:-/etc/vps-infra/secrets/dp-keys}
+
+      # Unattended AI Development Orchestrator (opt-in via COMPOSE_PROFILES=all,ai-dev & DEV_ORCHESTRATION_EXECUTOR_MODE=Remote)
+      - DevelopmentOrchestration__ExecutorMode=${DEV_ORCHESTRATION_EXECUTOR_MODE:-Unconfigured}
+      - DevelopmentOrchestration__WorkerUrl=${DEV_WORKER_URL:-}
+      - DevelopmentOrchestration__WorkerSecret=${DEV_WORKER_SECRET:-}
+      - DevelopmentOrchestration__CiServerUrl=${CI_API_INTERNAL_URL:-http://ci-api-prod:5051}
+      - DevelopmentOrchestration__PlannerProvider=${DEV_PLANNER_PROVIDER:-OpenAI}
+      - DevelopmentOrchestration__ImplementerProvider=${DEV_IMPLEMENTER_PROVIDER:-Gemini}
+      - DevelopmentOrchestration__ReviewerProvider=${DEV_REVIEWER_PROVIDER:-Anthropic}
 
       # Dynamic JWT & SuperAdmin Settings
       - JwtSettings__SecretKey=${JWT_SECRET_KEY:-${DEVOPS_JWT_SECRET}}
@@ -201,6 +211,44 @@ services:
       # Explicit certificate names exclude PRIVATE_IP from ACME requests.
       - "traefik.http.routers.ci-web.tls.domains[0].main=${CI_WEB_HOST:-ci.example.com}"
       - "traefik.http.services.ci-web.loadbalancer.server.port=80"
+
+  # ------------------------------------------------------------
+  # Isolated Unattended Development CLI Worker (Opt-In Profile: ai-dev)
+  # Runs without Docker socket, SSH keys, registry creds, or host /var/www mount
+  # ------------------------------------------------------------
+  dev-worker-prod:
+    profiles: ["ai-dev"]
+    image: ${DEV_WORKER_IMAGE:-ghcr.io/tmk-computers/tmk-dev-worker:latest}
+    container_name: tmk-dev-worker
+    restart: unless-stopped
+    mem_limit: ${DEV_WORKER_MEM_LIMIT:-4g}
+    cpus: ${DEV_WORKER_CPUS:-2.0}
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - NODE_ENV=production
+      - PORT=8095
+      - DEV_WORKSPACE_ROOT=/var/tmp/dev-workspaces
+      - DEV_WORKER_SECRET=${DEV_WORKER_SECRET:-}
+      - AGY_CLI_BIN=${AGY_CLI_BIN:-agy}
+      - GIT_TERMINAL_PROMPT=0
+    volumes:
+      - dev_worker_workspaces:/var/tmp/dev-workspaces
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=1g
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:8095/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - traefik_net
+
+volumes:
+  dev_worker_workspaces:
 
 networks:
   traefik_net:

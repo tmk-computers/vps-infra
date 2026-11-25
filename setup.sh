@@ -298,7 +298,18 @@ if [ -n "${TMK_ARG_TAG:-}" ]; then
     sed -i "s|^DEVOPS_WEB_IMAGE=.*|DEVOPS_WEB_IMAGE=ghcr.io/tmk-computers/tmk-devops-web:${TMK_ARG_TAG}|" "$SCRIPT_DIR/.env" || true
     sed -i "s|^CI_API_IMAGE=.*|CI_API_IMAGE=ghcr.io/tmk-computers/tmk-ci-api:${TMK_ARG_TAG}|" "$SCRIPT_DIR/.env" || true
     sed -i "s|^CI_WEB_IMAGE=.*|CI_WEB_IMAGE=ghcr.io/tmk-computers/tmk-ci-web:${TMK_ARG_TAG}|" "$SCRIPT_DIR/.env" || true
+    sed -i "s|^DEV_WORKER_IMAGE=.*|DEV_WORKER_IMAGE=ghcr.io/tmk-computers/tmk-dev-worker:${TMK_ARG_TAG}|" "$SCRIPT_DIR/.env" || true
     echo -e "${GREEN}✅ Configured container images to use tag '${TMK_ARG_TAG}'.${NC}"
+fi
+
+# Ensure DEV_WORKER_SECRET is generated if opt-in ai-dev profile is enabled
+cur_profiles=$(grep -E "^COMPOSE_PROFILES=" "$SCRIPT_DIR/.env" | cut -d'=' -f2- | tr -d '"' | tr -d "'" || true)
+if [[ ",${cur_profiles}," == *",ai-dev,"* ]]; then
+    cur_dev_worker_secret=$(grep -E "^DEV_WORKER_SECRET=" "$SCRIPT_DIR/.env" | cut -d'=' -f2- | tr -d '"' | tr -d "'" || true)
+    if [ -z "$cur_dev_worker_secret" ]; then
+        auto_dev_worker_secret=$(openssl rand -hex 32 2>/dev/null || date +%s%N | sha256sum | head -c 64)
+        set_env_val "DEV_WORKER_SECRET" "$auto_dev_worker_secret"
+    fi
 fi
 
 if [ -n "${TMK_ARG_LICENSE:-}" ]; then
@@ -673,9 +684,27 @@ if [ "$DEPLOYMENT_MODE" != "ci-only" ]; then
     done
 fi
 
-echo -e "\n${CYAN}▶ Pulling and Starting Platform Services (Profile: ${COMPOSE_PROFILES})...${NC}"
-docker compose -f "$COMPOSE_FILE" --profile "$COMPOSE_PROFILES" --env-file "$SCRIPT_DIR/.env" pull || true
-docker compose -f "$COMPOSE_FILE" --profile "$COMPOSE_PROFILES" --env-file "$SCRIPT_DIR/.env" up -d
+PROFILE_ARGS=()
+IFS=',' read -ra RAW_PROFILES <<< "${COMPOSE_PROFILES:-all}"
+for prof in "${RAW_PROFILES[@]}"; do
+    prof_trimmed=$(echo "$prof" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+    if [ -n "$prof_trimmed" ]; then
+        PROFILE_ARGS+=("--profile" "$prof_trimmed")
+    fi
+done
+
+echo -e "\n${CYAN}▶ Pulling Platform Services (Profiles: ${COMPOSE_PROFILES})...${NC}"
+docker compose -f "$COMPOSE_FILE" "${PROFILE_ARGS[@]}" --env-file "$SCRIPT_DIR/.env" pull || true
+
+if [ "$DEPLOYMENT_MODE" != "ci-only" ]; then
+    if [[ ",${COMPOSE_PROFILES:-}," == *",ai-dev,"* ]] || [ "${ENABLE_AI_DEV_MIGRATION:-false}" = "true" ] || [ "${DEV_ORCHESTRATION_EXECUTOR_MODE:-Unconfigured}" = "Remote" ]; then
+        echo -e "${CYAN}▶ Running one-shot EF Core schema migrations prior to container restart...${NC}"
+        docker compose -f "$COMPOSE_FILE" --env-file "$SCRIPT_DIR/.env" run --rm --no-deps devops-api-prod dotnet DevopsPanel.dll --migrate-only
+    fi
+fi
+
+echo -e "\n${CYAN}▶ Starting Platform Services (Profiles: ${COMPOSE_PROFILES})...${NC}"
+docker compose -f "$COMPOSE_FILE" "${PROFILE_ARGS[@]}" --env-file "$SCRIPT_DIR/.env" up -d
 
 # Verify account creation before presenting the configured credentials.
 source "$SCRIPT_DIR/scripts/validate-admin.sh"
