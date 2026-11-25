@@ -17,6 +17,7 @@ docker/registry/auth/htpasswd
 !docker/registry/auth/.gitkeep
 
 # Volumes: Ignore all dynamic company-specific application and mobile folders
+volumes/
 docker/volumes/
 !docker/volumes/db/pgadmin-config/
 !docker/volumes/db/pgadmin-config/**
